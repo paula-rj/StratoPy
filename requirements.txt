@@ -1,0 +1,7 @@
+pandas
+geopandas
+netcdf4
+pyhdf
+cartopy
+pyspectral
+pyorbital
