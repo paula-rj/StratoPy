@@ -7,7 +7,5 @@ Python library designed to easily manipulate CloudSat and GOES-R and generate la
 References:
 
 - [Cloudsat Overview](https://cloudsat.atmos.colostate.edu/CloudSat_overview.pdf)
-
 - [Cloudsat Page](https://cloudsat.atmos.colostate.edu/)
-
 - [Cloudsat Data Processing Center](http://www.cloudsat.cira.colostate.edu/)
