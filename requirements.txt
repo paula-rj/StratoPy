@@ -5,3 +5,4 @@ pyhdf
 cartopy
 pyspectral
 pyorbital
+numpy
