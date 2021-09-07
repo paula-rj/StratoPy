@@ -133,13 +133,14 @@ class CloudClass:
             #lo mismo que el anterior pero altura vs lat vs lon osea en 3d
             pass
 
-        def plot_latlon(self, tipo_capa, layer):
-            """Plots Latitude vs Longitude and the type of clouds along the CloudSat orbit for every point
+        def plot_latlon(self, layers_df, layer):
+            """Plots Latitude vs Longitude and the type of clouds along the CloudSat orbit for every (lon,lat) point
             Parameters
             ----------
-            tipo_capa: Pandas DataFrame
+            layers_df: Pandas DataFrame
+                DataFrame que contiene latitud, longitud, tipo de nube en cada capa
             layer: int
-                number of layer 
+                number of layer #el usuario elige que capa quiere plotear 
             Returns
             -------
             imagen? 
@@ -154,11 +155,12 @@ class CloudClass:
                  6:'Cu',
                  7:'Ns',
                  8:'DC'}
+            capa_str = 'capa' + str(capa_n)
             fig_dims = (8, 8)
             fig, ax = plt.subplots(figsize=fig_dims)
             sns.scatterplot(x='Longitude', y='Latitude', 
                             data= tipo_capa.assign(tipos_capa0 =tipo_capa.capa0.map(dic_LayerType)), 
-                            hue='tipos_capa0', palette='bright', marker='o', s=1)
+                            hue= capa_str, palette='bright', marker='o', s=1)
             ax.set_xlabel('Longitude')
             ax.set_ylabel('Latitude')
             plt.show()
