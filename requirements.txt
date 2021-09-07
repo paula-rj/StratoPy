@@ -1,8 +1,9 @@
-pandas
-geopandas
-netcdf4
-pyhdf
+pandas=1.1.5
+geopandas=0.9.0
+pyhdf=0.10.0
 cartopy
 pyspectral
 pyorbital
 numpy
+matplotlib
+netcdf4
