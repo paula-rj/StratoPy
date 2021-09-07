@@ -157,18 +157,20 @@ class CloudClass:
             #lo mismo que el anterior pero altura vs lat vs lon osea en 3d
             pass
 
-        def plot_latlon(self, tipo_capa, layer):
-            """Plots Latitude vs Longitude and the type of clouds along the CloudSat orbit for every point
+        def plot_latlon(self, layers_df, layer):
+            """Plots Latitude vs Longitude and the type of clouds along the CloudSat orbit for every (lon,lat) point
             Parameters
             ----------
-            tipo_capa: Pandas DataFrame
+            layers_df: Pandas DataFrame
+                DataFrame que contiene latitud, longitud, tipo de nube en cada capa
             layer: int
-                number of layer 
+                number of layer #el usuario elige que capa quiere plotear 
             Returns
             -------
             imagen? 
             VER SI CONVIENE QUE RETORNE Y GUARDE PNG O JPG O ALGO ASI
             """
+
             dic_LayerType = {
                 0: 'no',
                 1: 'Ci',
@@ -191,6 +193,7 @@ class CloudClass:
                 palette='bright',
                 marker='o',
                 s=1)
+
             ax.set_xlabel('Longitude')
             ax.set_ylabel('Latitude')
             plt.show()
