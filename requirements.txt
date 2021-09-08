@@ -9,5 +9,5 @@ pyspectral
 pyorbital
 numpy
 cartopy
-# es mejor instalar el cartopy desde el github
+# es mas facil instalar el cartopy desde el github
 # !pip install git+https://github.com/SciTools/cartopy.git
