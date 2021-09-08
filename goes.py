@@ -31,7 +31,15 @@ from pyspectral.near_infrared_reflectance import Calculator
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#%%
+class Goes:
+  def __init__(self, file_path):
+    self.file_path = file_path
+  def __repr__(self):
+    pass
+  def __getattr__(self):
+    pass
+
+  #%%
 #Recorte
 def muestreo(x,y,z,esc=1,kind='cubic'): #requiere numpy y scipy
   """ 
