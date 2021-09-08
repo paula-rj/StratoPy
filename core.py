@@ -34,8 +34,8 @@ class CloudClass:
     #     return self[a]
 
     def __repr__(self):
-        #la idea es que retorne un obj clodcclass con fecha y hora
-        pass
+        #la idea es que retorne un obj clodcclass con fecha y hora ---> en qué formato la fecha?
+        return f'{type(self).__name__ (self.hour_utc, self.julian_day, self.year)}'
 
     def read(self):
         #la idea es que lea el hdf y lo devuelva en formato DF de pandas
