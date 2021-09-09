@@ -30,7 +30,7 @@ def read_hdf(path, layer='CloudLayerType'):
         dataframe: contain Latitude, Longitude and 10 layers
                    separated in columns.
     """
-    
+
     #la idea es que lea el hdf y lo devuelva en formato DF de pandas
     #Read v data
     hdf_file = HDF(path, HC.READ)
@@ -70,10 +70,18 @@ def read_hdf(path, layer='CloudLayerType'):
         'capa9': cld_layertype[:, 9]
     })
     return layers_df
+
+
 class CloudClass:
     """[summary]
     """
     def __init__(self, hdf_path):
+        #Yo no pondría el path en el init ya que
+        #sacamos la función de read fuera de la clase.
+        #Queremos que la clase opere sobre los CloudDataFrame
+        #pero no que los cree (segun lo que dijo juan).
+        #tal vez lo que debería recibir es un CloudDataFrame
+        # (por ponerle un nombre)
         self.path = hdf_path
         self.file_name = os.path.split(self.path)[-1]
         self.date = self.file_name.split('_')[0]
@@ -90,7 +98,7 @@ class CloudClass:
     #     return self[a]
     # def __doc__(self):
     #     return f'{self.read_hdf}'
-        
+
     def __repr__(self):
         #la idea es que retorne un obj clodcclass con fecha y hora ---> en qué formato la fecha?
         date_time = datetime.datetime.strptime(self.date, '%Y%j%H%M%S')
@@ -101,10 +109,14 @@ class CloudClass:
     def read_hdf(self):
         readHDF = read_hdf(self.path)
         return readHDF
-    
+
     def plot_statistics(self):
         df = self.read_hdf()
-        fig, axs = plt.subplots(2, 5, figsize=(12,10), sharey=True, sharex=True)
+        fig, axs = plt.subplots(2,
+                                5,
+                                figsize=(12, 10),
+                                sharey=True,
+                                sharex=True)
         axs = axs.ravel()
         for i, capa in enumerate([f'capa{i}' for i in range(0, 10)]):
             axs[i].hist(df[capa].loc[df[capa] != -99])
@@ -251,3 +263,36 @@ class CloudClass:
                 f"year {self.year}; day {self.julian_day}; hour {self.hour_utc}; {self.light}"
             )
             plt.show()
+
+
+class ftp_cloudsat_load:
+    def __init__(self):
+        """ Established FTP connection to Cloudsat server
+        """
+        from ftplib import FTP
+        import getpass
+
+        user_name = input("login user name:")
+        pwd = p = getpass.getpass(prompt='login password: ')
+        server = "ftp.cloudsat.cira.colostate.edu"
+        self.ftp = FTP(server)
+        self.ftp.login(user_name, pwd)
+
+    @property
+    def ls(self):
+        '''List current directory files'''
+        return self.ftp.dir()
+
+    def cd(self, dir):
+        '''Allows to navigate in ftp host to file'''
+        self.ftp.cwd(dir)
+        return self.ftp.dir()
+
+    def download(self, file):
+        '''Downloads specific file
+        '''
+        print('Starting download')
+        downloaded = self.ftp.retrbinary(f"RETR {file}",
+                                         open(file, "wb").write)
+        print('Finished download')
+        return downloaded
