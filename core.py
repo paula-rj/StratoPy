@@ -72,34 +72,6 @@ def read_hdf(path, layer='CloudLayerType'):
     return layers_df
 
 
-class ftp_cloudsat_load:
-    def __init__(self):
-        """ Established FTP connection to Cloudsat server
-        """
-        from ftplib import FTP
-        import getpass
-
-        user_name = input("login user name:")
-        pwd = p = getpass.getpass(prompt='login password: ')
-        server = "ftp.cloudsat.cira.colostate.edu"
-        self.ftp = FTP(server)
-        self.ftp.login(user_name, pwd)
-
-    @property
-    def ls(self):
-        return self.ftp.dir()
-
-    def cd(self, dir):
-        '''Allows to navigate in ftp host to file'''
-        self.ftp.cwd(dir)
-        return self.ftp.dir()
-
-    def dowload(self, file):
-        '''Downloads specific file
-        '''
-        return self.ftp.retrbinary(f"RETR {file}", open(file, "wb").write)
-
-
 class CloudClass:
     """[summary]
     """
@@ -291,3 +263,36 @@ class CloudClass:
                 f"year {self.year}; day {self.julian_day}; hour {self.hour_utc}; {self.light}"
             )
             plt.show()
+
+
+class ftp_cloudsat_load:
+    def __init__(self):
+        """ Established FTP connection to Cloudsat server
+        """
+        from ftplib import FTP
+        import getpass
+
+        user_name = input("login user name:")
+        pwd = p = getpass.getpass(prompt='login password: ')
+        server = "ftp.cloudsat.cira.colostate.edu"
+        self.ftp = FTP(server)
+        self.ftp.login(user_name, pwd)
+
+    @property
+    def ls(self):
+        '''List current directory files'''
+        return self.ftp.dir()
+
+    def cd(self, dir):
+        '''Allows to navigate in ftp host to file'''
+        self.ftp.cwd(dir)
+        return self.ftp.dir()
+
+    def download(self, file):
+        '''Downloads specific file
+        '''
+        print('Starting download')
+        downloaded = self.ftp.retrbinary(f"RETR {file}",
+                                         open(file, "wb").write)
+        print('Finished download')
+        return downloaded
