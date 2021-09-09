@@ -15,10 +15,17 @@ data = read_hdf(path)
 # print(dir(y))
 
 #%%
-from core import ftp_cloudsat_load
+from core import ftp_cloudsat
 
-ftp = ftp_cloudsat_load()
+## Ejemplo 1
+# ftp = ftp_cloudsat()
+# ftp.cd("2B-GEOPROF.P1_R05/2015/001/")
+# ftp.download("2015001225704_46177_CS_2B-GEOPROF_GRANULE_P1_R05_E06_F00.hdf")
 
-ftp.cd("2B-GEOPROF.P1_R05/2015/001/")
-ftp.download("2015001225704_46177_CS_2B-GEOPROF_GRANULE_P1_R05_E06_F00.hdf")
-ftp.ls
+#%%
+from core import ftp_cloudsat
+
+path = "2B-GEOPROF.P1_R05/2015/001/2015001225704_46177_CS_2B-GEOPROF_GRANULE_P1_R05_E06_F00.hdf"
+ftp = ftp_cloudsat(path)
+
+# %%

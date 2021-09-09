@@ -16,6 +16,10 @@ from pyhdf.SD import SD, SDC
 from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
 
+#Para ftp
+from ftplib import FTP
+import getpass
+
 
 def read_hdf(path, layer='CloudLayerType'):
     """
@@ -265,18 +269,24 @@ class CloudClass:
             plt.show()
 
 
-class ftp_cloudsat_load:
-    def __init__(self):
+class ftp_cloudsat:
+    def __init__(self, file=None):
         """ Established FTP connection to Cloudsat server
         """
-        from ftplib import FTP
-        import getpass
 
         user_name = input("login user name:")
         pwd = p = getpass.getpass(prompt='login password: ')
         server = "ftp.cloudsat.cira.colostate.edu"
         self.ftp = FTP(server)
         self.ftp.login(user_name, pwd)
+
+        if '.hdf' in file:
+            hdf = file.split('/')[-1]
+            folder = file[:-len(hdf)]
+            self.cd(folder)
+            self.download(hdf)
+        else:
+            pass
 
     @property
     def ls(self):
