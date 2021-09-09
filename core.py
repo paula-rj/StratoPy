@@ -1,4 +1,5 @@
 import os
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -16,14 +17,69 @@ from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
 
 
+def read_hdf(path, layer='CloudLayerType'):
+    """
+    Read a hdf file
+
+    Args:
+        path (str): string of path file
+        layer (str, optional): select any layer of the 
+        hdf file. Defaults to 'CloudLayerType'.
+
+    Returns:
+        dataframe: contain Latitude, Longitude and 10 layers
+                   separated in columns.
+    """
+    
+    #la idea es que lea el hdf y lo devuelva en formato DF de pandas
+    #Read v data
+    hdf_file = HDF(path, HC.READ)
+    vs = hdf_file.vstart()
+    vdata = vs.vdatainfo(
+    )  #es una lista de tuplas de 9 elementos cada una. acá estan lat y long y cloud layers
+
+    vd_lat = vs.attach('Latitude', write=0)
+    lat = vd_lat[:]
+    vd_lat.detach
+
+    vd_lon = vs.attach('Longitude', write=0)
+    lon = vd_lon[:]
+    vd_lon.detach
+
+    vs.end()
+    # hdf_file.close()
+
+    latitud = np.array(lat).flatten()
+    longitud = np.array(lon).flatten()
+
+    #Read sd data
+    file = SD(path, SDC.READ)
+    cld_layertype = file.select(layer)[:]
+    layers_df = pd.DataFrame({
+        'Longitude': longitud,
+        'Latitude': latitud,
+        'capa0': cld_layertype[:, 0],
+        'capa1': cld_layertype[:, 1],
+        'capa2': cld_layertype[:, 2],
+        'capa3': cld_layertype[:, 3],
+        'capa4': cld_layertype[:, 4],
+        'capa5': cld_layertype[:, 5],
+        'capa6': cld_layertype[:, 6],
+        'capa7': cld_layertype[:, 7],
+        'capa8': cld_layertype[:, 8],
+        'capa9': cld_layertype[:, 9]
+    })
+    return layers_df
 class CloudClass:
+    """[summary]
+    """
     def __init__(self, hdf_path):
         self.path = hdf_path
         self.file_name = os.path.split(self.path)[-1]
-        date = self.file_name.split('_')[0]
-        self.year = date[:4]
-        self.julian_day = date[4:7]
-        self.hour_utc = date[7:9]
+        self.date = self.file_name.split('_')[0]
+        # self.year = self.date[:4]
+        # self.julian_day = self.date[4:7]
+        self.hour_utc = self.date[7:9]
         self.light = ''
         if int(self.hour_utc) > 10:
             self.light = 'day'
@@ -32,60 +88,27 @@ class CloudClass:
 
     # def __getattr__(self, a):
     #     return self[a]
-
+    # def __doc__(self):
+    #     return f'{self.read_hdf}'
+        
     def __repr__(self):
         #la idea es que retorne un obj clodcclass con fecha y hora ---> en qué formato la fecha?
-        return f'{type(self).__name__ (self.hour_utc, self.julian_day, self.year)}'
+        date_time = datetime.datetime.strptime(self.date, '%Y%j%H%M%S')
+        rep = f"Start collect --> {date_time.strftime('%Y %B %d Time %H:%M:%S')}"
+        # rep = f'Year: {self.year:>10s}\nJulian Day: {self.julian_day:>4s}\nHour: {self.hour_utc: >10s}'
+        return rep
 
-    def read(self):
-        #la idea es que lea el hdf y lo devuelva en formato DF de pandas
-
-        #Read v data
-        hdf_file = HDF(self.path, HC.READ)
-        vs = hdf_file.vstart()
-        vdata = vs.vdatainfo(
-        )  #es una lista de tuplas de 9 elementos cada una. acá estan lat y long y cloud layers
-
-        vd_lat = vs.attach('Latitude', write=0)
-        lat = vd_lat[:]
-        vd_lat.detach
-
-        vd_lon = vs.attach('Longitude', write=0)
-        lon = vd_lon[:]
-        vd_lon.detach
-
-        vs.end()
-        # hdf_file.close()
-
-        latitud = np.array(lat).flatten()
-        longitud = np.array(lon).flatten()
-
-        #Read sd data
-        file = SD(self.path, SDC.READ)
-        cld_layertype = file.select('CloudLayerType')[:]
-        self.layers_df = pd.DataFrame({
-            'Longitude': longitud,
-            'Latitude': latitud,
-            'capa0': cld_layertype[:, 0],
-            'capa1': cld_layertype[:, 1],
-            'capa2': cld_layertype[:, 2],
-            'capa3': cld_layertype[:, 3],
-            'capa4': cld_layertype[:, 4],
-            'capa5': cld_layertype[:, 5],
-            'capa6': cld_layertype[:, 6],
-            'capa7': cld_layertype[:, 7],
-            'capa8': cld_layertype[:, 8],
-            'capa9': cld_layertype[:, 9]
-        })
-        return self.layers_df
-
+    def read_hdf(self):
+        readHDF = read_hdf(self.path)
+        return readHDF
+    
     def plot_statistics(self):
-        self.read()
-        df = self.layers_df
+        df = self.read_hdf()
+        fig, axs = plt.subplots(2, 5, figsize=(12,10), sharey=True, sharex=True)
+        axs = axs.ravel()
         for i, capa in enumerate([f'capa{i}' for i in range(0, 10)]):
-            plt.subplot(2, 5, i + 1)
-            df[capa].loc[df[capa] != -99].hist()
-            plt.title(capa)
+            axs[i].hist(df[capa].loc[df[capa] != -99])
+            axs[i].set_title(capa)
         plt.show()
 
         def cut(self, df, sur=True):
@@ -125,7 +148,6 @@ class CloudClass:
             projection: str
                 the reprojection that the user desires
                 Default: geostationary, GOES-R
-
             """
             geo_df = gpd.GeoDataFrame(layers_df,
                                       geometry=gpd.points_from_xy(
@@ -205,7 +227,6 @@ class CloudClass:
             geopd: Geopandass DataFrame
             layer: int
                 chosen layer to plot
-
             Returns:
             -------
             Imagen?
