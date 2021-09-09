@@ -1,9 +1,13 @@
-pandas=1.1.5
-geopandas=0.9.0
-pyhdf=0.10.0
-cartopy
+pandas
+geopandas
+netcdf4
+pyhdf
+pyshp
+shapely --no-binary shapely
+six
 pyspectral
 pyorbital
 numpy
-matplotlib
-netcdf4
+cartopy
+# es mas facil instalar el cartopy desde el github
+# !pip install git+https://github.com/SciTools/cartopy.git
