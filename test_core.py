@@ -1,15 +1,15 @@
 #%%
-from core import CloudClass
+from core import CloudClass, read_hdf
 
-y = CloudClass(
-    'data/CloudSat/2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf'
-)
+path = 'data/CloudSat/2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf'
+#pruebo que la clase funcione
+y = CloudClass(path)
 
-data = y.read_hdf()
+#pruebo que levantar los datos funcione
+data = read_hdf(path)
 # y.plot_statistics()
 
 #%%
 # testando algunas funcionalidades
 
-# print(dir(y) )
-print(y.__repr__())
+print(dir(y))
