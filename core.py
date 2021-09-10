@@ -270,21 +270,23 @@ class CloudClass:
 
 
 class ftp_cloudsat:
-    def __init__(self, file=None):
+    def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
         """ Established FTP connection to Cloudsat server
         """
 
         user_name = input("login user name:")
-        pwd = p = getpass.getpass(prompt='login password: ')
-        server = "ftp.cloudsat.cira.colostate.edu"
+        pwd = getpass.getpass(prompt='login password: ')
         self.ftp = FTP(server)
         self.ftp.login(user_name, pwd)
 
-        if '.hdf' in file:
-            hdf = file.split('/')[-1]
-            folder = file[:-len(hdf)]
-            self.cd(folder)
-            self.download(hdf)
+        if (file != None):
+            if '.hdf' in file:
+                hdf = file.split('/')[-1]
+                folder = file[:-len(hdf)]
+                self.cd(folder)
+                self.download(hdf)
+            else:
+                print('not an .hdf file. Please navigate to file')
         else:
             pass
 
