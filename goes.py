@@ -71,7 +71,7 @@ class GoesClass:
         ynew = np.arange(y[0], y[-1], (y[1]-y[0])/esc)
         return f(xnew, ynew)
 
-            def recorte(data_path, x0=-555469.8930323641, y0=0.0):
+    def recorte(data_path, x0=-555469.8930323641, y0=0.0):
 
         # lat =  0. -> y0
         # lon = -80. -> x0

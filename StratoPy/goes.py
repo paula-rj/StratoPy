@@ -19,7 +19,6 @@ import cartopy
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 # %%
-from netCDF4 import Dataset
 # Librerias para calcular zenith
 # %%
 import calendar
