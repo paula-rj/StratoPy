@@ -3,7 +3,7 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
-#from pyhdf.HDF import * creo que esto esta mal segun PEP8
+# from pyhdf.HDF import * creo que esto esta mal segun PEP8
 #from pyhdf.VS import *
 
 import cartopy.crs as ccrs
@@ -16,8 +16,8 @@ from pyhdf.SD import SD, SDC
 from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
 
-#Para ftp
-from ftplib import FTP
+# Para ftp
+from ftplib import FTP, error_perm
 import getpass
 
 
@@ -35,12 +35,12 @@ def read_hdf(path, layer='CloudLayerType'):
                    separated in columns.
     """
 
-    #la idea es que lea el hdf y lo devuelva en formato DF de pandas
-    #Read v data
+    # la idea es que lea el hdf y lo devuelva en formato DF de pandas
+    # Read v data
     hdf_file = HDF(path, HC.READ)
     vs = hdf_file.vstart()
     vdata = vs.vdatainfo(
-    )  #es una lista de tuplas de 9 elementos cada una. acá estan lat y long y cloud layers
+    )  # es una lista de tuplas de 9 elementos cada una. acá estan lat y long y cloud layers
 
     vd_lat = vs.attach('Latitude', write=0)
     lat = vd_lat[:]
@@ -56,7 +56,7 @@ def read_hdf(path, layer='CloudLayerType'):
     latitud = np.array(lat).flatten()
     longitud = np.array(lon).flatten()
 
-    #Read sd data
+    # Read sd data
     file = SD(path, SDC.READ)
     cld_layertype = file.select(layer)[:]
     layers_df = pd.DataFrame({
@@ -79,12 +79,13 @@ def read_hdf(path, layer='CloudLayerType'):
 class CloudClass:
     """[summary]
     """
+
     def __init__(self, hdf_path):
-        #Yo no pondría el path en el init ya que
-        #sacamos la función de read fuera de la clase.
-        #Queremos que la clase opere sobre los CloudDataFrame
-        #pero no que los cree (segun lo que dijo juan).
-        #tal vez lo que debería recibir es un CloudDataFrame
+        # Yo no pondría el path en el init ya que
+        # sacamos la función de read fuera de la clase.
+        # Queremos que la clase opere sobre los CloudDataFrame
+        # pero no que los cree (segun lo que dijo juan).
+        # tal vez lo que debería recibir es un CloudDataFrame
         # (por ponerle un nombre)
         self.path = hdf_path
         self.file_name = os.path.split(self.path)[-1]
@@ -104,7 +105,7 @@ class CloudClass:
     #     return f'{self.read_hdf}'
 
     def __repr__(self):
-        #la idea es que retorne un obj clodcclass con fecha y hora ---> en qué formato la fecha?
+        # la idea es que retorne un obj clodcclass con fecha y hora ---> en qué formato la fecha?
         date_time = datetime.datetime.strptime(self.date, '%Y%j%H%M%S')
         rep = f"Start collect --> {date_time.strftime('%Y %B %d Time %H:%M:%S')}"
         # rep = f'Year: {self.year:>10s}\nJulian Day: {self.julian_day:>4s}\nHour: {self.hour_utc: >10s}'
@@ -128,10 +129,10 @@ class CloudClass:
         plt.show()
 
         def cut(self, df, sur=True):
-            #la idea es que recorte la pasada segun elija el usuario
+            # la idea es que recorte la pasada segun elija el usuario
             # quizas habria que ponerla junto con read?
-            #como está ahora lo que hace es cortarla en sudamérica si sur=True
-            #Otra idea: ver si puede cortar donde es de dia y donde es de noche
+            # como está ahora lo que hace es cortarla en sudamérica si sur=True
+            # Otra idea: ver si puede cortar donde es de dia y donde es de noche
             start_point = 0
             end_point = 36951
             if sur == True:
@@ -141,12 +142,13 @@ class CloudClass:
                     end_point = 20000
             if self.hour_utc == (15):
                 start_point = 6000
-            else:  #16,17,18 utc
+            else:  # 16,17,18 utc
                 start_point = 10000
             latitud = latitud[start_point:end_point]
             longitud = longitud[start_point:end_point]
 
-            cld_layertype = df  #.iloc([start_point:end_point]) #creo que era asi
+            # .iloc([start_point:end_point]) #creo que era asi
+            cld_layertype = df
 
             return cld_layertype
 
@@ -154,9 +156,9 @@ class CloudClass:
                 self,
                 layers_df,
                 projection="+proj=geos +h=35786023.0 +lon_0=-75.0"):
-            #la idea es que retorne un geopandas dataframe con la conversion de coordenadas
-            #que elija el usuario
-            #hay que ver si no conviene que desde el principio, osea desde read, retorne un geopd df
+            # la idea es que retorne un geopandas dataframe con la conversion de coordenadas
+            # que elija el usuario
+            # hay que ver si no conviene que desde el principio, osea desde read, retorne un geopd df
             """
             Parameters
             ----------
@@ -172,17 +174,17 @@ class CloudClass:
             geo_df.crs = {
                 'init': 'epsg:4326'
             }  # EPSG 4326 corresponds to coordinates in latitude and longitude
-            #Reprojecting into GOES16 geostationary projection
+            # Reprojecting into GOES16 geostationary projection
             geodf_GOESproj = geo_df.to_crs(projection)
             return geo_df
 
         def plot_layers(self):
-            #plotea height vs latitud o longitud y el tipo de nube en cada capa
-            #ver https://moonbooks.org/Codes/Plot-cldclass-lidar-granule-vertical-profile-using-python-3/
-            #para esta hay que extraer otros datos del hdf que estan en la parte de SD
-            #como layer_TOP, layer_bottom
+            # plotea height vs latitud o longitud y el tipo de nube en cada capa
+            # ver https://moonbooks.org/Codes/Plot-cldclass-lidar-granule-vertical-profile-using-python-3/
+            # para esta hay que extraer otros datos del hdf que estan en la parte de SD
+            # como layer_TOP, layer_bottom
 
-            #Read SD
+            # Read SD
             file = SD(self.hdf_path, SDC.READ)
             cld_layertype = np.array(file.select('CloudLayerType')[:])
             layer_base = np.array(file.select('CloudLayerBase')[:])
@@ -192,7 +194,7 @@ class CloudClass:
             pass
 
         def plot_layers_3D(self):
-            #lo mismo que el anterior pero altura vs lat vs lon osea en 3d
+            # lo mismo que el anterior pero altura vs lat vs lon osea en 3d
             pass
 
         def plot_latlon(self, layers_df, layer):
@@ -250,7 +252,7 @@ class CloudClass:
             layer_str = 'capa' + str(layer)
             crs = ccrs.Geostationary(central_longitude=-75.0,
                                      satellite_height=35786023.0
-                                     )  #proyeccion geoestacionaria para Goes16
+                                     )  # proyeccion geoestacionaria para Goes16
             fig_dims = (10, 10)
             fig, axis = plt.subplots(figsize=fig_dims)
             axis = plt.axes(projection=crs)
@@ -308,3 +310,37 @@ class ftp_cloudsat:
                                          open(file, "wb").write)
         print('Finished download')
         return downloaded
+
+    def quit(self):
+        '''Close connection with the server'''
+        print('Closing connection with the server')
+        self.ftp.quit()
+        print('Connection closed')
+        return None
+
+    def explore(self, date, product='2B-CLDCLASS', release='P1_R05'):
+        ''' Access product directory and show files of a desire date.             
+        Parameters
+        ----------
+        date: ``int tuple``
+            Tuple that contains date of observation in format (YYYY, MM, DD). 
+        product: ``str``, optional (defalult='2B-CLDCLASS')
+            Cloudsat product.
+        release: ``str``, optional (defalult='P1_R05')
+            Cloudsat product version.        
+
+        Returns
+        -------
+        dirname: ``str``
+            String containing the directory address of the input product 
+            and date.
+        '''
+        str_date = datetime.date(*date).strftime('%Y/%j')
+        dirname = f'{product}.{release}/{str_date}/'
+
+        try:
+            self.ftp.cwd(dirname)
+            return self.ftp.dir()
+        except error_perm as error:
+            print(error)
+            print('File not found. Try with other date or navigate to file.')
