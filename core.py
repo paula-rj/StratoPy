@@ -12,7 +12,7 @@ import cartopy.crs as ccrs
 import pandas as pd
 import geopandas as gpd
 
-# import seaborn as sns
+import seaborn as sns
 
 from pyhdf.SD import SD, SDC
 from pyhdf.HDF import HDF, HC
@@ -41,7 +41,10 @@ def read_hdf(path, layer="CloudLayerType"):
     # Read v data
     hdf_file = HDF(path, HC.READ)
     vs = hdf_file.vstart()
-    vdata = vs.vdatainfo()  # es una lista de tuplas de 9 elementos cada una. acá estan lat y long y cloud layers
+    # vdata = (
+    #     vs.vdatainfo()
+    # )  # es una lista de tuplas de 9 elementos cada una.
+    # acá estan lat y long y cloud layers
 
     vd_lat = vs.attach("Latitude", write=0)
     lat = vd_lat[:]
@@ -60,20 +63,18 @@ def read_hdf(path, layer="CloudLayerType"):
     # Read sd data
     file = SD(path, SDC.READ)
     cld_layertype = file.select(layer)[:]
-    layers_df = pd.DataFrame(
-        {
-            "Longitude": longitud,
-            "Latitude": latitud,
-            "capa0": cld_layertype[:, 0],
-            "capa1": cld_layertype[:, 1],
-            "capa2": cld_layertype[:, 2],
-            "capa3": cld_layertype[:, 3],
-            "capa4": cld_layertype[:, 4],
-            "capa5": cld_layertype[:, 5],
-            "capa6": cld_layertype[:, 6],
-            "capa7": cld_layertype[:, 7],
-            "capa8": cld_layertype[:, 8],
-            "capa9": cld_layertype[:, 9],
+    layers_df = pd.DataFrame({
+        "Latitude": latitud,
+        "capa0": cld_layertype[:, 0],
+        "capa1": cld_layertype[:, 1],
+        "capa2": cld_layertype[:, 2],
+        "capa3": cld_layertype[:, 3],
+        "capa4": cld_layertype[:, 4],
+        "capa5": cld_layertype[:, 5],
+        "capa6": cld_layertype[:, 6],
+        "capa7": cld_layertype[:, 7],
+        "capa8": cld_layertype[:, 8],
+        "capa9": cld_layertype[:, 9],
         }
     )
     return layers_df
@@ -110,7 +111,8 @@ class CloudClass:
         # la idea es que retorne un obj clodcclass con fecha y hora
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
         rep = f"Start collect --> {date_time.strftime('%Y %B %d Time %H:%M:%S')}"
-        # rep = f'Year: {self.year:>10s}\nJulian Day: {self.julian_day:>4s}\nHour: {self.hour_utc: >10s}'
+        # rep = f'''Year: {self.year:>10s}\nJulian Day: {self.julian_day:>4s}\nHour:
+        # {self.hour_utc: >10s}'''
         return rep
 
     def read_hdf(self):
@@ -150,9 +152,8 @@ class CloudClass:
             return cld_layertype
 
         def convert_coordinates(
-                self,
-                layers_df,
-                projection="+proj=geos +h=35786023.0 +lon_0=-75.0"):
+            self, layers_df, projection="+proj=geos +h=35786023.0 +lon_0=-75.0"
+        ):
 
             # la idea es que retorne un geopandas dataframe con la conversion de coordenadas
             # que elija el usuario
@@ -211,7 +212,7 @@ class CloudClass:
             VER SI CONVIENE QUE RETORNE Y GUARDE PNG O JPG O ALGO ASI
             """
 
-            dic_LayerType = {
+            dic_layer_type = {
                 0: "no",
                 1: "Ci",
                 2: "As",
@@ -222,24 +223,29 @@ class CloudClass:
                 7: "Ns",
                 8: "DC",
             }
-            fig_dims = (8, 8)
-            fig, ax = plt.subplots(figsize=fig_dims)
-            sns.scatterplot(
-                x="Longitude",
-                y="Latitude",
-                data=tipo_capa.assign(tipos_capa0=tipo_capa.capa0.map(dic_LayerType)),
-                hue="tipos_capa0",
-                palette="bright",
-                marker="o",
-                s=1,
-            )
+            # Acá tipo de capa no está definido.
+            # fig_dims = (8, 8)
+            # fig, ax = plt.subplots(figsize=fig_dims)
+            # sns.scatterplot(
+            #     x="Longitude",
+            #     y="Latitude",
+            #     data=tipo_capa.assign(
+            #         tipos_capa0=tipo_capa.capa0.map(dic_LayerType)
+            #         ),
+            #     hue="tipos_capa0",
+            #     palette="bright",
+            #     marker="o",
+            #     s=1,
+            # )
+            # ax.set_xlabel("Longitude")
+            # ax.set_ylabel("Latitude")
+            # plt.show()
 
-            ax.set_xlabel("Longitude")
-            ax.set_ylabel("Latitude")
-            plt.show()
+            return dic_layer_type
 
         def plot_projection(self, geodf, layer):
-            """Dibuja la capa layer de la pasada sobre el mapa con la reproyeccion que eligio el usuario
+            """Dibuja la capa layer de la pasada sobre el mapa
+            con la reproyeccion que eligio el usuario
             Parameters:
             ----------
             geopd: Geopandass DataFrame
@@ -249,7 +255,7 @@ class CloudClass:
             -------
             Imagen?
             """
-            
+
             layer_str = "capa" + str(layer)
             crs = ccrs.Geostationary(
                 central_longitude=-75.0, satellite_height=35786023.0
@@ -270,7 +276,8 @@ class CloudClass:
                 transform=ccrs.PlateCarree(),
             )
             axis.set_title(
-                f"year {self.year}; day {self.julian_day}; hour {self.hour_utc}; {self.light}"
+                f"year {self.year}; day {self.julian_day};\
+                hour {self.hour_utc}; {self.light}"
             )
             plt.show()
 
@@ -284,7 +291,7 @@ class ftp_cloudsat:
         self.ftp = FTP(server)
         self.ftp.login(user_name, pwd)
 
-        if file != None:
+        if file is not None:
             if ".hdf" in file:
                 hdf = file.split("/")[-1]
                 folder = file[: -len(hdf)]
@@ -308,40 +315,41 @@ class ftp_cloudsat:
     def download(self, file):
         """Downloads specific file"""
         print("Starting download")
-        downloaded = self.ftp.retrbinary(f"RETR {file}", open(file, "wb").write)
+        downloaded = self.ftp.retrbinary(f"RETR {file}",
+                                         open(file, "wb").write)
         print("Finished download")
         return downloaded
 
     def quit(self):
-        '''Close connection with the server'''
-        print('Closing connection with the server')
+        """Close connection with the server"""
+        print("Closing connection with the server")
         self.ftp.quit()
-        print('Connection closed')
+        print("Connection closed")
         return None
 
-    def explore(self, date, product='2B-CLDCLASS', release='P1_R05'):
-        ''' Access product directory and show files of a desire date.             
+    def explore(self, date, product="2B-CLDCLASS", release="P1_R05"):
+        """ Access product directory and show files of a desire date.
         Parameters
         ----------
         date: ``int tuple``
-            Tuple that contains date of observation in format (YYYY, MM, DD). 
+            Tuple that contains date of observation in format (YYYY, MM, DD).
         product: ``str``, optional (defalult='2B-CLDCLASS')
             Cloudsat product.
         release: ``str``, optional (defalult='P1_R05')
-            Cloudsat product version.        
+            Cloudsat product version.
 
         Returns
         -------
         dirname: ``str``
-            String containing the directory address of the input product 
+            String containing the directory address of the input product
             and date.
-        '''
-        str_date = datetime.date(*date).strftime('%Y/%j')
-        dirname = f'{product}.{release}/{str_date}/'
+        """
+        str_date = datetime.date(*date).strftime("%Y/%j")
+        dirname = f"{product}.{release}/{str_date}/"
 
         try:
             self.ftp.cwd(dirname)
             return self.ftp.dir()
         except error_perm as error:
             print(error)
-            print('File not found. Try with other date or navigate to file.')
+            print("File not found. Try with other date or navigate to file.")
