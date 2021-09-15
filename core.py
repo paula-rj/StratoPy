@@ -16,7 +16,7 @@ import seaborn as sns
 
 from pyhdf.SD import SD, SDC
 from pyhdf.HDF import HDF, HC
-from pyhdf.VS import VS
+# from pyhdf.VS import VS
 
 # Para ftp
 from ftplib import FTP, error_perm
@@ -51,30 +51,31 @@ def read_hdf(path, layer="CloudLayerType"):
     vd_lat.detach
 
     vd_lon = vs.attach("Longitude", write=0)
-    lon = vd_lon[:]
+    # lon = vd_lon[:]
     vd_lon.detach
 
     vs.end()
     # hdf_file.close()
 
     latitud = np.array(lat).flatten()
-    longitud = np.array(lon).flatten()
+    # longitud = np.array(lon).flatten()
 
     # Read sd data
     file = SD(path, SDC.READ)
     cld_layertype = file.select(layer)[:]
-    layers_df = pd.DataFrame({
-        "Latitude": latitud,
-        "capa0": cld_layertype[:, 0],
-        "capa1": cld_layertype[:, 1],
-        "capa2": cld_layertype[:, 2],
-        "capa3": cld_layertype[:, 3],
-        "capa4": cld_layertype[:, 4],
-        "capa5": cld_layertype[:, 5],
-        "capa6": cld_layertype[:, 6],
-        "capa7": cld_layertype[:, 7],
-        "capa8": cld_layertype[:, 8],
-        "capa9": cld_layertype[:, 9],
+    layers_df = pd.DataFrame(
+        {
+            "Latitude": latitud,
+            "capa0": cld_layertype[:, 0],
+            "capa1": cld_layertype[:, 1],
+            "capa2": cld_layertype[:, 2],
+            "capa3": cld_layertype[:, 3],
+            "capa4": cld_layertype[:, 4],
+            "capa5": cld_layertype[:, 5],
+            "capa6": cld_layertype[:, 6],
+            "capa7": cld_layertype[:, 7],
+            "capa8": cld_layertype[:, 8],
+            "capa9": cld_layertype[:, 9],
         }
     )
     return layers_df
@@ -109,9 +110,12 @@ class CloudClass:
 
     def __repr__(self):
         # la idea es que retorne un obj clodcclass con fecha y hora
-        date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
-        rep = f"Start collect --> {date_time.strftime('%Y %B %d Time %H:%M:%S')}"
-        # rep = f'''Year: {self.year:>10s}\nJulian Day: {self.julian_day:>4s}\nHour:
+        date_time = datetime.datetime.strptime(self.date,
+                                               "%Y%j%H%M%S")
+        rep = ("Start collect --> "
+               f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}")
+        # rep = f'''Year: {self.year:>10s}
+        # \nJulian Day: {self.julian_day:>4s}\nHour:
         # {self.hour_utc: >10s}'''
         return rep
 
@@ -121,7 +125,11 @@ class CloudClass:
 
     def plot_statistics(self):
         df = self.read_hdf()
-        fig, axs = plt.subplots(2, 5, figsize=(12, 10), sharey=True, sharex=True)
+        fig, axs = plt.subplots(2, 5,
+                                figsize=(12, 10),
+                                sharey=True,
+                                sharex=True
+                                )
         axs = axs.ravel()
         for i, capa in enumerate([f"capa{i}" for i in range(0, 10)]):
             axs[i].hist(df[capa].loc[df[capa] != -99])
@@ -129,23 +137,28 @@ class CloudClass:
         plt.show()
 
         def cut(self, df, sur=True):
-            # la idea es que recorte la pasada segun elija el usuario
+            # la idea es que recorte la pasada segun
+            #  elija el usuario
             # quizas habria que ponerla junto con read?
-            # como está ahora lo que hace es cortarla en sudamérica si sur=True
-            # Otra idea: ver si puede cortar donde es de dia y donde es de noche
-            start_point = 0
-            end_point = 36951
-            if sur == True:
-                if self.light == "night":
-                    end_point = 6000
-                else:
-                    end_point = 20000
-            if self.hour_utc == (15):
-                start_point = 6000
-            else:  # 16,17,18 utc
-                start_point = 10000
-            latitud = latitud[start_point:end_point]
-            longitud = longitud[start_point:end_point]
+            # como está ahora lo que hace es cortarla en
+            # sudamérica si sur=True
+            # Otra idea: ver si puede cortar donde es de dia
+            #  y donde es de noche
+
+            # start_point = 0
+            # end_point = 36951
+            # if sur == True:
+            #     if self.light == "night":
+            #         end_point = 6000
+            #     else:
+            #         end_point = 20000
+            # if self.hour_utc == (15):
+            #     start_point = 6000
+            # else:  # 16,17,18 utc
+            #     start_point = 10000
+
+            # latitud = latitud[start_point:end_point]
+            # longitud = longitud[start_point:end_point]
 
             # .iloc([start_point:end_point]) #creo que era asi
             cld_layertype = df
@@ -155,9 +168,11 @@ class CloudClass:
             self, layers_df, projection="+proj=geos +h=35786023.0 +lon_0=-75.0"
         ):
 
-            # la idea es que retorne un geopandas dataframe con la conversion de coordenadas
+            # la idea es que retorne un geopandas dataframe con
+            # la conversion de coordenadas
             # que elija el usuario
-            # hay que ver si no conviene que desde el principio, osea desde read, retorne un geopd df
+            # hay que ver si no conviene que desde el principio,
+            #  osea desde read, retorne un geopd df
             """
             Parameters
             ----------
@@ -169,41 +184,47 @@ class CloudClass:
             geo_df = gpd.GeoDataFrame(
                 layers_df,
                 geometry=gpd.points_from_xy(
-                    layers_data.Longitude, layers_data.Latitude
+                    layers_df.Longitude, layers_df.Latitude
                 ),
             )
             geo_df.crs = {
                 "init": "epsg:4326"
             }  # EPSG 4326 corresponds to coordinates in latitude and longitude
             # Reprojecting into GOES16 geostationary projection
-            geodf_GOESproj = geo_df.to_crs(projection)
+            # geodf_GOESproj = geo_df.to_crs(projection)
             return geo_df
 
         def plot_layers(self):
-            # plotea height vs latitud o longitud y el tipo de nube en cada capa
-            # ver https://moonbooks.org/Codes/Plot-cldclass-lidar-granule-vertical-profile-using-python-3/
-            # para esta hay que extraer otros datos del hdf que estan en la parte de SD
+            # plotea height vs latitud o longitud
+            # y el tipo de nube en cada capa
+            # ver https://moonbooks.org/Codes/Plot-cldclass-lidar
+            # -granule-vertical-profile-using-python-3/
+            # para esta hay que extraer otros datos del
+            # hdf que estan en la parte de SD
             # como layer_TOP, layer_bottom
 
             # Read SD
             file = SD(self.hdf_path, SDC.READ)
             cld_layertype = np.array(file.select("CloudLayerType")[:])
-            layer_base = np.array(file.select("CloudLayerBase")[:])
-            layer_top = np.array(file.select("CloudLayerTop")[:])
-            height = np.array(file.select("Height")[:])
+            # layer_base = np.array(file.select("CloudLayerBase")[:])
+            # layer_top = np.array(file.select("CloudLayerTop")[:])
+            # height = np.array(file.select("Height")[:])
 
-            pass
+            return cld_layertype
 
         def plot_layers_3D(self):
             # lo mismo que el anterior pero altura vs lat vs lon osea en 3d
             pass
 
         def plot_latlon(self, layers_df, layer):
-            """Plots Latitude vs Longitude and the type of clouds along the CloudSat orbit for every (lon,lat) point
+            """Plots Latitude vs Longitude and the type of clouds along
+               the CloudSat orbit for every (lon,lat) point
+
             Parameters
             ----------
             layers_df: Pandas DataFrame
-                DataFrame que contiene latitud, longitud, tipo de nube en cada capa
+                DataFrame que contiene latitud, longitud,
+                tipo de nube en cada capa
             layer: int
                 number of layer #el usuario elige que capa quiere plotear
             Returns
