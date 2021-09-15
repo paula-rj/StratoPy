@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 # from pyhdf.HDF import * creo que esto esta mal segun PEP8
 # from pyhdf.VS import *
 
+
 import cartopy.crs as ccrs
 
 import pandas as pd
@@ -18,7 +19,7 @@ from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
 
 # Para ftp
-from ftplib import FTP
+from ftplib import FTP, error_perm
 import getpass
 
 
@@ -40,9 +41,7 @@ def read_hdf(path, layer="CloudLayerType"):
     # Read v data
     hdf_file = HDF(path, HC.READ)
     vs = hdf_file.vstart()
-    vdata = (
-        vs.vdatainfo()
-    )  # es una lista de tuplas de 9 elementos cada una. acá estan lat y long y cloud layers
+    vdata = vs.vdatainfo()  # es una lista de tuplas de 9 elementos cada una. acá estan lat y long y cloud layers
 
     vd_lat = vs.attach("Latitude", write=0)
     lat = vd_lat[:]
@@ -108,7 +107,7 @@ class CloudClass:
     #     return f'{self.read_hdf}'
 
     def __repr__(self):
-        # la idea es que retorne un obj clodcclass con fecha y hora ---> en qué formato la fecha?
+        # la idea es que retorne un obj clodcclass con fecha y hora
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
         rep = f"Start collect --> {date_time.strftime('%Y %B %d Time %H:%M:%S')}"
         # rep = f'Year: {self.year:>10s}\nJulian Day: {self.julian_day:>4s}\nHour: {self.hour_utc: >10s}'
@@ -146,13 +145,15 @@ class CloudClass:
             latitud = latitud[start_point:end_point]
             longitud = longitud[start_point:end_point]
 
-            cld_layertype = df  # .iloc([start_point:end_point]) #creo que era asi
-
+            # .iloc([start_point:end_point]) #creo que era asi
+            cld_layertype = df
             return cld_layertype
 
         def convert_coordinates(
-            self, layers_df, projection="+proj=geos +h=35786023.0 +lon_0=-75.0"
-        ):
+                self,
+                layers_df,
+                projection="+proj=geos +h=35786023.0 +lon_0=-75.0"):
+
             # la idea es que retorne un geopandas dataframe con la conversion de coordenadas
             # que elija el usuario
             # hay que ver si no conviene que desde el principio, osea desde read, retorne un geopd df
@@ -248,10 +249,12 @@ class CloudClass:
             -------
             Imagen?
             """
+            
             layer_str = "capa" + str(layer)
             crs = ccrs.Geostationary(
                 central_longitude=-75.0, satellite_height=35786023.0
             )  # proyeccion geoestacionaria para Goes16
+
             fig_dims = (10, 10)
             fig, axis = plt.subplots(figsize=fig_dims)
             axis = plt.axes(projection=crs)
@@ -308,3 +311,37 @@ class ftp_cloudsat:
         downloaded = self.ftp.retrbinary(f"RETR {file}", open(file, "wb").write)
         print("Finished download")
         return downloaded
+
+    def quit(self):
+        '''Close connection with the server'''
+        print('Closing connection with the server')
+        self.ftp.quit()
+        print('Connection closed')
+        return None
+
+    def explore(self, date, product='2B-CLDCLASS', release='P1_R05'):
+        ''' Access product directory and show files of a desire date.             
+        Parameters
+        ----------
+        date: ``int tuple``
+            Tuple that contains date of observation in format (YYYY, MM, DD). 
+        product: ``str``, optional (defalult='2B-CLDCLASS')
+            Cloudsat product.
+        release: ``str``, optional (defalult='P1_R05')
+            Cloudsat product version.        
+
+        Returns
+        -------
+        dirname: ``str``
+            String containing the directory address of the input product 
+            and date.
+        '''
+        str_date = datetime.date(*date).strftime('%Y/%j')
+        dirname = f'{product}.{release}/{str_date}/'
+
+        try:
+            self.ftp.cwd(dirname)
+            return self.ftp.dir()
+        except error_perm as error:
+            print(error)
+            print('File not found. Try with other date or navigate to file.')
