@@ -230,14 +230,6 @@ rec03 = goes3obj.recorte()
 rec07 = goes7obj.recorte()
 rec13 = goes13obj.recorte()
 
-
-
-
-# Calculamos zenith para banda 7
-
-
-
-
 # %%
 # %%
 rec03 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\OR_ABI-L2-CMIPF-M3C03_G16_s20190021800363_e20190021811129_c20190021811205.nc")

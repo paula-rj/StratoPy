@@ -1,2 +1,0 @@
-file_path = "OR_ABI-L1b-RadF-M6C07_G16_s20191400530366_e20191400540086_c20191400540122.nc"
-file_path.split("_")
