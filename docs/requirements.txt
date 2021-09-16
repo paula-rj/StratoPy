@@ -1,0 +1,13 @@
+pandas
+geopandas
+netcdf4
+pyhdf
+pyshp
+shapely --no-binary shapely
+six
+pyspectral
+pyorbital
+numpy
+cartopy
+# es mas facil instalar el cartopy desde el github
+# !pip install git+https://github.com/SciTools/cartopy.git
