@@ -1,4 +1,4 @@
-# %%
+
 # Librerias generales
 import sys
 from scipy import interpolate
@@ -6,25 +6,24 @@ import numpy as np
 import pprint
 import pandas as pd
 import time as t
-#%%%%%%%
 
 # PyHDF
 import pyhdf
 from pyhdf.HDF import *
 from pyhdf.VS import *
 from pyhdf.SD import SD, SDC
-# %%
+
 # Librerias geo
 import cartopy
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
-# %%
+
 # Librerias para calcular zenith
-# %%
+
 import calendar
 import logging
 from datetime import datetime
-# %%
+
 from pyorbital import astronomy
 from pyspectral.near_infrared_reflectance import Calculator
 # Librerias para graficar
