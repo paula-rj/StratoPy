@@ -7,9 +7,10 @@
 </p>
 Python library designed to easily manipulate CloudSat and GOES-R and generate labeled images containing cloud types.
 
-# Motivation: 
+# Motivation:
 
 # Requirements:
+
 You need Python 3.9+ to run Stratopy.
 
 # Installation:
