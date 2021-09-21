@@ -16,6 +16,7 @@ import seaborn as sns
 
 from pyhdf.SD import SD, SDC
 from pyhdf.HDF import HDF, HC
+
 # from pyhdf.VS import VS
 
 # Para ftp
@@ -110,10 +111,11 @@ class CloudClass:
 
     def __repr__(self):
         # la idea es que retorne un obj clodcclass con fecha y hora
-        date_time = datetime.datetime.strptime(self.date,
-                                               "%Y%j%H%M%S")
-        rep = ("Start collect --> "
-               f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}")
+        date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
+        rep = (
+            "Start collect --> "
+            f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}"
+        )
         # rep = f'''Year: {self.year:>10s}
         # \nJulian Day: {self.julian_day:>4s}\nHour:
         # {self.hour_utc: >10s}'''
@@ -125,11 +127,9 @@ class CloudClass:
 
     def plot_statistics(self):
         df = self.read_hdf()
-        fig, axs = plt.subplots(2, 5,
-                                figsize=(12, 10),
-                                sharey=True,
-                                sharex=True
-                                )
+        fig, axs = plt.subplots(
+            2, 5, figsize=(12, 10), sharey=True, sharex=True
+        )
         axs = axs.ravel()
         for i, capa in enumerate([f"capa{i}" for i in range(0, 10)]):
             axs[i].hist(df[capa].loc[df[capa] != -99])
@@ -336,8 +336,9 @@ class ftp_cloudsat:
     def download(self, file):
         """Downloads specific file"""
         print("Starting download")
-        downloaded = self.ftp.retrbinary(f"RETR {file}",
-                                         open(file, "wb").write)
+        downloaded = self.ftp.retrbinary(
+            f"RETR {file}", open(file, "wb").write
+        )
         print("Finished download")
         return downloaded
 
@@ -349,7 +350,7 @@ class ftp_cloudsat:
         return None
 
     def explore(self, date, product="2B-CLDCLASS", release="P1_R05"):
-        """ Access product directory and show files of a desire date.
+        """Access product directory and show files of a desire date.
         Parameters
         ----------
         date: ``int tuple``

@@ -1,11 +1,18 @@
 from setuptools import setup
 
-REQUIREMENTS = ["numpy", "pandas", "matplotlib",
-                "geopandas", "cartopy", "pyhdf", "netcdf"]
+REQUIREMENTS = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "geopandas",
+    "cartopy",
+    "pyhdf",
+    "netcdf",
+]
 
 setup(
-    name='StratoPy',
-    version='0.1.0',
+    name="StratoPy",
+    version="0.1.0",
     description="",
     lond_description="",
     author="Paula Romero",
@@ -20,8 +27,6 @@ setup(
         "Development Status :: 4 -Beta",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
-        "Programming Language :: Python :: 3.9"
-    ]
-
-
+        "Programming Language :: Python :: 3.9",
+    ],
 )
