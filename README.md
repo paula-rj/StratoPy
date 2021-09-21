@@ -19,6 +19,7 @@ You need Python 3.9+ to run Stratopy.
 
 ## Installation:
 
+> pip install stratopy
 ## References:
 The main functions that integrate [StratoPy] were construct helped in the next bibliography:
 - [Cloudsat Overview](https://cloudsat.atmos.colostate.edu/CloudSat_overview.pdf)
