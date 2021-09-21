@@ -1,27 +1,23 @@
 import os
 import datetime
+
 import numpy as np
+
 import matplotlib.pyplot as plt
-
-# from pyhdf.HDF import * creo que esto esta mal segun PEP8
-# from pyhdf.VS import *
-
-
-# import cartopy.crs as ccrs
 
 import pandas as pd
 import geopandas as gpd
 
-# import seaborn as sns
+from pyhdf.SD import SD
+from pyhdf.HDF import HDF, HC
+from pyhdf.VS import VS
 
-from pyhdf.SD import *
-from pyhdf.HDF import *
-from pyhdf.VS import *
-
-# Para ftp
 from ftplib import FTP, error_perm
 import getpass
 
+import core
+
+# type: ignore
 
 def read_hdf(path, layer="CloudLayerType"):
     """
@@ -37,15 +33,9 @@ def read_hdf(path, layer="CloudLayerType"):
                    separated in columns.
     """
 
-    # la idea es que lea el hdf y lo devuelva en formato DF de pandas
-    # Read v data
     hdf_file = HDF(path, HC.READ)
     vs = hdf_file.vstart()
-    # vdata = (
-    #     vs.vdatainfo()
-    # )  # es una lista de tuplas de 9 elementos cada una.
-    # acá estan lat y long y cloud layers
-
+    
     vd_lat = vs.attach("Latitude", write=0)
     lat = np.array(vd_lat[:]).flatten()
     vd_lat.detach
@@ -56,9 +46,6 @@ def read_hdf(path, layer="CloudLayerType"):
 
     vs.end()
     # hdf_file.close()
-
-    # latitud = np.array(lat).flatten()
-    # longitud = np.array(lon).flatten()
 
     # Read sd data
     file = SD(path)
@@ -79,7 +66,7 @@ def read_hdf(path, layer="CloudLayerType"):
             "capa9": cld_layertype[:, 9],
         }
     )
-    return layers_df
+    return core.StratoPyDataFrame(model_df=layers_df, model="CloudSat")
 
 
 class CloudClass:
@@ -95,19 +82,20 @@ class CloudClass:
         self.path = hdf_path
         self.file_name = os.path.split(self.path)[-1]
         self.date = self.file_name.split("_")[0]
-        # self.year = self.date[:4]
-        # self.julian_day = self.date[4:7]
         self.hour_utc = self.date[7:9]
-        self.light = ""
-        if int(self.hour_utc) > 10:
-            self.light = "day"
-        else:
-            self.light = "night"
 
+        
     # def __getattr__(self, a):
     #     return self[a]
     # def __doc__(self):
     #     return f'{self.read_hdf}'
+    
+    def day_night(self):
+        if int(self.hour_utc) > 10:
+            light = "day"
+        else:
+            light = "night"
+        return light
 
     def __repr__(self):
         # la idea es que retorne un obj clodcclass con fecha y hora
@@ -115,9 +103,6 @@ class CloudClass:
                                                "%Y%j%H%M%S")
         rep = ("Start collect --> "
                f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}")
-        # rep = f'''Year: {self.year:>10s}
-        # \nJulian Day: {self.julian_day:>4s}\nHour:
-        # {self.hour_utc: >10s}'''
         return rep
 
     def read_hdf(self):
@@ -125,7 +110,7 @@ class CloudClass:
         return readHDF
 
 
-    def cut(self, df, sur=True):
+    def cut(self, sur=True):
         # la idea es que recorte la pasada segun
         #  elija el usuario
         # quizas habria que ponerla junto con read?
@@ -133,24 +118,12 @@ class CloudClass:
         # sudamérica si sur=True
         # Otra idea: ver si puede cortar donde es de dia
         #  y donde es de noche
-
-        # start_point = 0
-        # end_point = 36951
-        # if sur == True:
-        #     if self.light == "night":
-        #         end_point = 6000
-        #     else:
-        #         end_point = 20000
-        # if self.hour_utc == (15):
-        #     start_point = 6000
-        # else:  # 16,17,18 utc
-        #     start_point = 10000
-
-        # latitud = latitud[start_point:end_point]
-        # longitud = longitud[start_point:end_point]
-
-        # .iloc([start_point:end_point]) #creo que era asi
-        cld_layertype = df
+        # Aun faltan ajustar las latitudes y longitudes deseadass
+        df = self.read_hdf()
+        if sur == True:
+            cld_layertype = df[df.Latitude < 0]
+        else:
+            cld_layertype = None
         return cld_layertype
 
     def convert_coordinates(
@@ -184,6 +157,12 @@ class CloudClass:
         return geo_df
 
 
+def hemisferio():
+    '''
+    debemos construir una funcion que identifique el hemisferio en el que estamos trabajando
+    '''
+    
+    
 
 class ftp_cloudsat:
     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
