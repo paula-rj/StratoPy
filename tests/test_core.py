@@ -31,7 +31,7 @@
 # %%
 # StratoPy/
 import sys
-sys.path.append('../StratoPy')
+sys.path.append('../stratopy')
 import cloudsat
 # from . import StratoPy.cloudsat as cloudsat
 
@@ -39,3 +39,5 @@ filename = cloudsat.CloudClass('../data/CloudSat/2019003151948_67564_CS_2B-CLDCL
 
 hdf_file = filename.read_hdf()
 print(hdf_file)
+print(filename.day_night())
+print(filename.cut())
