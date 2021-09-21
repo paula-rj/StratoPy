@@ -1,27 +1,23 @@
-import os
 import datetime
-import numpy as np
-import matplotlib.pyplot as plt
-
-# from pyhdf.HDF import * creo que esto esta mal segun PEP8
-# from pyhdf.VS import *
+import getpass
+import os
+from ftplib import FTP, error_perm
 
 
 import cartopy.crs as ccrs
 
-import pandas as pd
 import geopandas as gpd
 
-import seaborn as sns
+import matplotlib.pyplot as plt
 
+import numpy as np
+
+import pandas as pd
+
+from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD, SDC
-from pyhdf.HDF import HDF, HC
 
-# from pyhdf.VS import VS
-
-# Para ftp
-from ftplib import FTP, error_perm
-import getpass
+import seaborn as sns
 
 
 def read_hdf(path, layer="CloudLayerType"):

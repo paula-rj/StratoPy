@@ -1,4 +1,4 @@
-from ..stratopy.cloudsat import ftp_cloudsat, CloudClass, read_hdf
+from ..stratopy.cloudsat import CloudClass, ftp_cloudsat, read_hdf
 
 path = "data/CloudSat/\
     2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
