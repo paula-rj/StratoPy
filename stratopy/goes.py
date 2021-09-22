@@ -1,28 +1,21 @@
-# Librerias generales
-from scipy import interpolate
-import numpy as np
-
-from pyhdf.HDF import *
-from pyhdf.VS import *
-
-# Librerias para calcular zenith
 from datetime import datetime
 
+from netCDF4 import Dataset
+
+import numpy as np
+
 from pyorbital import astronomy
+
 from pyspectral.near_infrared_reflectance import Calculator
 
-# Librerias para graficar
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# %%
+from scipy import interpolate
 
 
 class GoesClass:
     def __init__(self, file_path, latlon_extent):
         self.file_path = file_path
         # guarda desde el nivel L1 o L2
-        file_name = self.file_path.split("OR_ABI-")[1]
+        # file_name = self.file_path.split("OR_ABI-")[1]
         start_date = self.file_path.split("s20", 1)[1].split("_", 1)[0]
         self.julian_date = start_date[:5]
         self.sam_date = (
@@ -52,9 +45,11 @@ class GoesClass:
         columnas: int.
         Cantidad de columnas de pixeles (ancho) que tendrá la imagen recortada
         x0: float.
-        Coordenada x en sistema geoestacionario GOES del limite superior izquierdo en m.
+        Coordenada x en sistema geoestacionario GOES del limite superior
+        izquierdo en m.
         y0: float.
-        Coordenada y en sistema geoestacionario GOES del limite superior izquierdo en m.
+        Coordenada y en sistema geoestacionario GOES del limite superior
+        izquierdo en m.
 
         Returns
         -------
@@ -63,6 +58,7 @@ class GoesClass:
         """
         psize = 2000
         N = 5424  # esc da 1
+        esc = 1  # Fijate pau que es esto!!
         data = Dataset(self.file_path)  # Abro el archivo netcdf
         metadato = data.variables  # Extraigo todas las variables
         banda = metadato["band_id"][:].data[0]  # Extraigo el nro de banda
@@ -100,16 +96,18 @@ class GoesClass:
         im_rec = image[f0:f1, c0:c1]
         return im_rec
 
-    def solar_7(ch7, ch13, latlon_extent):
+    def solar_7(self, ch7, ch13, latlon_extent):
         """ "
-        Función que realiza la corrección según ángulo del zenith para la banda 7.
+        Función que realiza la corrección según ángulo
+        del zenith para la banda 7.
         Esta corrección es necesaria para imagenes de día
         Parameters
         ----------
         ch7: matriz (recortada) del canal 7
         ch13: matriz (recortada) del canal 13
         latlon_extent: list
-        Lista [x1,y1,x2,y2] de los bordes de la imagen en latitud, longitud donde
+        Lista [x1,y1,x2,y2] de los bordes de la imagen
+        en latitud, longitud donde
             x1=longitud de más al oeste
             y1=latitud de más al sur (punto y inferior)
             x2 = longitud de más al este
@@ -120,7 +118,8 @@ class GoesClass:
         data2b: matriz con el cálculo de zenith pixel a pixel
         """
         # Calculo del ángulo del sol para banda 7
-        # NOTAR que esto está mal. Está calulando una latitud y longitud equiespaciadas.
+        # NOTAR que esto está mal. Está calulando una latitud
+        # y longitud equiespaciadas.
         # Tengo el codigo para hacerlo bien, ya lo voy a subir.
         lat = np.linspace(
             self.latlon_extent[3], self.latlon_extent[1], ch7.shape[0]
@@ -180,13 +179,13 @@ class GoesClass:
                 zenith[x, y] = astronomy.sun_zenith_angle(
                     utc_time, lon[y], lat[x]
                 )
-        refl39 = Calculator(
-            platform_name="GOES-16", instrument="abi", band="ch7"
-        )
-        data07b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
+        # refl39 = Calculator(
+        #     platform_name="GOES-16", instrument="abi", band="ch7"
+        # )
+        # data07b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
 
         R = rec03  # banda3
-        G = rec07b  # banda7 con corrección zenith
+        G = rec07  # banda7 con corrección zenith
         B = rec13  # banda13
 
         # Minimuns and Maximuns
@@ -244,9 +243,12 @@ class GoesClass:
 
 # # %%
 # # %%
-# rec03 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\OR_ABI-L2-CMIPF-M3C03_G16_s20190021800363_e20190021811129_c20190021811205.nc")
-# rec07 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\OR_ABI-L2-CMIPF-M3C07_G16_s20190021800363_e20190021811141_c20190021811202.nc")
-# rec13 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\OR_ABI-L2-CMIPF-M3C13_G16_s20190021800363_e20190021811141_c20190021811221.nc")
+# rec03 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\
+# OR_ABI-L2-CMIPF-M3C03_G16_s20190021800363_e20190021811129_c20190021811205.nc")
+# rec07 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\
+# OR_ABI-L2-CMIPF-M3C07_G16_s20190021800363_e20190021811141_c20190021811202.nc")
+# rec13 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\
+# OR_ABI-L2-CMIPF-M3C13_G16_s20190021800363_e20190021811141_c20190021811221.nc")
 
 
 # latlon_extent = [-80, -30, -50, 0]  # lat y longs del recorte
