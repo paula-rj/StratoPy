@@ -163,7 +163,7 @@ def hemisferio():
     """
 
 
-class ftp_cloudsat:
+class Ftp_cloudsat:
     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
         """Established FTP connection to Cloudsat server"""
 
