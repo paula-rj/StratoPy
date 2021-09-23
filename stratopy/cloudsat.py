@@ -1,20 +1,15 @@
-import os
 import datetime
-
 import numpy as np
 
 import matplotlib.pyplot as plt
 
-import pandas as pd
 import geopandas as gpd
-
 from pyhdf.SD import SD
 from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
 
 from ftplib import FTP, error_perm
 import getpass
-
 import core
 
 # type: ignore
@@ -99,6 +94,7 @@ class CloudClass:
 
     def __repr__(self):
         # la idea es que retorne un obj clodcclass con fecha y hora
+
         date_time = datetime.datetime.strptime(self.date,
                                                "%Y%j%H%M%S")
         rep = ("Start collect --> "
@@ -108,7 +104,6 @@ class CloudClass:
     def read_hdf(self):
         readHDF = read_hdf(self.path)
         return readHDF
-
 
     def cut(self, sur=True):
         # la idea es que recorte la pasada segun
@@ -197,8 +192,9 @@ class ftp_cloudsat:
     def download(self, file):
         """Downloads specific file"""
         print("Starting download")
-        downloaded = self.ftp.retrbinary(f"RETR {file}",
-                                         open(file, "wb").write)
+        downloaded = self.ftp.retrbinary(
+            f"RETR {file}", open(file, "wb").write
+        )
         print("Finished download")
         return downloaded
 
@@ -210,7 +206,7 @@ class ftp_cloudsat:
         return None
 
     def explore(self, date, product="2B-CLDCLASS", release="P1_R05"):
-        """ Access product directory and show files of a desire date.
+        """Access product directory and show files of a desire date.
         Parameters
         ----------
         date: ``int tuple``
