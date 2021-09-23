@@ -4,13 +4,17 @@ from stratopy.cloudsat import CloudClass, read_hdf
 def test_read():
     path = "data/CloudSat/\
 2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
-    print(path)
     # pruebo que la clase funcione
-    y = CloudClass(path)
+    y = CloudClass(path).read_hdf()
 
     # pruebo que levantar los datos funcione
     data = read_hdf(path)
+
     return data, y
+
+
+if __name__ == "__main__":
+    test_read()
 
 
 # path = "2B-GEOPROF.P1_R05/2015/001/\
