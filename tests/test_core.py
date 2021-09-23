@@ -1,5 +1,5 @@
+from stratopy.cloudsat import CloudClass, ftp_cloudsat, read_hdf
 
-from ..stratopy.cloudsat import CloudClass, ftp_cloudsat, read_hdf
 
 path = "data/CloudSat/\
     2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
@@ -33,12 +33,14 @@ ftp = ftp_cloudsat(path)
 
 # %%
 # StratoPy/
-import sys
-sys.path.append('../stratopy')
-import cloudsat
+
+
 # from . import StratoPy.cloudsat as cloudsat
 
-filename = cloudsat.CloudClass('../data/CloudSat/2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf')
+filename = CloudClass(
+    "../data/CloudSat/\
+        2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
+)
 
 hdf_file = filename.read_hdf()
 print(hdf_file)
