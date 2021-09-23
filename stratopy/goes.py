@@ -226,37 +226,3 @@ class GoesClass:
         RRGB = np.stack([RR, GG, BB], axis=2)
         print(RGB.shape)
         return RRGB
-
-
-# %%
-# ch3_path = input('Write channel 3 file path')
-# ch7_path = input('Write channel 7 file path')
-# ch13_path = input('Write channel 13 file path')
-
-# goes3obj = GoesClass(ch3_path)
-# goes7obj = GoesClass(ch7_path)
-# goes13obj = GoesClass(ch13_path)
-
-# rec03 = goes3obj.recorte()
-# rec07 = goes7obj.recorte()
-# rec13 = goes13obj.recorte()
-
-# # %%
-# # %%
-# rec03 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\
-# OR_ABI-L2-CMIPF-M3C03_G16_s20190021800363_e20190021811129_c20190021811205.nc")
-# rec07 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\
-# OR_ABI-L2-CMIPF-M3C07_G16_s20190021800363_e20190021811141_c20190021811202.nc")
-# rec13 = recorte("C:\Users\Paula\Documents\stratopy\StratoPy\data\GOES16\
-# OR_ABI-L2-CMIPF-M3C13_G16_s20190021800363_e20190021811141_c20190021811221.nc")
-
-
-# latlon_extent = [-80, -30, -50, 0]  # lat y longs del recorte
-# rec07b = solar_7(rec07, rec13, latlon_extent)
-# rec07b.shape
-
-# RRGB = day_microphysicsRGB(rec03, rec07b, rec13)
-
-# plt.figure()
-# plt.imshow(RRGB)
-# plt.show()
