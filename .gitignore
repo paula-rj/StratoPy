@@ -115,3 +115,6 @@ pyvenv.cfg
 pip-selfcheck.json
 .vscode
 share
+tareas.md
+python.md
+maquinas_virtuales.md

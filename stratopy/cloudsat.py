@@ -1,18 +1,23 @@
 import datetime
-import numpy as np
-
-import matplotlib.pyplot as plt
-
-import geopandas as gpd
-from pyhdf.SD import SD
-from pyhdf.HDF import HDF, HC
-from pyhdf.VS import VS
-
-from ftplib import FTP, error_perm
 import getpass
+import os
+from ftplib import FTP, error_perm
+
 import core
 
+import geopandas as gpd
+
+import numpy as np
+
+import pandas as pd
+
+from pyhdf.HDF import HC, HDF
+from pyhdf.SD import SD
+
+# from pyhdf.VS import VS
+
 # type: ignore
+
 
 def read_hdf(path, layer="CloudLayerType"):
     """
@@ -30,7 +35,7 @@ def read_hdf(path, layer="CloudLayerType"):
 
     hdf_file = HDF(path, HC.READ)
     vs = hdf_file.vstart()
-    
+
     vd_lat = vs.attach("Latitude", write=0)
     lat = np.array(vd_lat[:]).flatten()
     vd_lat.detach
@@ -68,23 +73,23 @@ class CloudClass:
     """[summary]"""
 
     def __init__(self, hdf_path):
-        # Yo no pondría el path en el init ya que
+        """# Yo no pondría el path en el init ya que
         # sacamos la función de read fuera de la clase.
         # Queremos que la clase opere sobre los CloudDataFrame
         # pero no que los cree (segun lo que dijo juan).
         # tal vez lo que debería recibir es un CloudDataFrame
         # (por ponerle un nombre)
+        """
         self.path = hdf_path
         self.file_name = os.path.split(self.path)[-1]
         self.date = self.file_name.split("_")[0]
         self.hour_utc = self.date[7:9]
 
-        
     # def __getattr__(self, a):
     #     return self[a]
     # def __doc__(self):
     #     return f'{self.read_hdf}'
-    
+
     def day_night(self):
         if int(self.hour_utc) > 10:
             light = "day"
@@ -95,10 +100,11 @@ class CloudClass:
     def __repr__(self):
         # la idea es que retorne un obj clodcclass con fecha y hora
 
-        date_time = datetime.datetime.strptime(self.date,
-                                               "%Y%j%H%M%S")
-        rep = ("Start collect --> "
-               f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}")
+        date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
+        rep = (
+            "Start collect --> "
+            f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}"
+        )
         return rep
 
     def read_hdf(self):
@@ -115,7 +121,7 @@ class CloudClass:
         #  y donde es de noche
         # Aun faltan ajustar las latitudes y longitudes deseadass
         df = self.read_hdf()
-        if sur == True:
+        if sur:
             cld_layertype = df[df.Latitude < 0]
         else:
             cld_layertype = None
@@ -153,11 +159,11 @@ class CloudClass:
 
 
 def hemisferio():
-    '''
-    debemos construir una funcion que identifique el hemisferio en el que estamos trabajando
-    '''
-    
-    
+    """
+    debemos construir una funcion que identifique el
+    hemisferio en el que estamos trabajando
+    """
+
 
 class ftp_cloudsat:
     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):

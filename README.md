@@ -7,16 +7,21 @@
 </p>
 Python library designed to easily manipulate CloudSat and GOES-R and generate labeled images containing cloud types.
 
-# Motivation:
+## Motivation:
 
-# Requirements:
+## Requirements:
 
 You need Python 3.9+ to run Stratopy.
+- [pyhdf](https://pypi.org/project/pyhdf/)
+- [nunmpy](https://numpy.org/)
+- [pandas](https://pandas.pydata.org/)
+- [scipy](https://www.scipy.org/)
 
-# Installation:
+## Installation:
 
-# References:
-
+> pip install stratopy
+## References:
+The main functions that integrate [StratoPy] were construct helped in the next bibliography:
 - [Cloudsat Overview](https://cloudsat.atmos.colostate.edu/CloudSat_overview.pdf)
 - [Cloudsat Page](https://cloudsat.atmos.colostate.edu/)
 - [Cloudsat Data Processing Center](http://www.cloudsat.cira.colostate.edu/)
