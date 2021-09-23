@@ -13,9 +13,13 @@ Python library designed to easily manipulate CloudSat and GOES-R and generate la
 
 You need Python 3.9+ to run Stratopy.
 - [pyhdf](https://pypi.org/project/pyhdf/)
-- [nunmpy](https://numpy.org/)
-- [pandas](https://pandas.pydata.org/)
+- [numpy](https://numpy.org/)
 - [scipy](https://www.scipy.org/)
+- [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
+- [geopandas](https://geopandas.org/)
+- [netcdf4](https://unidata.github.io/netcdf4-python/)
+- [pyorbital](https://github.com/pytroll/pyorbital)
+- [pyspectral](https://github.com/pytroll/pyspectral)
 
 ## Installation:
 
