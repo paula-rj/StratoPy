@@ -3,8 +3,6 @@ import getpass
 import os
 from ftplib import FTP, error_perm
 
-import core
-
 import geopandas as gpd
 
 import numpy as np
@@ -13,8 +11,9 @@ import pandas as pd
 
 from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD
+from pyhdf.VS import VS
 
-# from pyhdf.VS import VS
+from . import core
 
 # type: ignore
 
@@ -34,7 +33,7 @@ def read_hdf(path, layer="CloudLayerType"):
     """
 
     hdf_file = HDF(path, HC.READ)
-    vs = hdf_file.vstart()
+    vs = VS(hdf_file)
 
     vd_lat = vs.attach("Latitude", write=0)
     lat = np.array(vd_lat[:]).flatten()
@@ -45,7 +44,6 @@ def read_hdf(path, layer="CloudLayerType"):
     vd_lon.detach
 
     vs.end()
-    # hdf_file.close()
 
     # Read sd data
     file = SD(path)
@@ -73,12 +71,12 @@ class CloudClass:
     """[summary]"""
 
     def __init__(self, hdf_path):
-        """# Yo no pondría el path en el init ya que
-        # sacamos la función de read fuera de la clase.
-        # Queremos que la clase opere sobre los CloudDataFrame
-        # pero no que los cree (segun lo que dijo juan).
-        # tal vez lo que debería recibir es un CloudDataFrame
-        # (por ponerle un nombre)
+        """Yo no pondría el path en el init ya que
+        sacamos la función de read fuera de la clase.
+        Queremos que la clase opere sobre los CloudDataFrame
+        pero no que los cree (segun lo que dijo juan).
+        tal vez lo que debería recibir es un CloudDataFrame
+        (por ponerle un nombre)
         """
         self.path = hdf_path
         self.file_name = os.path.split(self.path)[-1]
@@ -165,7 +163,7 @@ def hemisferio():
     """
 
 
-class ftp_cloudsat:
+class Ftp_cloudsat:
     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
         """Established FTP connection to Cloudsat server"""
 

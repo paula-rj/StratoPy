@@ -1,48 +1,32 @@
-from stratopy.cloudsat import CloudClass, ftp_cloudsat, read_hdf
+from stratopy.cloudsat import CloudClass, read_hdf
 
 
-path = "data/CloudSat/\
-    2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
-# pruebo que la clase funcione
-y = CloudClass(path)
+def test_read():
+    path = "data/CloudSat/\
+2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
+    # pruebo que la clase funcione
+    y = CloudClass(path).read_hdf()
 
-# pruebo que levantar los datos funcione
-data = read_hdf(path)
-# y.plot_statistics()
+    # pruebo que levantar los datos funcione
+    data = read_hdf(path)
 
-# %%
-# testando algunas funcionalidades
-
-
-# # print(dir(y))
+    return data, y
 
 
-# %%
-
-# Ejemplo 1
-# ftp = ftp_cloudsat()
-# ftp.cd("2B-GEOPROF.P1_R05/2015/001/")
-# ftp.download("2015001225704_46177_CS_2B-GEOPROF_GRANULE_P1_R05_E06_F00.hdf")
-
-# %%
-
-path = "2B-GEOPROF.P1_R05/2015/001/\
-    2015001225704_46177_CS_2B-GEOPROF_GRANULE_P1_R05_E06_F00.hdf"
-ftp = ftp_cloudsat(path)
+if __name__ == "__main__":
+    test_read()
 
 
-# %%
-# StratoPy/
+# path = "2B-GEOPROF.P1_R05/2015/001/\
+#     2015001225704_46177_CS_2B-GEOPROF_GRANULE_P1_R05_E06_F00.hdf"
+# ftp = ftp_cloudsat(path)
 
+# filename = CloudClass(
+#     "../data/CloudSat/\
+#         2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
+# )
 
-# from . import StratoPy.cloudsat as cloudsat
-
-filename = CloudClass(
-    "../data/CloudSat/\
-        2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
-)
-
-hdf_file = filename.read_hdf()
-print(hdf_file)
-print(filename.day_night())
-print(filename.cut())
+# hdf_file = filename.read_hdf()
+# print(hdf_file)
+# print(filename.day_night())
+# print(filename.cut())
