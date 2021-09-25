@@ -1,4 +1,3 @@
-#%%
 from datetime import datetime
 
 from netCDF4 import Dataset
@@ -11,7 +10,7 @@ from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
 
-#%%
+
 class DayMicrophysics:
     def __init__(self, file_path):
         self.file_path = file_path
@@ -235,6 +234,3 @@ class DayMicrophysics:
         RRGB = np.stack([RR, GG, BB], axis=2)
         print(RGB.shape)
         return RRGB
-
-
-#%%
