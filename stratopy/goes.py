@@ -10,14 +10,22 @@ from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
 
-
-class GoesClass:
+#%%
+class DayMicrophysics:
     def __init__(self, file_path, latlon_extent):
         self.file_path = file_path
+        start_date = [
+            self.band_path[0].split("s20", 1)[1].split("_", 1)[0]
+            for band_path in file_path
+        ]
+
+        assert all(
+            date == start_date[0] for date in start_date
+        ), "Start date's from all files should be the same."
+
         # guarda desde el nivel L1 o L2
         # file_name = self.file_path.split("OR_ABI-")[1]
-        start_date = self.file_path.split("s20", 1)[1].split("_", 1)[0]
-        self.julian_date = start_date[:5]
+        self.julian_date = start_date[0][:5]
         self.sam_date = (
             datetime.strptime(self.julian_date, "%y%j")
             .date()
@@ -226,3 +234,4 @@ class GoesClass:
         RRGB = np.stack([RR, GG, BB], axis=2)
         print(RGB.shape)
         return RRGB
+#%% 
