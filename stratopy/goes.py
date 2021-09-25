@@ -1,3 +1,4 @@
+#%%
 from datetime import datetime
 
 from netCDF4 import Dataset
@@ -12,11 +13,11 @@ from scipy import interpolate
 
 #%%
 class DayMicrophysics:
-    def __init__(self, file_path, latlon_extent):
+    def __init__(self, file_path):
         self.file_path = file_path
         start_date = [
-            self.band_path[0].split("s20", 1)[1].split("_", 1)[0]
-            for band_path in file_path
+            band_path.split("s20", 1)[1].split("_", 1)[0]
+            for band_path in self.file_path
         ]
 
         assert all(
@@ -31,7 +32,7 @@ class DayMicrophysics:
             .date()
             .strftime("%d-%m-%y")
         )
-        self.utc_hour = start_date[5:9]
+        self.utc_hour = start_date[0][5:9]
 
     def __repr__(self):
         return f"GOES obj. Date: {self.sam_date}; {self.utc_hour} UTC "
@@ -234,4 +235,6 @@ class DayMicrophysics:
         RRGB = np.stack([RR, GG, BB], axis=2)
         print(RGB.shape)
         return RRGB
-#%% 
+
+
+#%%
