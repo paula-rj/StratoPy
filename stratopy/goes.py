@@ -19,9 +19,13 @@ class DayMicrophysics:
             for band_path in self.file_path
         ]
 
+        # Check for date and product consistency
         assert all(
             date == start_date[0] for date in start_date
         ), "Start date's from all files should be the same."
+        assert all(
+            "L2-CMIPF" in path for path in self.file_path
+        ), "Files must be from the same product."
 
         # guarda desde el nivel L1 o L2
         # file_name = self.file_path.split("OR_ABI-")[1]
@@ -35,6 +39,9 @@ class DayMicrophysics:
 
     def __repr__(self):
         return f"GOES obj. Date: {self.sam_date}; {self.utc_hour} UTC "
+
+    def read_nc(self, folder_path, start_date):
+        pass
 
     def recorte(
         self, filas=1440, columnas=1440, x0=-555469.8930323641, y0=0.0
