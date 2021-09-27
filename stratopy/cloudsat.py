@@ -64,7 +64,8 @@ def read_hdf(path, layer="CloudLayerType"):
             "capa9": cld_layertype[:, 9],
         }
     )
-    return core.StratoPyDataFrame(model_df=layers_df, model="CloudSat")
+    dset = core.StratoPyDataFrame(model_df=layers_df, model="CloudSat")
+    return dset
 
 
 class CloudClass:
