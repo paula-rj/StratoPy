@@ -97,8 +97,6 @@ class CloudClass:
         return light
 
     def __repr__(self):
-        # la idea es que retorne un obj clodcclass con fecha y hora
-
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
         rep = (
             "Start collect --> "
