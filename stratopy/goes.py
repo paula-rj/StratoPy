@@ -12,6 +12,14 @@ from scipy import interpolate
 
 
 class DayMicrophysics:
+    """Generates an object...
+    Parameters
+    ----------
+    file_path: ``str tuple``
+        Tuple of length three containing the paths of the channels 3, 7
+        and 13 of the CMIPF Goes-16 product.
+    """
+
     def __init__(self, file_path):
         self.file_path = file_path
         start_date = [
