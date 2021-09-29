@@ -245,9 +245,9 @@ class FtpCloudsat:
 
     def fetch(self, dirname):
         """Stores in-memory specific file from server as binary."""
-        with io.BytesIO() as file:
-            self.ftp.retrbinary(f"RETR {dirname}", file.write)
-        return file
+        buffer = io.BytesIO()
+        self.ftp.retrbinary(f"RETR {dirname}", buffer.write)
+        return buffer
 
 
 def fetch_cloudsat(
@@ -263,14 +263,16 @@ def fetch_cloudsat(
     id_ = f"{product}_{release}_{str_date}"
 
     # Search in local cache
-    result = cache.get("cloudsat", id_)
+    result = cache.get(id_)
 
     if result is None:
-        # Search in cloudsat server and store in local cache
+        # Search in cloudsat server and store in buffer
         dirname = f"{product}.{release}/{str_date}/"
         ftp_cloudsat = FtpCloudsat()
-        result = ftp_cloudsat.fetch(dirname)
+        buffer_file = ftp_cloudsat.fetch(dirname)
 
-        cache.set("cloudsat", id_, result)
+        # Save file in local cache and delete buffer
+        cache.set("cloudsat", id_, result.getvalue())
+        buffer_file.close()
 
-    return result
+    return cache.get(id_)
