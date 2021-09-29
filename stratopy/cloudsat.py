@@ -1,5 +1,6 @@
 import datetime
 import getpass
+import io
 import os
 import pathlib
 from ftplib import FTP, error_perm
@@ -73,33 +74,6 @@ def read_hdf(path, layer="CloudLayerType"):
     )
     dset = core.StratoPyDataFrame(model_df=layers_df, model="CloudSat")
     return dset
-
-
-def ftp_cloudsat(server="ftp.cloudsat.cira.colostate.edu"):
-    pass
-
-
-def fetch_cloudsat(
-    date, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
-):
-    """Fetch files of a certain date from cloudsat server and
-    stores in a local cache.
-    """
-    cache = Cache(path)
-
-    # Transform date into cache id
-    str_date = datetime.date(*date).strftime("%Y/%j")
-    id_ = f"{product}_{release}_{str_date}"
-
-    # Search in local cache
-    result = cache.get("cloudsat", id_)
-
-    if result is None:
-        # Search in cloudsat server and store in local cache
-        result = ftp_cloudsat.fetch(id_)
-        cache.set("cloudsat", id_, result)
-
-    return result
 
 
 class CloudClass:
@@ -196,7 +170,7 @@ def hemisferio():
     """
 
 
-class Ftp_cloudsat:
+class FtpCloudsat:
     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
         """Established FTP connection to Cloudsat server"""
 
@@ -268,3 +242,35 @@ class Ftp_cloudsat:
         except error_perm as error:
             print(error)
             print("File not found. Try with other date or navigate to file.")
+
+    def fetch(self, dirname):
+        """Stores in-memory specific file from server as binary."""
+        with io.BytesIO() as file:
+            self.ftp.retrbinary(f"RETR {dirname}", file.write)
+        return file
+
+
+def fetch_cloudsat(
+    date, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
+):
+    """Fetch files of a certain date from cloudsat server and
+    stores in a local cache.
+    """
+    cache = Cache(path)
+
+    # Transform date into cache id
+    str_date = datetime.date(*date).strftime("%Y/%j")
+    id_ = f"{product}_{release}_{str_date}"
+
+    # Search in local cache
+    result = cache.get("cloudsat", id_)
+
+    if result is None:
+        # Search in cloudsat server and store in local cache
+        dirname = f"{product}.{release}/{str_date}/"
+        ftp_cloudsat = FtpCloudsat()
+        result = ftp_cloudsat.fetch(dirname)
+
+        cache.set("cloudsat", id_, result)
+
+    return result
