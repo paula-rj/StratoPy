@@ -91,11 +91,6 @@ class CloudClass:
         self.date = self.file_name.split("_")[0]
         self.hour_utc = self.date[7:9]
 
-    # def __getattr__(self, a):
-    #     return self[a]
-    # def __doc__(self):
-    #     return f'{self.read_hdf}'
-
     def day_night(self):
         if int(self.hour_utc) > 10:
             light = "day"
@@ -120,7 +115,7 @@ class CloudClass:
         # Otra idea: ver si puede cortar donde es de dia
         #  y donde es de noche
         # Aun faltan ajustar las latitudes y longitudes deseadass
-        df = self.read_hdf()
+        df = read_hdf(self.path)
         if sur:
             cld_layertype = df[df.Latitude < 0]
         else:
@@ -156,13 +151,6 @@ class CloudClass:
         # Reprojecting into GOES16 geostationary projection
         # geodf_GOESproj = geo_df.to_crs(projection)
         return geo_df
-
-
-def hemisferio():
-    """
-    debemos construir una funcion que identifique el
-    hemisferio en el que estamos trabajando
-    """
 
 
 class FtpCloudsat:
