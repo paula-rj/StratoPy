@@ -8,6 +8,7 @@ REQUIREMENTS = [
     "cartopy",
     "pyhdf",
     "netcdf",
+    "diskcache",
 ]
 
 setup(

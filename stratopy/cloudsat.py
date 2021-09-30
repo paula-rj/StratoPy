@@ -1,7 +1,11 @@
 import datetime
 import getpass
+import io
 import os
+import pathlib
 from ftplib import FTP, error_perm
+
+from diskcache import Cache
 
 import geopandas as gpd
 
@@ -15,7 +19,10 @@ from pyhdf.VS import VS
 
 from . import core
 
-# type: ignore
+
+DEFAULT_CACHE_PATH = pathlib.Path(
+    os.path.expanduser(os.path.join("~", "stratopy_cache"))
+)
 
 
 def read_hdf(path, layer="CloudLayerType"):
@@ -162,7 +169,7 @@ def hemisferio():
     """
 
 
-class Ftp_cloudsat:
+class FtpCloudsat:
     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
         """Established FTP connection to Cloudsat server"""
 
@@ -234,3 +241,44 @@ class Ftp_cloudsat:
         except error_perm as error:
             print(error)
             print("File not found. Try with other date or navigate to file.")
+
+    def fetch(self, dirname):
+        """Stores in-memory specific file from server as binary."""
+        buffer = io.BytesIO()
+        self.ftp.retrbinary(f"RETR {dirname}", buffer.write)
+        return buffer
+
+
+def fetch_cloudsat(
+    date, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
+):
+    """Fetch files of a certain date from cloudsat server and
+    stores in a local cache.
+    """
+    cache = Cache(path)
+
+    # Transform date into cache id
+    str_date = datetime.date(*date).strftime("%Y/%j")
+    id_ = f"{product}_{release}_{str_date}"
+
+    # Search in local cache
+    cache.expire()
+    result = cache.get(id_, tag="cloudsat")
+
+    if result is None:
+        # Search in cloudsat server and store in buffer
+        dirname = (
+            "2B-CLDCLASS.P1_R05/2018/296/"
+            "2018296235338_66517_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
+        )
+        # f"{product}.{release}/{str_date}/"
+        ftp_cloudsat = FtpCloudsat()
+        buffer_file = ftp_cloudsat.fetch(dirname)
+        # procesar
+
+        # Save file in local cache and delete buffer
+        result = buffer_file.getvalue()
+        cache.set(id_, result, tag="cloudsat")
+        buffer_file.close()
+
+    return result
