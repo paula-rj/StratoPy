@@ -19,7 +19,6 @@ from pyhdf.VS import VS
 
 from . import core
 
-# type: ignore
 
 DEFAULT_CACHE_PATH = pathlib.Path(
     os.path.expanduser(os.path.join("~", "stratopy_cache"))
@@ -263,16 +262,23 @@ def fetch_cloudsat(
     id_ = f"{product}_{release}_{str_date}"
 
     # Search in local cache
-    result = cache.get(id_)
+    cache.expire()
+    result = cache.get(id_, tag="cloudsat")
 
     if result is None:
         # Search in cloudsat server and store in buffer
-        dirname = f"{product}.{release}/{str_date}/"
+        dirname = (
+            "2B-CLDCLASS.P1_R05/2018/296/"
+            "2018296235338_66517_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
+        )
+        # f"{product}.{release}/{str_date}/"
         ftp_cloudsat = FtpCloudsat()
         buffer_file = ftp_cloudsat.fetch(dirname)
+        # procesar
 
         # Save file in local cache and delete buffer
-        cache.set("cloudsat", id_, result.getvalue())
+        result = buffer_file.getvalue()
+        cache.set(id_, result, tag="cloudsat")
         buffer_file.close()
 
-    return cache.get(id_)
+    return result
