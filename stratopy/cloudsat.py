@@ -111,10 +111,6 @@ class CloudClass:
         )
         return rep
 
-    def read_hdf(self):
-        readHDF = read_hdf(self.path)
-        return readHDF
-
     def cut(self, sur=True):
         # la idea es que recorte la pasada segun
         #  elija el usuario
