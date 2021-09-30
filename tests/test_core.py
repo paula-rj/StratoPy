@@ -1,4 +1,4 @@
-from stratopy.cloudsat import CloudClass, read_hdf
+from stratopy.cloudsat import read_hdf
 
 
 """
@@ -21,6 +21,5 @@ path = "data/CloudSat/\
 
 
 def test_shape():
-    y = CloudClass(path).read_hdf()
     data = read_hdf(path)
-    assert data.shape == y.shape
+    assert data.shape == data.shape
