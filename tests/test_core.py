@@ -1,6 +1,3 @@
-from stratopy.cloudsat import CloudClass, read_hdf
-
-
 """
 para escribir tests devemos tener en mente,
 
@@ -18,9 +15,3 @@ TDD kant beck - One-step Test
 
 path = "data/CloudSat/\
 2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
-
-
-def test_shape():
-    y = CloudClass(path).read_hdf()
-    data = read_hdf(path)
-    assert data.shape == y.shape
