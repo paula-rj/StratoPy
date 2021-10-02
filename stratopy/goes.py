@@ -11,17 +11,25 @@ from pyspectral.near_infrared_reflectance import Calculator
 from scipy import interpolate
 
 
-class DayMicrophysics:
-    """Generates an object...
+class GoesClass:
+    """Generates an StratDataFrame object containing Day Microphysics
+    according to the GOES-16 definition.
+
     Parameters
     ----------
-    file_path: ``str tuple``
-        Tuple of length three containing the paths of the channels 3, 7
-        and 13 of the CMIPF Goes-16 product.
+    file_path_ch3: ``str``
+        String containing the paths of the channels 3 of the CMIPF
+        Goes-16 product.
+    file_path_ch7: ``str``
+        String containing the paths of the channels 7 of the CMIPF
+        Goes-16 product.
+    file_path_ch13: ``str``
+        String containing the paths of the channels 13 of the CMIPF
+        Goes-16 product.
     """
 
-    def __init__(self, file_path):
-        self.file_path = file_path
+    def __init__(self, file_path_ch3, file_path_ch7, file_path_ch13):
+        self.file_path = (file_path_ch3, file_path_ch7, file_path_ch13)
         start_date = [
             band_path.split("s20", 1)[1].split("_", 1)[0]
             for band_path in self.file_path
@@ -47,9 +55,6 @@ class DayMicrophysics:
 
     def __repr__(self):
         return f"GOES obj. Date: {self.sam_date}; {self.utc_hour} UTC "
-
-    def read_nc(self, folder_path, start_date):
-        pass
 
     def recorte(
         self, filas=1440, columnas=1440, x0=-555469.8930323641, y0=0.0
