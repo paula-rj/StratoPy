@@ -1,9 +1,4 @@
 import datetime
-import getpass
-import io
-import os
-import pathlib
-from ftplib import FTP, error_perm
 
 from diskcache import Cache
 
@@ -13,16 +8,13 @@ import numpy as np
 
 import pandas as pd
 
+import os
+
 from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD
 from pyhdf.VS import VS
 
-from . import core
-
-
-DEFAULT_CACHE_PATH = pathlib.Path(
-    os.path.expanduser(os.path.join("~", "stratopy_cache"))
-)
+# type: ignore
 
 
 def read_hdf(path, layer="CloudLayerType"):
@@ -38,6 +30,12 @@ def read_hdf(path, layer="CloudLayerType"):
         dataframe: contain Latitude, Longitude and 10 layers
                    separated in columns.
     """
+    if path is None:
+        raise FileNotFoundError(
+            "The enter path is wrong"
+            "Try with the complete path!"
+            "E.g. /home/user/data/CloudSat/..."
+        )
 
     hdf_file = HDF(path, HC.READ)
     vs = VS(hdf_file)
@@ -71,8 +69,7 @@ def read_hdf(path, layer="CloudLayerType"):
             "capa9": cld_layertype[:, 9],
         }
     )
-    dset = core.StratoPyDataFrame(model_df=layers_df, model="CloudSat")
-    return dset
+    return layers_df
 
 
 class CloudClass:
@@ -91,12 +88,12 @@ class CloudClass:
         self.date = self.file_name.split("_")[0]
         self.hour_utc = self.date[7:9]
 
-    def day_night(self):
+    @property
+    def day_night_(self):
         if int(self.hour_utc) > 10:
-            light = "day"
+            return "day"
         else:
-            light = "night"
-        return light
+            return "night"
 
     def __repr__(self):
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
@@ -106,31 +103,48 @@ class CloudClass:
         )
         return rep
 
-    def cut(self, sur=True):
-        # la idea es que recorte la pasada segun
-        #  elija el usuario
-        # quizas habria que ponerla junto con read?
-        # como está ahora lo que hace es cortarla en
-        # sudamérica si sur=True
-        # Otra idea: ver si puede cortar donde es de dia
-        #  y donde es de noche
-        # Aun faltan ajustar las latitudes y longitudes deseadass
-        df = read_hdf(self.path)
-        if sur:
+    def read_hdf(self):
+        readHDF = read_hdf(self.path)
+        return readHDF
+
+    def cut(self, area=None):
+        """
+        Parameters:
+            area = [lat_0, lat_1, lon_0, lon_1]
+            where:
+                lat_0, latitude of minimal position
+                lat_1, latitude of maximal position
+                lon_0, longitude of minimal position
+                lon_1, longitude of maximal position
+            Default:
+                the cut will be south hemisphere
+        """
+        df = self.convert_coordinates()
+        if not area:
             cld_layertype = df[df.Latitude < 0]
+        elif len(area) == 4:
+            latitude_min = area[0]
+            latitude_max = area[1]
+            longitude_min = area[2]
+            longitude_max = area[3]
+            cld_layertype = df[
+                df["Latitude"].between(latitude_min, latitude_max)
+            ]
+            cld_layertype = cld_layertype[
+                cld_layertype["Longitude"].between(
+                    longitude_min, longitude_max
+                )
+            ]
         else:
-            cld_layertype = None
+            raise TypeError(
+                "Spected list. "
+                "For example:\n"
+                "[lat_min, lat_max, lon_min, lon_max]"
+            )
+
         return cld_layertype
 
-    def convert_coordinates(
-        self, layers_df, projection="+proj=geos +h=35786023.0 +lon_0=-75.0"
-    ):
-
-        # la idea es que retorne un geopandas dataframe con
-        # la conversion de coordenadas
-        # que elija el usuario
-        # hay que ver si no conviene que desde el principio,
-        #  osea desde read, retorne un geopd df
+    def convert_coordinates(self, layers_df=None, projection=None):
         """
         Parameters
         ----------
@@ -139,130 +153,110 @@ class CloudClass:
             the reprojection that the user desires
             Default: geostationary, GOES-R
         """
+        if projection is None:
+            projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
+            +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
+
+        if layers_df is None:
+            layers_df = self.read_hdf()
+        
         geo_df = gpd.GeoDataFrame(
             layers_df,
             geometry=gpd.points_from_xy(
                 layers_df.Longitude, layers_df.Latitude
             ),
         )
-        geo_df.crs = {
-            "init": "epsg:4326"
-        }  # EPSG 4326 corresponds to coordinates in latitude and longitude
+        geo_df.crs = 'cyl' #"EPSG:4326"
+        # EPSG 4326 corresponds to coordinates in latitude and longitude
         # Reprojecting into GOES16 geostationary projection
-        # geodf_GOESproj = geo_df.to_crs(projection)
-        return geo_df
+        geodf_to_proj = geo_df.to_crs(projection)
+        return geodf_to_proj
 
 
-class FtpCloudsat:
-    def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
-        """Established FTP connection to Cloudsat server"""
+# class Ftp_cloudsat:
+#     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
+#         """Established FTP connection to Cloudsat server"""
 
-        user_name = input("login user name:")
-        pwd = getpass.getpass(prompt="login password: ")
-        self.ftp = FTP(server)
-        self.ftp.login(user_name, pwd)
+#         user_name = input("login user name:")
+#         pwd = getpass.getpass(prompt="login password: ")
+#         self.ftp = FTP(server)
+#         self.ftp.login(user_name, pwd)
 
-        if file is not None:
-            if ".hdf" in file:
-                hdf = file.split("/")[-1]
-                folder = file[: -len(hdf)]
-                self.cd(folder)
-                self.download(hdf)
-            else:
-                print("not an .hdf file. Please navigate to file")
-        else:
-            pass
+#         if file is not None:
+#             if ".hdf" in file:
+#                 hdf = file.split("/")[-1]
+#                 folder = file[: -len(hdf)]
+#                 self.cd(folder)
+#                 self.download(hdf)
+#             else:
+#                 print("not an .hdf file. Please navigate to file")
+#         else:
+#             pass
 
-    @property
-    def ls(self):
-        """List current directory files"""
-        return self.ftp.dir()
+#     @property
+#     def ls(self):
+#         """List current directory files"""
+#         return self.ftp.dir()
 
-    def cd(self, dir):
-        """Allows to navigate in ftp host to file"""
-        self.ftp.cwd(dir)
-        return self.ftp.dir()
+#     def cd(self, dir):
+#         """Allows to navigate in ftp host to file"""
+#         self.ftp.cwd(dir)
+#         return self.ftp.dir()
 
-    def download(self, file):
-        """Downloads specific file"""
-        print("Starting download")
-        downloaded = self.ftp.retrbinary(
-            f"RETR {file}", open(file, "wb").write
-        )
-        print("Finished download")
-        return downloaded
+#     def download(self, file):
+#         """Downloads specific file"""
+#         print("Starting download")
+#         downloaded = self.ftp.retrbinary(
+#             f"RETR {file}", open(file, "wb").write
+#         )
+#         print("Finished download")
+#         return downloaded
 
-    def quit(self):
-        """Close connection with the server"""
-        print("Closing connection with the server")
-        self.ftp.quit()
-        print("Connection closed")
-        return None
+#     def quit(self):
+#         """Close connection with the server"""
+#         print("Closing connection with the server")
+#         self.ftp.quit()
+#         print("Connection closed")
+#         return None
 
-    def explore(self, date, product="2B-CLDCLASS", release="P1_R05"):
-        """Access product directory and show files of a desire date.
-        Parameters
-        ----------
-        date: ``int tuple``
-            Tuple that contains date of observation in format (YYYY, MM, DD).
-        product: ``str``, optional (defalult='2B-CLDCLASS')
-            Cloudsat product.
-        release: ``str``, optional (defalult='P1_R05')
-            Cloudsat product version.
+#     def explore(self, date, product="2B-CLDCLASS", release="P1_R05"):
+#         """Access product directory and show files of a desire date.
+#         Parameters
+#         ----------
+#         date: ``int tuple``
+#             Tuple that contains date of observation in format (YYYY, MM, DD).
+#         product: ``str``, optional (defalult='2B-CLDCLASS')
+#             Cloudsat product.
+#         release: ``str``, optional (defalult='P1_R05')
+#             Cloudsat product version.
 
-        Returns
-        -------
-        dirname: ``str``
-            String containing the directory address of the input product
-            and date.
-        """
-        str_date = datetime.date(*date).strftime("%Y/%j")
-        dirname = f"{product}.{release}/{str_date}/"
+#         Returns
+#         -------
+#         dirname: ``str``
+#             String containing the directory address of the input product
+#             and date.
+#         """
+#         str_date = datetime.date(*date).strftime("%Y/%j")
+#         dirname = f"{product}.{release}/{str_date}/"
 
-        try:
-            self.ftp.cwd(dirname)
-            return self.ftp.dir()
-        except error_perm as error:
-            print(error)
-            print("File not found. Try with other date or navigate to file.")
-
-    def fetch(self, dirname):
-        """Stores in-memory specific file from server as binary."""
-        buffer = io.BytesIO()
-        self.ftp.retrbinary(f"RETR {dirname}", buffer.write)
-        return buffer
+#         try:
+#             self.ftp.cwd(dirname)
+#             return self.ftp.dir()
+#         except error_perm as error:
+#             print(error)
+#             print("File not found. Try with other date or navigate to file.")
 
 
-def fetch_cloudsat(
-    date, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
-):
-    """Fetch files of a certain date from cloudsat server and
-    stores in a local cache.
-    """
-    cache = Cache(path)
+# # cdf = stpy.read_goes(....)
+# # sdf = stpy.read_csat(...)
 
-    # Transform date into cache id
-    str_date = datetime.date(*date).strftime("%Y/%j")
-    id_ = f"{product}_{release}_{str_date}"
+# # stpy.merge(sdf, cdf)
 
-    # Search in local cache
-    cache.expire()
-    result = cache.get(id_, tag="cloudsat")
+# # df = stpy.StratropyDataframe(goes=gds, cloudsat=cdf, ...)
 
-    if result is None:
-        # Search in cloudsat server and store in buffer
-        dirname = (
-            "2B-CLDCLASS.P1_R05/2018/296/"
-            "2018296235338_66517_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
-        )
-        # f"{product}.{release}/{str_date}/"
-        ftp_cloudsat = FtpCloudsat()
-        buffer_file = ftp_cloudsat.fetch(dirname)
-        # procesar
-
-        # Save file in local cache and delete buffer
-        result = buffer_file.getvalue()
-        cache.set(id_, result, tag="cloudsat")
-        buffer_file.close()
-
-    return result
+# # def repr(...):
+# #     '''Deberia retornar algunas cosas que queremos,
+# #     - cantidad de datos
+# #     - satelites
+# #     - ....
+# #     '''

@@ -1,5 +1,5 @@
 from stratopy import cloudsat
-from stratopy import core
+import pandas as pd
 
 path = "data/CloudSat/\
 2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
@@ -7,12 +7,12 @@ path = "data/CloudSat/\
 
 def test_hdf_read():
     dado = cloudsat.read_hdf(path)
-    assert isinstance(dado, core.StratoPyDataFrame)
+    assert isinstance(dado, pd.DataFrame)
 
 
 def test_day_night():
     path_hdf = cloudsat.CloudClass(path)
-    assert "day" == path_hdf.day_night()
+    assert "day" == path_hdf.day_night_()
 
 
 def test_cut():
