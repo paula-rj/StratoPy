@@ -234,35 +234,40 @@ class FtpCloudsat:
 
 
 def fetch_cloudsat(
-    date, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
+    dirname, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
 ):
     """Fetch files of a certain date from cloudsat server and
     stores in a local cache.
     """
     cache = Cache(path)
 
-    # Transform date into cache id
-    str_date = datetime.date(*date).strftime("%Y/%j")
-    id_ = f"{product}_{release}_{str_date}"
+    # Transform dirname into cache id
+    file_name = os.path.split(dirname)[-1]
+    date = file_name.split("_")[0]
+
+    # str_date = datetime.date(*date).strftime("%Y/%j")
+    id_ = f"{product}_{release}_{date}"
 
     # Search in local cache
     cache.expire()
-    result = cache.get(id_, tag="cloudsat")
+    result = cache.get(id_)
 
     if result is None:
         # Search in cloudsat server and store in buffer
-        dirname = (
-            "2B-CLDCLASS.P1_R05/2018/296/"
-            "2018296235338_66517_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
-        )
+        # dirname = (
         # f"{product}.{release}/{str_date}/"
+        # )
+
         ftp_cloudsat = FtpCloudsat()
         buffer_file = ftp_cloudsat.fetch(dirname)
+        # -----------
         # procesar
+        # ------------
 
         # Save file in local cache and delete buffer
         result = buffer_file.getvalue()
-        cache.set(id_, result, tag="cloudsat")
+        cache.set(id_, result)
+
         buffer_file.close()
 
     return result
