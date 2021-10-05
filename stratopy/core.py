@@ -1,8 +1,14 @@
+import datetime
+import getpass
+import os
+import pathlib
 from collections.abc import Mapping
+from ftplib import FTP, error_perm
 
 import attr
 
-import pandas as pd
+from diskcache import Cache
+
 
 # ============================================================================
 # CLASSES
@@ -47,54 +53,132 @@ class MetaData(Mapping):
         return self[a]
 
 
-@attr.s(frozen=True, repr=False)
-class StratoPyDataFrame:
+class FtpCloudsat:
+    """
+    Used to download CloudSata files from ftp-server
 
-    model = attr.ib(validator=attr.validators.instance_of(str))
-    model_df = attr.ib(validator=attr.validators.instance_of(pd.DataFrame))
+    To start will be needed:
 
-    metadata = attr.ib(factory=MetaData, converter=MetaData)
+    - file=None
+    - server="ftp.cloudsat.cira.colostate.edu"):
+    - "login user name:"
+    - "login password: "
 
-    def __getitem__(self, slice):
-        sliced = self.model_df.__getitem__(slice)
-        return StratoPyDataFrame(
-            model=self.model,
-            model_df=sliced,
-            metadata=dict(self.metadata),
+    """
+
+    def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
+        """Established FTP connection to Cloudsat server"""
+
+        user_name = input("login user name:")
+        pwd = getpass.getpass(prompt="login password: ")
+        self.ftp = FTP(server)
+        self.ftp.login(user_name, pwd)
+
+        if file is not None:
+            if ".hdf" in file:
+                hdf = file.split("/")[-1]
+                folder = file[: -len(hdf)]
+                self.cd(folder)
+                self.download(hdf)
+            else:
+                print("not an .hdf file. Please navigate to file")
+        else:
+            pass
+
+    @property
+    def ls(self):
+        """List current directory files"""
+        return self.ftp.dir()
+
+    def cd(self, dir):
+        """Allows to navigate in ftp host to file"""
+        self.ftp.cwd(dir)
+        return self.ftp.dir()
+
+    def download(self, file):
+        """Downloads specific file"""
+        print("Starting download")
+        downloaded = self.ftp.retrbinary(
+            f"RETR {file}", open(file, "wb").write
         )
+        print("Finished download")
+        return downloaded
 
-    def __dir__(self):
-        return super().__dir__() + dir(self.model_df)
+    def quit(self):
+        """Close connection with the server"""
+        print("Closing connection with the server")
+        self.ftp.quit()
+        print("Connection closed")
+        return None
 
-    def __getattr__(self, a):
-        return getattr(self.model_df, a)
+    def explore(self, date, product="2B-CLDCLASS", release="P1_R05"):
+        """Access product directory and show files of a desire date.
+        Parameters
+        ----------
+        date: ``int tuple``
+            Tuple that contains date of observation in format (YYYY, MM, DD).
+        product: ``str``, optional (defalult='2B-CLDCLASS')
+            Cloudsat product.
+        release: ``str``, optional (defalult='P1_R05')
+            Cloudsat product version.
 
-    def __repr__(self) -> str:
-        with pd.option_context("display.show_dimensions", False):
-            df_body = repr(self.model_df).splitlines()
-        df_dim = list(self.model_df.shape)
-        sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
+        Returns
+        -------
+        dirname: ``str``
+            String containing the directory address of the input product
+            and date.
+        """
+        str_date = datetime.date(*date).strftime("%Y/%j")
+        dirname = f"{product}.{release}/{str_date}/"
 
-        fotter = f"\nStratoPyDataFrame - {sdf_dim}"
-        stratopy_data_repr = "\n".join(df_body + [fotter])
-        return stratopy_data_repr
+        try:
+            self.ftp.cwd(dirname)
+            return self.ftp.dir()
+        except error_perm as error:
+            print(error)
+            print("File not found. Try with other date or navigate to file.")
 
-    def _repr_html_(self):
-        ad_id = id(self)
 
-        with pd.option_context("display.show_dimensions", False):
-            df_html = self.model_df._repr_html_()
+DEFAULT_CACHE_PATH = pathlib.Path(
+    os.path.expanduser(os.path.join("~", "stratopy_cache"))
+)
 
-        rows = f"{self.model_df.shape[0]} rows"
-        columns = f"{self.model_df.shape[1]} columns"
 
-        footer = f"StratoPyDataFrame - {rows} x {columns}"
+def fetch_cloudsat(
+    dirname, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
+):
+    """Fetch files of a certain date from cloudsat server and
+    stores in a local cache.
+    """
+    cache = Cache(path)
 
-        parts = [
-            f"<div class='stratopy-data-container' id={ad_id}>",
-            df_html,
-            footer,
-            "</div>",
-        ]
-        html = "".join(parts)
-        return html
+    # Transform dirname into cache id
+    file_name = os.path.split(dirname)[-1]
+    date = file_name.split("_")[0]
+
+    # str_date = datetime.date(*date).strftime("%Y/%j")
+    id_ = f"{product}_{release}_{date}"
+
+    # Search in local cache
+    cache.expire()
+    result = cache.get(id_)
+
+    if result is None:
+        # Search in cloudsat server and store in buffer
+        # dirname = (
+        # f"{product}.{release}/{str_date}/"
+        # )
+
+        ftp_cloudsat = FtpCloudsat()
+        buffer_file = ftp_cloudsat.fetch(dirname)
+        # -----------
+        # procesar
+        # ------------
+
+        # Save file in local cache and delete buffer
+        result = buffer_file.getvalue()
+        cache.set(id_, result)
+
+        buffer_file.close()
+
+    return result

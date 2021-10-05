@@ -1,7 +1,6 @@
 import geopandas as gpd
 
 from stratopy import cloudsat
-from stratopy import core
 
 path = "data/CloudSat/\
 2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
@@ -9,7 +8,7 @@ path = "data/CloudSat/\
 
 def test_hdf_read():
     dado = cloudsat.read_hdf(path)
-    assert isinstance(dado, core.StratoPyDataFrame)
+    assert isinstance(dado, pd.DataFrame)
 
 
 def test_day_night():
