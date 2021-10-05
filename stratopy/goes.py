@@ -28,8 +28,9 @@ class GoesClass:
         Goes-16 product.
     """
 
-    def __init__(self, file_path_ch3, file_path_ch7, file_path_ch13):
-        self.file_path = (file_path_ch3, file_path_ch7, file_path_ch13)
+    def __init__(self, file_path):
+
+        self.file_path = file_path
         start_date = [
             band_path.split("s20", 1)[1].split("_", 1)[0]
             for band_path in self.file_path
@@ -52,13 +53,63 @@ class GoesClass:
             .strftime("%d-%m-%y")
         )
         self.utc_hour = start_date[0][5:9]
+        self.read_nc = read_nc(file_path)
 
     def __repr__(self):
         return f"GOES obj. Date: {self.sam_date}; {self.utc_hour} UTC "
 
 
-def read_nc(self, folder_path, start_date):
-    pass
+def read_nc(folder_path):
+    nc_file = Dataset(folder_path, "r")
+    return recorte(nc_file)
+
+
+def Degrees(file_id):
+    proj_info = file_id.variables["goes_imager_projection"]
+    lon_origin = proj_info.longitude_of_projection_origin
+    H = proj_info.perspective_point_height + proj_info.semi_major_axis
+    r_eq = proj_info.semi_major_axis
+    r_pol = proj_info.semi_minor_axis
+
+    # Data info
+    lat_rad_1d = file_id.variables["x"][:]
+    lon_rad_1d = file_id.variables["y"][:]
+
+    # Create meshgrid filled with radian angles
+    lat_rad, lon_rad = np.meshgrid(lat_rad_1d, lon_rad_1d)
+
+    # lat/lon calculus routine from satellite radian angle vectors
+    lambda_0 = (lon_origin * np.pi) / 180.0
+
+    a_var = np.power(np.sin(lat_rad), 2.0) + (
+        np.power(np.cos(lat_rad), 2.0)
+        * (
+            np.power(np.cos(lon_rad), 2.0)
+            + (
+                ((r_eq * r_eq) / (r_pol * r_pol))
+                * np.power(np.sin(lon_rad), 2.0)
+            )
+        )
+    )
+    b_var = -2.0 * H * np.cos(lat_rad) * np.cos(lon_rad)
+    c_var = (H ** 2.0) - (r_eq ** 2.0)
+
+    r_s = (-1.0 * b_var - np.sqrt((b_var ** 2) - (4.0 * a_var * c_var))) / (
+        2.0 * a_var
+    )
+
+    s_x = r_s * np.cos(lat_rad) * np.cos(lon_rad)
+    s_y = -r_s * np.sin(lat_rad)
+    s_z = r_s * np.cos(lat_rad) * np.sin(lon_rad)
+
+    Lat = (180.0 / np.pi) * (
+        np.arctan(
+            ((r_eq * r_eq) / (r_pol * r_pol))
+            * ((s_z / np.sqrt(((H - s_x) * (H - s_x)) + (s_y * s_y))))
+        )
+    )
+    Lon = (lambda_0 - np.arctan(s_y / (H - s_x))) * (180.0 / np.pi)
+    return Lat, Lon
 
 
 def recorte(self, filas=1440, columnas=1440, x0=-555469.8930323641, y0=0.0):
@@ -81,11 +132,9 @@ def recorte(self, filas=1440, columnas=1440, x0=-555469.8930323641, y0=0.0):
     y0: float.
     Coordenada y en sistema geoestacionario GOES del limite superior
     izquierdo en m.
-
     Returns
     -------
     im_rec: matriz con los elementos del recorte
-
     """
     psize = 2000
     N = 5424  # esc da 1
