@@ -154,7 +154,7 @@ class FtpCloudsat(FTP):
         """Established FTP connection to Cloudsat server"""
 
         super().__init__()
-        self.connect(host = server)
+        self.connect(host=server)
         user_name = input("login user name:")
         pwd = getpass.getpass(prompt="login password: ")
         # self.ftp = FTP(server)
@@ -163,9 +163,7 @@ class FtpCloudsat(FTP):
     def download(self, file):
         """Downloads specific file"""
         print("Starting download")
-        downloaded = self.retrbinary(
-            f"RETR {file}", open(file, "wb").write
-        )
+        downloaded = self.retrbinary(f"RETR {file}", open(file, "wb").write)
         print("Finished download")
         return downloaded
 
