@@ -1,5 +1,5 @@
-from stratopy.cloudsat import read_hdf
-
+from stratopy import cloudsat
+from stratopy import core
 
 """
 para escribir tests devemos tener en mente,
@@ -21,5 +21,15 @@ path = "data/CloudSat/\
 
 
 def test_shape():
-    data = read_hdf(path)
+    data = cloudsat.read_hdf(path)
     assert data.shape == data.shape
+    assert isinstance(dir(data), list)
+    assert isinstance(data.__repr__(), str)
+    assert isinstance(data._repr_html_(), str)
+
+
+def test_metadata():
+    metadata = core.MetaData({"a": 1, "b": 2})
+    assert isinstance(metadata.__repr__(), str)
+    assert metadata.a == 1
+    assert len(metadata) == 2
