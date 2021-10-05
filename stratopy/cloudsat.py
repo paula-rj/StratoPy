@@ -1,12 +1,11 @@
 import datetime
+import os
 
 import geopandas as gpd
 
 import numpy as np
 
 import pandas as pd
-
-import os
 
 from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD
@@ -15,7 +14,7 @@ from pyhdf.VS import VS
 # type: ignore
 
 
-def read_hdf(path, layer="CloudLayerType"):
+def read_hdf(path, layer="CloudLayerType", convert=True):
     """
     Read a hdf file
 
@@ -67,7 +66,37 @@ def read_hdf(path, layer="CloudLayerType"):
             "capa9": cld_layertype[:, 9],
         }
     )
-    return layers_df
+    if convert:
+        return convert_coordinates(layers_df)
+    else:
+        return layers_df
+
+
+def convert_coordinates(df, layers_df=None, projection=None):
+    """
+    Parameters
+    ----------
+    layers_df: pandas DataFrame
+    projection: str
+        the reprojection that the user desires
+        Default: geostationary, GOES-R
+    """
+    if projection is None:
+        projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
+            +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
+
+    if layers_df is None:
+        layers_df = df
+
+    geo_df = gpd.GeoDataFrame(
+        layers_df,
+        geometry=gpd.points_from_xy(layers_df.Longitude, layers_df.Latitude),
+    )
+    geo_df.crs = "EPSG:4326"
+    # EPSG 4326 corresponds to coordinates in latitude and longitude
+    # Reprojecting into GOES16 geostationary projection
+    geodf_to_proj = geo_df.to_crs(projection)
+    return geodf_to_proj
 
 
 class CloudClass:
@@ -82,6 +111,7 @@ class CloudClass:
         (por ponerle un nombre)
         """
         self.path = hdf_path
+        self.hdf_file = read_hdf(hdf_path)
         self.file_name = os.path.split(self.path)[-1]
         self.date = self.file_name.split("_")[0]
         self.hour_utc = self.date[7:9]
@@ -96,14 +126,11 @@ class CloudClass:
     def __repr__(self):
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
         rep = (
+            "CloudSat Dataset:\n"
             "Start collect --> "
             f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}"
         )
         return rep
-
-    def read_hdf(self):
-        readHDF = read_hdf(self.path)
-        return readHDF
 
     def cut(self, area=None):
         """
@@ -117,7 +144,7 @@ class CloudClass:
             Default:
                 the cut will be south hemisphere
         """
-        df = self.convert_coordinates()
+        df = self.hdf_file
         if not area:
             cld_layertype = df[df.Latitude < 0]
         elif len(area) == 4:
@@ -141,108 +168,6 @@ class CloudClass:
             )
 
         return cld_layertype
-
-    def convert_coordinates(self, layers_df=None, projection=None):
-        """
-        Parameters
-        ----------
-        layers_df: pandas DataFrame
-        projection: str
-            the reprojection that the user desires
-            Default: geostationary, GOES-R
-        """
-        if projection is None:
-            projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
-            +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
-
-        if layers_df is None:
-            layers_df = self.read_hdf()
-        
-        geo_df = gpd.GeoDataFrame(
-            layers_df,
-            geometry=gpd.points_from_xy(
-                layers_df.Longitude, layers_df.Latitude
-            ),
-        )
-        geo_df.crs = 'cyl' #"EPSG:4326"
-        # EPSG 4326 corresponds to coordinates in latitude and longitude
-        # Reprojecting into GOES16 geostationary projection
-        geodf_to_proj = geo_df.to_crs(projection)
-        return geodf_to_proj
-
-
-# class Ftp_cloudsat:
-#     def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
-#         """Established FTP connection to Cloudsat server"""
-
-#         user_name = input("login user name:")
-#         pwd = getpass.getpass(prompt="login password: ")
-#         self.ftp = FTP(server)
-#         self.ftp.login(user_name, pwd)
-
-#         if file is not None:
-#             if ".hdf" in file:
-#                 hdf = file.split("/")[-1]
-#                 folder = file[: -len(hdf)]
-#                 self.cd(folder)
-#                 self.download(hdf)
-#             else:
-#                 print("not an .hdf file. Please navigate to file")
-#         else:
-#             pass
-
-#     @property
-#     def ls(self):
-#         """List current directory files"""
-#         return self.ftp.dir()
-
-#     def cd(self, dir):
-#         """Allows to navigate in ftp host to file"""
-#         self.ftp.cwd(dir)
-#         return self.ftp.dir()
-
-#     def download(self, file):
-#         """Downloads specific file"""
-#         print("Starting download")
-#         downloaded = self.ftp.retrbinary(
-#             f"RETR {file}", open(file, "wb").write
-#         )
-#         print("Finished download")
-#         return downloaded
-
-#     def quit(self):
-#         """Close connection with the server"""
-#         print("Closing connection with the server")
-#         self.ftp.quit()
-#         print("Connection closed")
-#         return None
-
-#     def explore(self, date, product="2B-CLDCLASS", release="P1_R05"):
-#         """Access product directory and show files of a desire date.
-#         Parameters
-#         ----------
-#         date: ``int tuple``
-#             Tuple that contains date of observation in format (YYYY, MM, DD).
-#         product: ``str``, optional (defalult='2B-CLDCLASS')
-#             Cloudsat product.
-#         release: ``str``, optional (defalult='P1_R05')
-#             Cloudsat product version.
-
-#         Returns
-#         -------
-#         dirname: ``str``
-#             String containing the directory address of the input product
-#             and date.
-#         """
-#         str_date = datetime.date(*date).strftime("%Y/%j")
-#         dirname = f"{product}.{release}/{str_date}/"
-
-#         try:
-#             self.ftp.cwd(dirname)
-#             return self.ftp.dir()
-#         except error_perm as error:
-#             print(error)
-#             print("File not found. Try with other date or navigate to file.")
 
 
 # # cdf = stpy.read_goes(....)
