@@ -1,6 +1,8 @@
 import datetime
 import os
 
+from diskcache import Cache
+
 import geopandas as gpd
 
 import numpy as np
@@ -103,12 +105,8 @@ class CloudClass:
     """[summary]"""
 
     def __init__(self, hdf_path):
-        """Yo no pondría el path en el init ya que
-        sacamos la función de read fuera de la clase.
-        Queremos que la clase opere sobre los CloudDataFrame
-        pero no que los cree (segun lo que dijo juan).
-        tal vez lo que debería recibir es un CloudDataFrame
-        (por ponerle un nombre)
+        """
+        doc
         """
         self.path = hdf_path
         self.hdf_file = read_hdf(hdf_path)
