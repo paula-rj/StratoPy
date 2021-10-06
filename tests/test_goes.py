@@ -7,8 +7,9 @@ OR_ABI-L1b-RadF-M6C13_G16_s20191400530366_e20191400540086_c20191400540143.nc"
 
 
 def test_metadata():
-    metadata = goes.GoesClass(path_goes)
-    assert isinstance(metadata.__repr__(), str)
+    data = goes.DayMicrophysics(path_goes)
+    repr_val = data.__repr__()
+    assert isinstance(repr_val, str)
 
 
 def test_shape():

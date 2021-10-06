@@ -8,8 +8,7 @@ REQUIREMENTS = [
     "cartopy",
     "pyhdf",
     "pyorbital",
-    "pyspectral"
-    "netCDF4",
+    "pyspectral" "netCDF4",
     "diskcache",
 ]
 

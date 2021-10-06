@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from netCDF4 import Dataset
@@ -71,28 +72,27 @@ class DayMicrophysics:
     def __init__(self, file_path):
         self.file_path = file_path
         self.read_nc = Dataset(file_path, "r")
-        start_date = [
-            band_path.split("s20", 1)[1].split("_", 1)[0]
-            for band_path in self.file_path
-        ]
 
-        # Check for date and product consistency
-        assert all(
-            date == start_date[0] for date in start_date
-        ), "Start date's from all files should be the same."
-        assert all(
-            "L2-CMIPF" in path for path in self.file_path
-        ), "Files must be from the same product."
+        find_numbers = re.findall(r"\d+", self.file_path)
+        # start_date = [
+        #     band_path.split("s20", 1)[1].split("_", 1)[0]
+        #     for band_path in self.file_path
+        # ]
+
+        # # Check for date and product consistency
+        # assert all(
+        #     date == start_date[0] for date in start_date
+        # ), "Start date's from all files should be the same."
+        # assert all(
+        #     "L2-CMIPF" in path for path in self.file_path
+        # ), "Files must be from the same product."
 
         # guarda desde el nivel L1 o L2
         # file_name = self.file_path.split("OR_ABI-")[1]
-        self.julian_date = start_date[0][:5]
-        self.sam_date = (
-            datetime.strptime(self.julian_date, "%y%j")
-            .date()
-            .strftime("%d-%m-%y")
-        )
-        self.utc_hour = start_date[0][5:9]
+        self.julian_date = find_numbers[5][:-1]
+        start_date = datetime.strptime(self.julian_date, "%Y%j%H%M%S")
+        self.sam_date = start_date.strftime("%d-%m-%y")
+        self.utc_hour = start_date.hour
 
     def __repr__(self):
         return f"GOES obj. Date: {self.sam_date}; {self.utc_hour} UTC "
