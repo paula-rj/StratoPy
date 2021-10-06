@@ -7,7 +7,9 @@ REQUIREMENTS = [
     "geopandas",
     "cartopy",
     "pyhdf",
-    "netcdf",
+    "pyorbital",
+    "pyspectral"
+    "netCDF4",
     "diskcache",
 ]
 
