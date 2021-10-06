@@ -1,8 +1,6 @@
 import datetime
 import os
 
-from diskcache import Cache
-
 import geopandas as gpd
 
 import numpy as np
@@ -118,8 +116,7 @@ class CloudClass:
     def day_night_(self):
         if int(self.hour_utc) > 10:
             return "day"
-        else:
-            return "night"
+        return "night"
 
     def __repr__(self):
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")

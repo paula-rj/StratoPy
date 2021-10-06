@@ -1,5 +1,6 @@
 import datetime
 import getpass
+import io
 import os
 import pathlib
 from collections.abc import Mapping
@@ -15,6 +16,9 @@ from diskcache import Cache
 # ============================================================================
 
 # type: ignore
+DEFAULT_CACHE_PATH = pathlib.Path(
+    os.path.expanduser(os.path.join("~", "stratopy_cache"))
+)
 
 
 @attr.s(frozen=True, repr=False)
@@ -53,61 +57,28 @@ class MetaData(Mapping):
         return self[a]
 
 
-class FtpCloudsat:
-    """
-    Used to download CloudSata files from ftp-server
-
-    To start will be needed:
-
-    - file=None
-    - server="ftp.cloudsat.cira.colostate.edu"):
-    - "login user name:"
-    - "login password: "
-
-    """
-
-    def __init__(self, file=None, server="ftp.cloudsat.cira.colostate.edu"):
+class FtpCloudsat(FTP):
+    def __init__(self, server="ftp.cloudsat.cira.colostate.edu"):
         """Established FTP connection to Cloudsat server"""
 
+        super().__init__()
+        self.connect(host=server)
         user_name = input("login user name:")
         pwd = getpass.getpass(prompt="login password: ")
-        self.ftp = FTP(server)
-        self.ftp.login(user_name, pwd)
-
-        if file is not None:
-            if ".hdf" in file:
-                hdf = file.split("/")[-1]
-                folder = file[: -len(hdf)]
-                self.cd(folder)
-                self.download(hdf)
-            else:
-                print("not an .hdf file. Please navigate to file")
-        else:
-            pass
-
-    @property
-    def ls(self):
-        """List current directory files"""
-        return self.ftp.dir()
-
-    def cd(self, dir):
-        """Allows to navigate in ftp host to file"""
-        self.ftp.cwd(dir)
-        return self.ftp.dir()
+        # self.ftp = FTP(server)
+        self.ftp = self.login(user_name, pwd)
 
     def download(self, file):
         """Downloads specific file"""
         print("Starting download")
-        downloaded = self.ftp.retrbinary(
-            f"RETR {file}", open(file, "wb").write
-        )
+        downloaded = self.retrbinary(f"RETR {file}", open(file, "wb").write)
         print("Finished download")
         return downloaded
 
     def quit(self):
         """Close connection with the server"""
         print("Closing connection with the server")
-        self.ftp.quit()
+        self.quit()
         print("Connection closed")
         return None
 
@@ -132,16 +103,17 @@ class FtpCloudsat:
         dirname = f"{product}.{release}/{str_date}/"
 
         try:
-            self.ftp.cwd(dirname)
-            return self.ftp.dir()
+            self.cwd(dirname)
+            return self.dir()
         except error_perm as error:
             print(error)
             print("File not found. Try with other date or navigate to file.")
 
-
-DEFAULT_CACHE_PATH = pathlib.Path(
-    os.path.expanduser(os.path.join("~", "stratopy_cache"))
-)
+    def fetch(self, dirname):
+        """Stores in-memory specific file from server as binary."""
+        buffer = io.BytesIO()
+        self.retrbinary(f"RETR {dirname}", buffer.write)
+        return buffer
 
 
 def fetch_cloudsat(
