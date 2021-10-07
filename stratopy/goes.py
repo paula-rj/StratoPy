@@ -60,7 +60,7 @@ def Degrees(file_id):
     return Lat, Lon
 
 
-class DayMicrophysics:
+class DayMicro:
     """Generates an object...
     Parameters
     ----------
@@ -217,7 +217,7 @@ class DayMicrophysics:
         data2b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
         return data2b
 
-    def day_microphysicsRGB(self, rec03, rec07, rec13):
+    def RGBdmp(self, rec03, rec07, rec13):
         """
         Función que arma una imagen RGB que representa microfísica
         de día según la guía de la pagina de GOES.
