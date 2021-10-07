@@ -3,12 +3,15 @@ import getpass
 import io
 import os
 import pathlib
+import tempfile
 from collections.abc import Mapping
 from ftplib import FTP, error_perm
 
 import attr
 
 from diskcache import Cache
+
+from . import cloudsat
 
 
 # ============================================================================
@@ -116,41 +119,48 @@ class FtpCloudsat(FTP):
         return buffer
 
 
-def fetch_cloudsat(
-    dirname, product="2B-CLDCLASS", release="P1_R05", path=DEFAULT_CACHE_PATH
-):
+def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
     """Fetch files of a certain date from cloudsat server and
     stores in a local cache.
     """
     cache = Cache(path)
 
     # Transform dirname into cache id
-    file_name = os.path.split(dirname)[-1]
-    date = file_name.split("_")[0]
+    id_ = os.path.split(dirname)[-1]
+    # namevals = file_name.split("_")
+
+    # date = namevals[0]
+    # release = namevals[5] + '_' + namevals[6]
+    # product = namevals[3]
 
     # str_date = datetime.date(*date).strftime("%Y/%j")
-    id_ = f"{product}_{release}_{date}"
+    # id_ = f"{product}_{release}_{date}"
 
     # Search in local cache
     cache.expire()
-    result = cache.get(id_)
+    # result = cache.get(id_)
+    result = cache.get(id_, retry=True)
 
     if result is None:
-        # Search in cloudsat server and store in buffer
-        # dirname = (
-        # f"{product}.{release}/{str_date}/"
-        # )
 
-        ftp_cloudsat = FtpCloudsat()
-        buffer_file = ftp_cloudsat.fetch(dirname)
-        # -----------
-        # procesar
-        # ------------
+        ftp = FTP()
+        ftp.connect(host="ftp.cloudsat.cira.colostate.edu")
+        user = input("login user name:")
+        passwd = getpass.getpass(prompt="login password: ")
+        ftp.login(user, passwd)
 
-        # Save file in local cache and delete buffer
+        buffer_file = io.BytesIO()
+        ftp.retrbinary(f"RETR {dirname}", buffer_file.write)
         result = buffer_file.getvalue()
-        cache.set(id_, result)
 
-        buffer_file.close()
+        cache.set(id_, result, tag="stratopy-cloudsat")
 
-    return result
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        fname = os.path.join(tmpdirname, id_)
+
+        with open(fname, "wb") as fp:
+            fp.write(result)
+
+        df = cloudsat.CloudClass(fname)
+
+    return df
