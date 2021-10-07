@@ -38,7 +38,7 @@ class DayMicrophysics:
         self.utc_hour = start_date[0][5:9]
 
     def __repr__(self):
-        return f"GOES obj. Date: {self.sam_date}; {self.utc_hour} UTC "
+        return f"GOES object. Date: {self.sam_date}; {self.utc_hour} UTC "
 
     def read_nc(self, folder_path, start_date):
         pass
