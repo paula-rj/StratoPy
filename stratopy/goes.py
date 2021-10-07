@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from netCDF4 import Dataset
@@ -11,37 +12,93 @@ from pyspectral.near_infrared_reflectance import Calculator
 from scipy import interpolate
 
 
+def Degrees(file_id):
+    proj_info = file_id.variables["goes_imager_projection"]
+    lon_origin = proj_info.longitude_of_projection_origin
+    H = proj_info.perspective_point_height + proj_info.semi_major_axis
+    r_eq = proj_info.semi_major_axis
+    r_pol = proj_info.semi_minor_axis
+
+    # Data info
+    lat_rad_1d = file_id.variables["x"][:]
+    lon_rad_1d = file_id.variables["y"][:]
+
+    # Create meshgrid filled with radian angles
+    lat_rad, lon_rad = np.meshgrid(lat_rad_1d, lon_rad_1d)
+
+    # lat/lon calculus routine from satellite radian angle vectors
+    lambda_0 = (lon_origin * np.pi) / 180.0
+
+    a_var = np.power(np.sin(lat_rad), 2.0) + (
+        np.power(np.cos(lat_rad), 2.0)
+        * (
+            np.power(np.cos(lon_rad), 2.0)
+            + (
+                ((r_eq * r_eq) / (r_pol * r_pol))
+                * np.power(np.sin(lon_rad), 2.0)
+            )
+        )
+    )
+    b_var = -2.0 * H * np.cos(lat_rad) * np.cos(lon_rad)
+    c_var = (H ** 2.0) - (r_eq ** 2.0)
+
+    r_s = (-1.0 * b_var - np.sqrt((b_var ** 2) - (4.0 * a_var * c_var))) / (
+        2.0 * a_var
+    )
+
+    s_x = r_s * np.cos(lat_rad) * np.cos(lon_rad)
+    s_y = -r_s * np.sin(lat_rad)
+    s_z = r_s * np.cos(lat_rad) * np.sin(lon_rad)
+
+    Lat = (180.0 / np.pi) * (
+        np.arctan(
+            ((r_eq * r_eq) / (r_pol * r_pol))
+            * ((s_z / np.sqrt(((H - s_x) * (H - s_x)) + (s_y * s_y))))
+        )
+    )
+    Lon = (lambda_0 - np.arctan(s_y / (H - s_x))) * (180.0 / np.pi)
+    return Lat, Lon
+
+
 class DayMicrophysics:
+    """Generates an object...
+    Parameters
+    ----------
+    file_path: ``str tuple``
+        Tuple of length three containing the paths of the channels 3, 7
+        and 13 of the CMIPF Goes-16 product.
+    """
+
     def __init__(self, file_path):
         self.file_path = file_path
-        start_date = [
-            band_path.split("s20", 1)[1].split("_", 1)[0]
-            for band_path in self.file_path
-        ]
+        self.read_nc = Dataset(file_path, "r")
 
-        # Check for date and product consistency
-        assert all(
-            date == start_date[0] for date in start_date
-        ), "Start date's from all files should be the same."
-        assert all(
-            "L2-CMIPF" in path for path in self.file_path
-        ), "Files must be from the same product."
+        find_numbers = re.findall(r"\d+", self.file_path)
+        # start_date = [
+        #     band_path.split("s20", 1)[1].split("_", 1)[0]
+        #     for band_path in self.file_path
+        # ]
+
+        # # Check for date and product consistency
+        # assert all(
+        #     date == start_date[0] for date in start_date
+        # ), "Start date's from all files should be the same."
+        # assert all(
+        #     "L2-CMIPF" in path for path in self.file_path
+        # ), "Files must be from the same product."
 
         # guarda desde el nivel L1 o L2
         # file_name = self.file_path.split("OR_ABI-")[1]
-        self.julian_date = start_date[0][:5]
-        self.sam_date = (
-            datetime.strptime(self.julian_date, "%y%j")
-            .date()
-            .strftime("%d-%m-%y")
-        )
-        self.utc_hour = start_date[0][5:9]
+        self.julian_date = find_numbers[5][:-1]
+        start_date = datetime.strptime(self.julian_date, "%Y%j%H%M%S")
+        self.sam_date = start_date.strftime("%d-%m-%y")
+        self.utc_hour = start_date.hour
 
     def __repr__(self):
         return f"GOES object. Date: {self.sam_date}; {self.utc_hour} UTC "
 
-    def read_nc(self, folder_path, start_date):
-        pass
+    # def read_nc(self, folder_path, start_date):
+    #     pass
 
     def recorte(
         self, filas=1440, columnas=1440, x0=-555469.8930323641, y0=0.0
@@ -74,7 +131,8 @@ class DayMicrophysics:
         psize = 2000
         N = 5424  # esc da 1
         esc = 1  # Fijate pau que es esto!!
-        data = Dataset(self.file_path)  # Abro el archivo netcdf
+        data = self.read_nc
+        # data = Dataset(self.file_path)  # Abro el archivo netcdf
         metadato = data.variables  # Extraigo todas las variables
         banda = metadato["band_id"][:].data[0]  # Extraigo el nro de banda
         # Extraigo la imagen y la guardo en un array de np
