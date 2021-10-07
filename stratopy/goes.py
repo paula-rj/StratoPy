@@ -1,6 +1,8 @@
 import re
 from datetime import datetime
 
+import latlon2geos
+
 from netCDF4 import Dataset
 
 import numpy as np
@@ -60,6 +62,16 @@ def Degrees(file_id):
     return Lat, Lon
 
 
+def read_nc(file_path):
+    """
+    Función de lectura
+    Sirve para L1 Y L2.
+    """
+    data = Dataset(file_path, "r")  # Abro el archivo netcdf
+    metadato = data.variables  # Extraigo todas las variables
+    return metadato
+
+
 class DayMicro:
     """Generates an object...
     Parameters
@@ -71,7 +83,7 @@ class DayMicro:
 
     def __init__(self, file_path):
         self.file_path = file_path
-        self.read_nc = Dataset(file_path, "r")
+        self.metadato = read_nc(file_path)
 
         find_numbers = re.findall(r"\d+", self.file_path)
         # start_date = [
@@ -97,48 +109,56 @@ class DayMicro:
     def __repr__(self):
         return f"GOES object. Date: {self.sam_date}; {self.utc_hour} UTC "
 
-    # def read_nc(self, folder_path, start_date):
-    #     pass
+    def recorte(self, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0):
 
-    def recorte(
-        self, filas=1440, columnas=1440, x0=-555469.8930323641, y0=0.0
-    ):
-
-        # lat =  0. -> y0
-        # lon = -80. -> x0
         """
         Funcion que recorta una imagen tipo CMI de GOES.
+
         Parameters
         ----------
         data_path: str.
         Direccion de los datos GOES.
-        filas: int.
+        rows: int.
         Cantidad de filas de pixeles (largo) que tendrá la imagen recortada
-        columnas: int.
+        cols: int.
         Cantidad de columnas de pixeles (ancho) que tendrá la imagen recortada
-        x0: float.
-        Coordenada x en sistema geoestacionario GOES del limite superior
-        izquierdo en m.
-        y0: float.
-        Coordenada y en sistema geoestacionario GOES del limite superior
-        izquierdo en m.
+        lon_west: float.
+        Longitud maxima al oeste del recorte
+        lat_sup: float.
+        Latitud superior del recorte.
 
         Returns
         -------
         im_rec: matriz con los elementos del recorte
 
         """
-        psize = 2000
-        N = 5424  # esc da 1
-        esc = 1  # Fijate pau que es esto!!
-        data = self.read_nc
-        # data = Dataset(self.file_path)  # Abro el archivo netcdf
-        metadato = data.variables  # Extraigo todas las variables
+
+        psize = 2000  # Tamaño del pixel en m
+        N = 5424  # Tamaño de imagen con psize=2000 m
+
+        metadato = self.metadato  # Extraigo todas las variables
         banda = metadato["band_id"][:].data[0]  # Extraigo el nro de banda
+        # altura del satelite
+        h = metadato["goes_imager_projection"].perspective_point_height
+        semieje_may = metadato["goes_imager_projection"].semi_major_axis
+        semieje_men = metadato["goes_imager_projection"].semi_minor_axis
+        lon_cen = metadato[
+            "goes_imager_projection"
+        ].longitude_of_projection_origin
+
+        pto_sup_izq = latlon2geos.latlon2scan(
+            lat_sup, lon_west, lon_cen, Re=semieje_may, Rp=semieje_men, h=h
+        )
+        x0 = pto_sup_izq[1] * h
+        y0 = pto_sup_izq[0] * h
+
         # Extraigo la imagen y la guardo en un array de np
         image = np.array(metadato["CMI"][:].data)
 
         if int(banda) == 3:
+            esc = 0.5
+            # escala es 1/2 porque tamaño de pixel de banda 3 = 1 km
+            # y tamaño pixel del resto = 2 km
             x = range(0, 10848)
             y = range(0, 10848)
             f = interpolate.interp2d(x, y, image, kind="cubic")
@@ -146,17 +166,12 @@ class DayMicro:
             ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
             image = f(xnew, ynew)
 
-        img_extentr = [
-            x0,
-            x0 + columnas * psize,
-            y0 - filas * psize,
-            y0,
-        ]  # tamaño del recorte en proyeccion goes
-        print("extent rec en proyeccion goes:", img_extentr)
+        # tamaño del recorte en proyeccion goes
+        # img_extentr = [x0, x0+columnas*psize, y0 -filas*psize, y0]
 
         esc = int(N / image.shape[0])
-        Nx = int(columnas / esc)  # numero de puntos del recorte en x
-        Ny = int(filas / esc)  # numero de puntos del recorte en x
+        Nx = int(cols / esc)  # numero de puntos del recorte en x
+        Ny = int(rows / esc)  # numero de puntos del recorte en x
         f0 = int(
             (-y0 / psize + N / 2 - 1.5) / esc
         )  # fila del angulo superior izquierdo
@@ -164,7 +179,7 @@ class DayMicro:
         c0 = int((x0 / psize + N / 2 + 0.5) / esc)
         f1 = int(f0 + Ny)  # fila del angulo inferior derecho
         c1 = int(c0 + Nx)  # columna del angulo inferior derecho
-        print("coordenadas filas, col: ", f0, c0, f1, c1)
+        # print('coordenadas filas, col: ', f0, c0, f1, c1)
 
         im_rec = image[f0:f1, c0:c1]
         return im_rec
