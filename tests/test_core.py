@@ -33,3 +33,20 @@ def test_metadata():
     assert isinstance(metadata.__repr__(), str)
     assert metadata.a == 1
     assert len(metadata) == 2
+
+
+# def test_fetch_cloudsat(monkeypatch):
+#     monkeypatch.setattr('builtins.input', lambda _: "jose.stratopy")
+
+#     df = core.fetch_cloudsat(path)
+#     assert isinstance(df, cloudsat.CloudClass)
+#     assert df.date.isnumeric()
+#     assert df.hour_utc.isnumeric()
+
+
+# ejemplo del uso del fetch
+# path = '2B-CLDCLASS-LIDAR.P1_R05/2019/180/\
+# 2019180235812_70156_CS_2B-CLDCLASS-LIDAR_GRANULE_P1_R05_E08_F03.hdf'
+# path2 = '/2B-CLDCLASS-LIDAR.P1_R05/2019/180/\
+# 2019180154532_70151_CS_2B-CLDCLASS-LIDAR_GRANULE_P1_R05_E08_F03.hdf'
+# df = core.fetch_cloudsat(path)
