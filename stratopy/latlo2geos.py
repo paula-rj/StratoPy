@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Ago 30 08:33:09 2021
+Created on Thu Ago 30 2021
 
 @author: sergio masuelli
 
