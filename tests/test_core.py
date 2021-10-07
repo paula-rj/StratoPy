@@ -37,7 +37,7 @@ def test_metadata():
 
 # def test_fetch_cloudsat(monkeypatch):
 #     monkeypatch.setattr('builtins.input', lambda _: "jose.stratopy")
-    
+
 #     df = core.fetch_cloudsat(path)
 #     assert isinstance(df, cloudsat.CloudClass)
 #     assert df.date.isnumeric()

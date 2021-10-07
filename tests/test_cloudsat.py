@@ -8,6 +8,7 @@ path = "data/CloudSat/\
 2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
 df = cloudsat.CloudClass(path)
 
+
 def test_hdf_read():
     dado = cloudsat.read_hdf(path)
     assert isinstance(dado, pd.DataFrame)
