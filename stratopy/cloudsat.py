@@ -27,12 +27,6 @@ def read_hdf(path, layer="CloudLayerType", convert=True):
         dataframe: contain Latitude, Longitude and 10 layers
                    separated in columns.
     """
-    if path is None:
-        raise FileNotFoundError(
-            "The enter path is wrong"
-            "Try with the complete path!"
-            "E.g. /home/user/data/CloudSat/..."
-        )
 
     hdf_file = HDF(path, HC.READ)
     vs = VS(hdf_file)
