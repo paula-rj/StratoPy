@@ -1,8 +1,6 @@
 import datetime
 import os
 
-from diskcache import Cache
-
 import geopandas as gpd
 
 import numpy as np
@@ -29,49 +27,30 @@ def read_hdf(path, layer="CloudLayerType", convert=True):
         dataframe: contain Latitude, Longitude and 10 layers
                    separated in columns.
     """
-    if path is None:
-        raise FileNotFoundError(
-            "The enter path is wrong"
-            "Try with the complete path!"
-            "E.g. /home/user/data/CloudSat/..."
-        )
-
-    hdf_file = HDF(path, HC.READ)
-    vs = VS(hdf_file)
-
-    vd_lat = vs.attach("Latitude", write=0)
-    lat = np.array(vd_lat[:]).flatten()
-    vd_lat.detach
-
-    vd_lon = vs.attach("Longitude", write=0)
-    lon = np.array(vd_lon[:]).flatten()
-    vd_lon.detach
-
-    vs.end()
-
-    # Read sd data
-    file = SD(path)
-    cld_layertype = file.select(layer)[:]
-    layers_df = pd.DataFrame(
-        {
-            "Latitude": lat,
-            "Longitude": lon,
-            "capa0": cld_layertype[:, 0],
-            "capa1": cld_layertype[:, 1],
-            "capa2": cld_layertype[:, 2],
-            "capa3": cld_layertype[:, 3],
-            "capa4": cld_layertype[:, 4],
-            "capa5": cld_layertype[:, 5],
-            "capa6": cld_layertype[:, 6],
-            "capa7": cld_layertype[:, 7],
-            "capa8": cld_layertype[:, 8],
-            "capa9": cld_layertype[:, 9],
-        }
-    )
+    try:
+        hdf_file = HDF(path, HC.READ)
+        vs = VS(hdf_file)
+        vd_lat = vs.attach("Latitude", write=0)
+        lat = np.array(vd_lat[:]).flatten()
+        vd_lat.detach
+        vd_lon = vs.attach("Longitude", write=0)
+        lon = np.array(vd_lon[:]).flatten()
+        vd_lon.detach
+    except Exception as e:
+        raise e
+    else:
+        # Read sd data
+        file_path = SD(path)
+        cld_layertype = file_path.select(layer)[:]
+        layers_df = pd.DataFrame(data=np.c_[lon, lat, cld_layertype])
+        layers_df.columns = ["Longitude", "Latitude"] + [
+            f"capa_{i}" for i in range(10)
+        ]
+    finally:
+        vs.end()
     if convert:
         return convert_coordinates(layers_df)
-    else:
-        return layers_df
+    return layers_df
 
 
 def convert_coordinates(df, layers_df=None, projection=None):
@@ -116,19 +95,44 @@ class CloudClass:
 
     @property
     def day_night_(self):
-        if int(self.hour_utc) > 10:
-            return "day"
-        else:
-            return "night"
-
-    def __repr__(self):
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
-        rep = (
-            "CloudSat Dataset:\n"
-            "Start collect --> "
-            f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}"
+        desc = (
+            "Start collect: " f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}"
         )
-        return rep
+        if int(self.hour_utc) > 10:
+
+            return desc + " day"
+        else:
+            return desc + " night"
+
+    def __repr__(self) -> (str):
+        """repr(x) <=> x.__repr__()."""
+        with pd.option_context("display.show_dimensions", False):
+            df_body = repr(self.hdf_file).splitlines()
+        df_dim = list(self.hdf_file.shape)
+        sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
+        footer = f"\nCloudSatDataFrame - {sdf_dim}"
+        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
+        return cloudsat_cldcls_repr
+
+    def __repr_html__(self) -> str:
+        ad_id = id(self)
+
+        with pd.option_context("display.show_dimensions", False):
+            df_html = self.hdf_file.__repr_html__()
+        rows = f"{self.hdf_file.shape[0]} rows"
+        columns = f"{self.hdf_file.shape[1]} columns"
+
+        footer = f"CloudSatDataFrame - {rows} x {columns}"
+
+        parts = [
+            f'<div class="stratopy-data-container" id={ad_id}>',
+            df_html,
+            footer,
+            "</div>",
+        ]
+        html = "".join(parts)
+        return html
 
     def cut(self, area=None):
         """
