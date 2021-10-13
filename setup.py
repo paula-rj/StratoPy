@@ -17,7 +17,12 @@ setup(
     version="0.1.0",
     description="",
     lond_description="",
-    author="Paula Romero",
+    author=[
+        "Paula Romero",
+        "Georgynio Rosales",
+        "Jose Robledo",
+        "Julian Villa",
+    ],
     author_email="",
     url="https://github.com/paula-rj/StratoPy",
     py_modules=None,
