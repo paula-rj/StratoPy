@@ -1,7 +1,5 @@
 import geopandas as gpd
 
-import pandas as pd
-
 from stratopy import cloudsat
 
 path = (

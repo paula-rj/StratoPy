@@ -95,11 +95,6 @@ class CloudClass:
 
     @property
     def day_night_(self):
-        if int(self.hour_utc) > 10:
-            return "day"
-        return "night"
-
-    def __repr__(self):
         date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
         desc = (
             "Start collect: " f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}"
