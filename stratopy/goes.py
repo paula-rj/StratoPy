@@ -17,6 +17,18 @@ from . import latlon2geos
 def read_nc(file_path):
     """Function for reading GOES16 files, with extension ".nc".
     It works the same for level L1 and L2.
+
+    Parameters
+    ----------
+    file_path: ``str tuple``
+        Tuple of length three containing the paths of the channels 3, 7
+        and 13 of the CMIPF GOES-16 product.
+
+    Returns
+    -------
+    im_rec: ``netCDF4.Dataset`` object.
+
+
     """
     # Open netcdf file and extract variables
     data = Dataset(file_path, "r")
@@ -140,7 +152,7 @@ class DayMicro:
         return im_rec
 
     def solar_7(self, ch7, ch13, latlon_extent):
-        """ "
+        """
         This function does a zenith angle correction to channel 7.
         This correction is needed for daylight images.
 

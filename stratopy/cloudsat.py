@@ -14,21 +14,25 @@ from pyhdf.VS import VS
 # type: ignore
 
 
-def read_hdf(path, layer="CloudLayerType", convert=True):
+def read_hdf(file_path, layer="CloudLayerType", convert=True):
     """
-    Read a hdf file
+    Function for reading CloudSat data files, with extension ".hdf".
 
-    Args:
-        path (str): string of path file
-        layer (str, optional): select any layer of the
-        hdf file. Defaults to 'CloudLayerType'.
+    Parameters
+    ----------
+    file_path: ``str``
+        String containing path to file.
+    layer: ``str``, optional (default="CloudLayerType")
+        Select any layer of the hdf file.
 
-    Returns:
-        dataframe: contain Latitude, Longitude and 10 layers
-                   separated in columns.
+    Returns
+    -------
+    ``pandas.DataFrame``:
+        Dataframe containing Latitude, Longitude and
+        10 layers separated in columns.
     """
 
-    hdf_file = HDF(path, HC.READ)
+    hdf_file = HDF(file_path, HC.READ)
     vs = VS(hdf_file)
 
     vd_lat = vs.attach("Latitude", write=0)
@@ -41,8 +45,8 @@ def read_hdf(path, layer="CloudLayerType", convert=True):
 
     vs.end()
 
-    # Read sd data
-    file = SD(path)
+    # Read SD data
+    file = SD(file_path)
     cld_layertype = file.select(layer)[:]
     layers_df = pd.DataFrame(
         {
@@ -70,10 +74,10 @@ def convert_coordinates(df, layers_df=None, projection=None):
     """
     Parameters
     ----------
-    layers_df: pandas DataFrame
-    projection: str
-        the reprojection that the user desires
-        Default: geostationary, GOES-R
+    layers_df: ``pandas.DataFrame``, optional (default=None)
+    projection: ``str``, optional (default=geostationary, GOES-R)
+        The reprojection that the user desires.
+
     """
     if projection is None:
         projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
@@ -86,20 +90,24 @@ def convert_coordinates(df, layers_df=None, projection=None):
         layers_df,
         geometry=gpd.points_from_xy(layers_df.Longitude, layers_df.Latitude),
     )
-    geo_df.crs = "EPSG:4326"
     # EPSG 4326 corresponds to coordinates in latitude and longitude
+    geo_df.crs = "EPSG:4326"
+
     # Reprojecting into GOES16 geostationary projection
     geodf_to_proj = geo_df.to_crs(projection)
     return geodf_to_proj
 
 
 class CloudClass:
-    """[summary]"""
+    """Class containing state and methods for CloudSat hdf file.
+
+    Parameters
+    ----------
+    hdf_path: ``str``
+        String containing path to hdf file.
+    """
 
     def __init__(self, hdf_path):
-        """
-        doc
-        """
         self.path = hdf_path
         self.hdf_file = read_hdf(hdf_path)
         self.file_name = os.path.split(self.path)[-1]
@@ -123,15 +131,15 @@ class CloudClass:
 
     def cut(self, area=None):
         """
-        Parameters:
-            area = [lat_0, lat_1, lon_0, lon_1]
-            where:
-                lat_0, latitude of minimal position
-                lat_1, latitude of maximal position
-                lon_0, longitude of minimal position
-                lon_1, longitude of maximal position
-            Default:
-                the cut will be south hemisphere
+        Parameters
+        ----------
+            area: ``list``, optional (default: cut will be south hemisphere)
+                [lat_0, lat_1, lon_0, lon_1] where:
+                    lat_0, latitude of minimal position
+                    lat_1, latitude of maximal position
+                    lon_0, longitude of minimal position
+                    lon_1, longitude of maximal position
+
         """
         df = self.hdf_file
         if not area:
