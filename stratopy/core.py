@@ -10,6 +10,7 @@ from ftplib import FTP, error_perm
 import attr
 
 from diskcache import Cache
+from diskcache.core import ENOVAL
 
 from . import cloudsat
 
@@ -28,6 +29,7 @@ DEFAULT_CACHE_PATH = pathlib.Path(
 class MetaData(Mapping):
     """Implements an inmutable dict-like to store the metadata.
     Also provides attribute like access to the keys.
+
     Example
     -------
     >>> metadata = MetaData({"a": 1, "b": 2})
@@ -139,9 +141,9 @@ def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
     # Search in local cache
     cache.expire()
     # result = cache.get(id_)
-    result = cache.get(id_, retry=True)
+    result = cache.get(id_, default=ENOVAL, retry=True)
 
-    if result is None:
+    if result is ENOVAL:
 
         ftp = FTP()
         ftp.connect(host="ftp.cloudsat.cira.colostate.edu")
