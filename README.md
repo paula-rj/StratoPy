@@ -15,7 +15,6 @@ You need Python 3.9+ to run Stratopy.
 - [pyhdf](https://pypi.org/project/pyhdf/)
 - [numpy](https://numpy.org/)
 - [scipy](https://www.scipy.org/)
-- [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
 - [geopandas](https://geopandas.org/)
 - [netcdf4](https://unidata.github.io/netcdf4-python/)
 - [pyorbital](https://github.com/pytroll/pyorbital)
