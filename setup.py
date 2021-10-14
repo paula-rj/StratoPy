@@ -9,7 +9,6 @@ REQUIREMENTS = [
     "pandas",
     "matplotlib",
     "geopandas",
-    "cartopy",
     "pyhdf",
     "pyorbital",
     "pyspectral",
