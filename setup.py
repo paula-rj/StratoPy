@@ -12,7 +12,8 @@ REQUIREMENTS = [
     "cartopy",
     "pyhdf",
     "pyorbital",
-    "pyspectral" "netCDF4",
+    "pyspectral",
+    "netCDF4",
     "diskcache",
 ]
 
@@ -23,6 +24,7 @@ setup(
          and GOES-R and generate labeled images containing cloud types.",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
+    install_requires=REQUIREMENTS,
     author=[
         "Paula Romero",
         "Georgynio Rosales",
