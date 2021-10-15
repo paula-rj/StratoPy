@@ -5,10 +5,10 @@ REQUIREMENTS = [
     "pandas",
     "matplotlib",
     "geopandas",
-    "cartopy",
     "pyhdf",
     "pyorbital",
-    "pyspectral" "netCDF4",
+    "pyspectral",
+    "netCDF4",
     "diskcache",
 ]
 
@@ -22,6 +22,7 @@ setup(
     url="https://github.com/paula-rj/StratoPy",
     py_modules=None,
     packages=["stratopy"],
+    install_requires=REQUIREMENTS,
     include_package_data=True,
     license="The MIT License",
     keywords=["stratopy", "clouds"],

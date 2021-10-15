@@ -1,9 +1,18 @@
-import datetime
+import getpass
+import io
 import os
+import pathlib
+import tempfile
+from ftplib import FTP
+
+import attr
+
+from diskcache import Cache
 
 import geopandas as gpd
 
 import numpy as np
+
 
 import pandas as pd
 
@@ -12,9 +21,13 @@ from pyhdf.SD import SD
 from pyhdf.VS import VS
 
 # type: ignore
+# type: ignore
+DEFAULT_CACHE_PATH = pathlib.Path(
+    os.path.expanduser(os.path.join("~", "stratopy_cache"))
+)
 
 
-def read_hdf(path, layer="CloudLayerType", convert=True):
+def read_hdf(path, layer="CloudLayerType", convert=False):
     """
     Read a hdf file
 
@@ -27,46 +40,33 @@ def read_hdf(path, layer="CloudLayerType", convert=True):
         dataframe: contain Latitude, Longitude and 10 layers
                    separated in columns.
     """
-
-    hdf_file = HDF(path, HC.READ)
-    vs = VS(hdf_file)
-
-    vd_lat = vs.attach("Latitude", write=0)
-    lat = np.array(vd_lat[:]).flatten()
-    vd_lat.detach
-
-    vd_lon = vs.attach("Longitude", write=0)
-    lon = np.array(vd_lon[:]).flatten()
-    vd_lon.detach
-
-    vs.end()
-
-    # Read sd data
-    file = SD(path)
-    cld_layertype = file.select(layer)[:]
-    layers_df = pd.DataFrame(
-        {
-            "Latitude": lat,
-            "Longitude": lon,
-            "capa0": cld_layertype[:, 0],
-            "capa1": cld_layertype[:, 1],
-            "capa2": cld_layertype[:, 2],
-            "capa3": cld_layertype[:, 3],
-            "capa4": cld_layertype[:, 4],
-            "capa5": cld_layertype[:, 5],
-            "capa6": cld_layertype[:, 6],
-            "capa7": cld_layertype[:, 7],
-            "capa8": cld_layertype[:, 8],
-            "capa9": cld_layertype[:, 9],
-        }
-    )
-    if convert:
-        return convert_coordinates(layers_df)
+    try:
+        hdf_file = HDF(path, HC.READ)
+        vs = VS(hdf_file)
+        vd_lat = vs.attach("Latitude", write=0)
+        lat = np.array(vd_lat[:]).flatten()
+        vd_lat.detach
+        vd_lon = vs.attach("Longitude", write=0)
+        lon = np.array(vd_lon[:]).flatten()
+        vd_lon.detach
+    except Exception as e:
+        raise e
     else:
-        return layers_df
+        # Read sd data
+        file_path = SD(path)
+        cld_layertype = file_path.select(layer)[:]
+        layers_df = {"Longitude": lon, "Latitude": lat}
+        for i, v in enumerate(np.transpose(cld_layertype)):
+            layers_df[f"capa_{i}"] = v
+        cld_df = CloudDataFrame(layers_df)
+    finally:
+        vs.end()
+    if convert:
+        return convert_coordinates(cld_df)
+    return cld_df
 
 
-def convert_coordinates(df, layers_df=None, projection=None):
+def convert_coordinates(hdf_df, projection=None):
     """
     Parameters
     ----------
@@ -79,12 +79,9 @@ def convert_coordinates(df, layers_df=None, projection=None):
         projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
             +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
 
-    if layers_df is None:
-        layers_df = df
-
     geo_df = gpd.GeoDataFrame(
-        layers_df,
-        geometry=gpd.points_from_xy(layers_df.Longitude, layers_df.Latitude),
+        hdf_df,
+        geometry=gpd.points_from_xy(hdf_df["Longitude"], hdf_df["Latitude"]),
     )
     geo_df.crs = "EPSG:4326"
     # EPSG 4326 corresponds to coordinates in latitude and longitude
@@ -93,33 +90,53 @@ def convert_coordinates(df, layers_df=None, projection=None):
     return geodf_to_proj
 
 
-class CloudClass:
+@attr.s(frozen=True, repr=False)
+class CloudDataFrame:
     """[summary]"""
 
-    def __init__(self, hdf_path):
-        """
-        doc
-        """
-        self.path = hdf_path
-        self.hdf_file = read_hdf(hdf_path)
-        self.file_name = os.path.split(self.path)[-1]
-        self.date = self.file_name.split("_")[0]
-        self.hour_utc = self.date[7:9]
+    cld_df = attr.ib(
+        validator=attr.validators.instance_of(pd.DataFrame),
+        converter=pd.DataFrame,
+    )
 
-    @property
-    def day_night_(self):
-        if int(self.hour_utc) > 10:
-            return "day"
-        return "night"
+    def __getitem__(self, slice):
+        sliced = self.cld_df.__getitem__(slice)
+        return CloudDataFrame(cld_df=sliced)
 
-    def __repr__(self):
-        date_time = datetime.datetime.strptime(self.date, "%Y%j%H%M%S")
-        rep = (
-            "CloudSat Dataset:\n"
-            "Start collect --> "
-            f"{date_time.strftime('%Y %B %d Time %H:%M:%S')}"
-        )
-        return rep
+    def __dir__(self):
+        return super().__dir__() + dir(self.cld_df)
+
+    def __getattr__(self, a):
+        return getattr(self.cld_df, a)
+
+    def __repr__(self) -> (str):
+        """repr(x) <=> x.__repr__()."""
+        with pd.option_context("display.show_dimensions", False):
+            df_body = repr(self.cld_df).splitlines()
+        df_dim = list(self.cld_df.shape)
+        sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
+        footer = f"\nCloudSatDataFrame - {sdf_dim}"
+        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
+        return cloudsat_cldcls_repr
+
+    def __repr_html__(self) -> str:
+        ad_id = id(self)
+
+        with pd.option_context("display.show_dimensions", False):
+            df_html = self.cld_df.__repr_html__()
+        rows = f"{self.cld_df.shape[0]} rows"
+        columns = f"{self.cld_df.shape[1]} columns"
+
+        footer = f"CloudSatDataFrame - {rows} x {columns}"
+
+        parts = [
+            f'<div class="stratopy-data-container" id={ad_id}>',
+            df_html,
+            footer,
+            "</div>",
+        ]
+        html = "".join(parts)
+        return html
 
     def cut(self, area=None):
         """
@@ -133,7 +150,7 @@ class CloudClass:
             Default:
                 the cut will be south hemisphere
         """
-        df = self.hdf_file
+        df = self.cld_df
         if not area:
             cld_layertype = df[df.Latitude < 0]
         elif len(area) == 4:
@@ -159,16 +176,48 @@ class CloudClass:
         return cld_layertype
 
 
-# # cdf = stpy.read_goes(....)
-# # sdf = stpy.read_csat(...)
+def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
+    """Fetch files of a certain date from cloudsat server and
+    stores in a local cache.
+    """
+    cache = Cache(path)
 
-# # stpy.merge(sdf, cdf)
+    # Transform dirname into cache id
+    id_ = os.path.split(dirname)[-1]
+    # namevals = file_name.split("_")
 
-# # df = stpy.StratropyDataframe(goes=gds, cloudsat=cdf, ...)
+    # date = namevals[0]
+    # release = namevals[5] + '_' + namevals[6]
+    # product = namevals[3]
 
-# # def repr(...):
-# #     '''Deberia retornar algunas cosas que queremos,
-# #     - cantidad de datos
-# #     - satelites
-# #     - ....
-# #     '''
+    # str_date = datetime.date(*date).strftime("%Y/%j")
+    # id_ = f"{product}_{release}_{date}"
+
+    # Search in local cache
+    cache.expire()
+    # result = cache.get(id_)
+    result = cache.get(id_, retry=True)
+
+    if result is None:
+
+        ftp = FTP()
+        ftp.connect(host="ftp.cloudsat.cira.colostate.edu")
+        user = input("login user name:")
+        passwd = getpass.getpass(prompt="login password: ")
+        ftp.login(user, passwd)
+
+        buffer_file = io.BytesIO()
+        ftp.retrbinary(f"RETR {dirname}", buffer_file.write)
+        result = buffer_file.getvalue()
+
+        cache.set(id_, result, tag="stratopy-cloudsat")
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        fname = os.path.join(tmpdirname, id_)
+
+        with open(fname, "wb") as fp:
+            fp.write(result)
+
+        df = CloudDataFrame(fname)
+
+    return df
