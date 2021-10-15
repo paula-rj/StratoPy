@@ -15,22 +15,36 @@ from . import latlon2geos
 
 
 def read_nc(file_path):
-    """
-    Función de lectura
-    Sirve para L1 Y L2.
-    """
-    data = Dataset(file_path, "r")  # Abro el archivo netcdf
-    metadato = data.variables  # Extraigo todas las variables
-    return metadato
+    """Function for reading GOES16 files, with extension ".nc".
+    It works the same for level L1 and L2.
 
-
-class DayMicro:
-    """Generates an object...
     Parameters
     ----------
     file_path: ``str tuple``
         Tuple of length three containing the paths of the channels 3, 7
-        and 13 of the CMIPF Goes-16 product.
+        and 13 of the CMIPF GOES-16 product.
+
+    Returns
+    -------
+    im_rec: ``netCDF4.Dataset`` object.
+
+
+    """
+    # Open netcdf file and extract variables
+    data = Dataset(file_path, "r")
+    metadato = data.variables
+    return metadato
+
+
+class DayMicro:
+    """Generates an object containing de Day Microphysics state
+    according to GOES-16 manual.
+
+    Parameters
+    ----------
+    file_path: ``str tuple``
+        Tuple of length three containing the paths of the channels 3, 7
+        and 13 of the CMIPF GOES-16 product.
     """
 
     def __init__(self, file_path):
@@ -64,24 +78,25 @@ class DayMicro:
     def recorte(self, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0):
 
         """
-        Funcion que recorta una imagen tipo CMI de GOES.
+        This function trim a GOES CMI image according to the width, height
+        max west longitude and upper latitude specified on the parameters.
 
         Parameters
         ----------
-        data_path: str.
-        Direccion de los datos GOES.
-        rows: int.
-        Cantidad de filas de pixeles (largo) que tendrá la imagen recortada
-        cols: int.
-        Cantidad de columnas de pixeles (ancho) que tendrá la imagen recortada
-        lon_west: float.
-        Longitud maxima al oeste del recorte
-        lat_sup: float.
-        Latitud superior del recorte.
+        data_path: ``str``
+            Path to GOES CMI image.
+        rows: ``int``
+            Height of the trimmed image in pixels.
+        cols: ``int``
+            Height of the trimmed image in pixels.
+        lon_west: ``float``
+            Maximum longitude to the west.
+        lat_sup: ``float``
+            Maximum upper latitude.
 
         Returns
         -------
-        im_rec: matriz con los elementos del recorte
+        im_rec: ``numpy.array`` containing the trimmed image.
 
         """
 
@@ -137,25 +152,28 @@ class DayMicro:
         return im_rec
 
     def solar_7(self, ch7, ch13, latlon_extent):
-        """ "
-        Función que realiza la corrección según ángulo
-        del zenith para la banda 7.
-        Esta corrección es necesaria para imagenes de día
+        """
+        This function does a zenith angle correction to channel 7.
+        This correction is needed for daylight images.
+
         Parameters
         ----------
-        ch7: matriz (recortada) del canal 7
-        ch13: matriz (recortada) del canal 13
-        latlon_extent: list
-        Lista [x1,y1,x2,y2] de los bordes de la imagen
-        en latitud, longitud donde
-            x1=longitud de más al oeste
-            y1=latitud de más al sur (punto y inferior)
-            x2 = longitud de más al este
-            y2=latitud de más al norte (punto y superior)
+        ch7: ``numpy.array``
+            Trimmed image of channel 7.
+        ch13: ``numpy.array``
+            Trimed image of channel 13.
+        latlon_extent: ``list``
+            List containing the borders of the image in latitude and
+            longitude [x1,y1,x2,y2] where:
+                x1, further west longitude
+                y1, further south latitude
+                x2, further east longitude
+                y2, further north latitude
 
         Returns
         -------
-        data2b: matriz con el cálculo de zenith pixel a pixel
+        data2b: ``numpy.array``
+            Zenith calculation for every pixel.
         """
         # Calculo del ángulo del sol para banda 7
         # NOTAR que esto está mal. Está calulando una latitud
@@ -186,22 +204,22 @@ class DayMicro:
 
     def RGBdmp(self, rec03, rec07, rec13):
         """
-        Función que arma una imagen RGB que representa microfísica
-        de día según la guía de la pagina de GOES.
+        This function creates an RGB image that represents the day microphysics
+        according to the GOES webpage manual.
 
         Parameters
         ----------
-        rec03: numpy array
-        imágen correctamente procesada de la banda 3
-        rec07b: numpy array
-        imágen correctamente procesada de la banda 7
-        rec13: numpy array
-        imágen correctamente procesada de la banda 13
+        rec03: ``numpy.array``
+            Processed image of channel 3.
+        rec07b: ``numpy.array``
+            Processed image of channel 7.
+        rec13: ``numpy.array``
+            Processed image of channel 13.
 
         Returns
         -------
-        RGB: numpy array
-        Imagen RGB de microfísica de día
+        RGB: ``numpy.array``
+            RGB day microphysics image.
         """
 
         # Correccion del zenith

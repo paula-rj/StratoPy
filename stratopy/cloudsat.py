@@ -29,16 +29,20 @@ DEFAULT_CACHE_PATH = pathlib.Path(
 
 def read_hdf(path, layer="CloudLayerType", convert=False):
     """
-    Read a hdf file
+    Function for reading CloudSat data files, with extension ".hdf".
 
-    Args:
-        path (str): string of path file
-        layer (str, optional): select any layer of the
-        hdf file. Defaults to 'CloudLayerType'.
+    Parameters
+    ----------
+    file_path: ``str``
+        String containing path to file.
+    layer: ``str``, optional (default="CloudLayerType")
+        Select any layer of the hdf file.
 
-    Returns:
-        dataframe: contain Latitude, Longitude and 10 layers
-                   separated in columns.
+    Returns
+    -------
+    ``pandas.DataFrame``:
+        Dataframe containing Latitude, Longitude and
+        10 layers separated in columns.
     """
     try:
         hdf_file = HDF(path, HC.READ)
@@ -70,10 +74,10 @@ def convert_coordinates(hdf_df, projection=None):
     """
     Parameters
     ----------
-    layers_df: pandas DataFrame
-    projection: str
-        the reprojection that the user desires
-        Default: geostationary, GOES-R
+    layers_df: ``pandas.DataFrame``, optional (default=None)
+    projection: ``str``, optional (default=geostationary, GOES-R)
+        The reprojection that the user desires.
+
     """
     if projection is None:
         projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
@@ -83,8 +87,9 @@ def convert_coordinates(hdf_df, projection=None):
         hdf_df,
         geometry=gpd.points_from_xy(hdf_df["Longitude"], hdf_df["Latitude"]),
     )
-    geo_df.crs = "EPSG:4326"
     # EPSG 4326 corresponds to coordinates in latitude and longitude
+    geo_df.crs = "EPSG:4326"
+
     # Reprojecting into GOES16 geostationary projection
     geodf_to_proj = geo_df.to_crs(projection)
     return geodf_to_proj
@@ -140,15 +145,15 @@ class CloudDataFrame:
 
     def cut(self, area=None):
         """
-        Parameters:
-            area = [lat_0, lat_1, lon_0, lon_1]
-            where:
-                lat_0, latitude of minimal position
-                lat_1, latitude of maximal position
-                lon_0, longitude of minimal position
-                lon_1, longitude of maximal position
-            Default:
-                the cut will be south hemisphere
+        Parameters
+        ----------
+            area: ``list``, optional (default: cut will be south hemisphere)
+                [lat_0, lat_1, lon_0, lon_1] where:
+                    lat_0, latitude of minimal position
+                    lat_1, latitude of maximal position
+                    lon_0, longitude of minimal position
+                    lon_1, longitude of maximal position
+
         """
         df = self.cld_df
         if not area:
