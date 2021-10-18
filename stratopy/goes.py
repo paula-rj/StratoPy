@@ -36,20 +36,26 @@ def read_nc(file_path):
     return result
 
 
-class DayMicro:
+class GoesDataFrame:
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
 
     Parameters
     ----------
-    file_path: ``str tuple``
-        Tuple of length three containing the paths of the channels 3, 7
-        and 13 of the CMIPF GOES-16 product.
+    path_channel_3: ``str``
+        String containing the path to "nc" file for channel 3 of the
+        CMIPF GOES-16 product.
+    path_channel_7: ``str``
+        String containing the path to "nc" file for channel 7 of the
+        CMIPF GOES-16 product.
+    path_channel_13: ``str``
+        String containing the path to "nc" file for channel 13 of the
+        CMIPF GOES-16 product.
     """
 
-    def __init__(self, file_path):
-        self.file_path = file_path
-        self.metadato = read_nc(file_path)
+    def __init__(self, path_channel_3, path_channel_7, path_channel_13):
+        self.file_path = (path_channel_3, path_channel_7, path_channel_13)
+        self.metadata = read_nc(self.file_path[0])
 
         find_numbers = re.findall(r"\d+", self.file_path)
         # start_date = [
