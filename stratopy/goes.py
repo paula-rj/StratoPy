@@ -31,43 +31,47 @@ def read_nc(file_path):
     metadat: File variables.
 
     """
+    # Open netcdf file and extract variables
+    data = Dataset(file_path, "r")
+    result = data.variables
+    return result
 
-    data = Dataset(file_path, "r")  # Open netcdf file
-    metadata = data.variables
-    return metadata
 
-
-class DayMicro:
+class GoesDataFrame:
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
 
     Parameters
     ----------
-    file_path: ``str tuple``
-        Tuple of length three containing the paths of the channels 3, 7
-        and 13 of the CMIPF GOES-16 product.
+    path_channel_3: ``str``
+        String containing the path to "nc" file for channel 3 of the
+        CMIPF GOES-16 product.
+    path_channel_7: ``str``
+        String containing the path to "nc" file for channel 7 of the
+        CMIPF GOES-16 product.
+    path_channel_13: ``str``
+        String containing the path to "nc" file for channel 13 of the
+        CMIPF GOES-16 product.
     """
 
-    def __init__(self, file_path):
+    def __init__(self, path_channel_3, path_channel_7, path_channel_13):
+        self.file_path = (path_channel_3, path_channel_7, path_channel_13)
+        self.metadata = read_nc(self.file_path[0])
 
-        self.metadato = read_nc(file_path)
+        # Check for date and product consistency
+        files_date = [
+            band_path.split("s20", 1)[1].split("_", 1)[0]
+            for band_path in self.file_path
+        ]
+        assert all(
+            date == files_date[0] for date in files_date
+        ), "Start date's from all files should be the same."
+        assert all(
+            "L2-CMIPF" in path for path in self.file_path
+        ), "Files must be from the same product."
 
-        find_numbers = re.findall(r"\d+", file_path)
-        # start_date = [
-        #     band_path.split("s20", 1)[1].split("_", 1)[0]
-        #     for band_path in self.file_path
-        # ]
-
-        # # Check for date and product consistency
-        # assert all(
-        #     date == start_date[0] for date in start_date
-        # ), "Start date's from all files should be the same."
-        # assert all(
-        #     "L2-CMIPF" in path for path in self.file_path
-        # ), "Files must be from the same product."
-
-        # guarda desde el nivel L1 o L2
-        # file_name = file_path.split("OR_ABI-")[1]
+        # Saves from level L1 or L2
+        find_numbers = re.findall(r"\d+", self.file_path[0])
         self.julian_date = find_numbers[5][:-1]
         start_date = datetime.strptime(self.julian_date, "%Y%j%H%M%S")
         self.sam_date = start_date.strftime("%d-%m-%y")
@@ -104,13 +108,13 @@ class DayMicro:
         psize = 2000  # Tamaño del pixel en m
         N = 5424  # Tamaño de imagen con psize=2000 m
 
-        metadato = self.metadato  # Extraigo todas las variables
-        banda = metadato["band_id"][:].data[0]  # Extraigo el nro de banda
+        metadata = self.metadata  # Extraigo todas las variables
+        banda = metadata["band_id"][:].data[0]  # Extraigo el nro de banda
         # altura del satelite
-        h = metadato["goes_imager_projection"].perspective_point_height
-        semieje_may = metadato["goes_imager_projection"].semi_major_axis
-        semieje_men = metadato["goes_imager_projection"].semi_minor_axis
-        lon_cen = metadato[
+        h = metadata["goes_imager_projection"].perspective_point_height
+        semieje_may = metadata["goes_imager_projection"].semi_major_axis
+        semieje_men = metadata["goes_imager_projection"].semi_minor_axis
+        lon_cen = metadata[
             "goes_imager_projection"
         ].longitude_of_projection_origin
 
@@ -121,7 +125,7 @@ class DayMicro:
         y0 = pto_sup_izq[0] * h
 
         # Extraigo la imagen y la guardo en un array de np
-        image = np.array(metadato["CMI"][:].data)
+        image = np.array(metadata["CMI"][:].data)
 
         if int(banda) == 3:
             esc = 0.5
