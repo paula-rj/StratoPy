@@ -32,8 +32,8 @@ def read_nc(file_path):
     """
     # Open netcdf file and extract variables
     data = Dataset(file_path, "r")
-    metadato = data.variables
-    return metadato
+    result = data.variables
+    return result
 
 
 class DayMicro:

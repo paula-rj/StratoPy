@@ -8,6 +8,7 @@ from ftplib import FTP
 import attr
 
 from diskcache import Cache
+from diskcache.core import ENOVAL
 
 import geopandas as gpd
 
@@ -20,7 +21,6 @@ from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD
 from pyhdf.VS import VS
 
-# type: ignore
 # type: ignore
 DEFAULT_CACHE_PATH = pathlib.Path(
     os.path.expanduser(os.path.join("~", "stratopy_cache"))
@@ -189,21 +189,12 @@ def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
 
     # Transform dirname into cache id
     id_ = os.path.split(dirname)[-1]
-    # namevals = file_name.split("_")
-
-    # date = namevals[0]
-    # release = namevals[5] + '_' + namevals[6]
-    # product = namevals[3]
-
-    # str_date = datetime.date(*date).strftime("%Y/%j")
-    # id_ = f"{product}_{release}_{date}"
 
     # Search in local cache
     cache.expire()
-    # result = cache.get(id_)
-    result = cache.get(id_, retry=True)
+    result = cache.get(id_, default=ENOVAL, retry=True)
 
-    if result is None:
+    if result is ENOVAL:
 
         ftp = FTP()
         ftp.connect(host="ftp.cloudsat.cira.colostate.edu")
