@@ -1,9 +1,13 @@
 import re
 from datetime import datetime
 
+import core
+
 from netCDF4 import Dataset
 
 import numpy as np
+
+import pandas as pd
 
 from pyorbital import astronomy
 
@@ -11,13 +15,11 @@ from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
 
-from . import latlon2geos
-
 
 def read_nc(file_path):
-    """Function for reading GOES16 files, with extension ".nc".
-    It works the same for level L1 and L2.
 
+    """
+    Reads netCDF files.
     Parameters
     ----------
     file_path: ``str tuple``
@@ -26,14 +28,13 @@ def read_nc(file_path):
 
     Returns
     -------
-    im_rec: ``netCDF4.Dataset`` object.
-
+    metadat: File variables.
 
     """
-    # Open netcdf file and extract variables
-    data = Dataset(file_path, "r")
-    metadato = data.variables
-    return metadato
+
+    data = Dataset(file_path, "r")  # Open netcdf file
+    metadata = data.variables
+    return metadata
 
 
 class DayMicro:
@@ -48,10 +49,10 @@ class DayMicro:
     """
 
     def __init__(self, file_path):
-        self.file_path = file_path
+
         self.metadato = read_nc(file_path)
 
-        find_numbers = re.findall(r"\d+", self.file_path)
+        find_numbers = re.findall(r"\d+", file_path)
         # start_date = [
         #     band_path.split("s20", 1)[1].split("_", 1)[0]
         #     for band_path in self.file_path
@@ -66,7 +67,7 @@ class DayMicro:
         # ), "Files must be from the same product."
 
         # guarda desde el nivel L1 o L2
-        # file_name = self.file_path.split("OR_ABI-")[1]
+        # file_name = file_path.split("OR_ABI-")[1]
         self.julian_date = find_numbers[5][:-1]
         start_date = datetime.strptime(self.julian_date, "%Y%j%H%M%S")
         self.sam_date = start_date.strftime("%d-%m-%y")
@@ -78,7 +79,7 @@ class DayMicro:
     def recorte(self, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0):
 
         """
-        This function trim a GOES CMI image according to the width, height
+        This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.
 
         Parameters
@@ -96,7 +97,7 @@ class DayMicro:
 
         Returns
         -------
-        im_rec: ``numpy.array`` containing the trimmed image.
+        trim_img: ``numpy.array`` containing the trimmed image.
 
         """
 
@@ -113,7 +114,7 @@ class DayMicro:
             "goes_imager_projection"
         ].longitude_of_projection_origin
 
-        pto_sup_izq = latlon2geos.latlon2scan(
+        pto_sup_izq = core.latlon2scan(
             lat_sup, lon_west, lon_cen, Re=semieje_may, Rp=semieje_men, h=h
         )
         x0 = pto_sup_izq[1] * h
@@ -138,20 +139,20 @@ class DayMicro:
 
         esc = int(N / image.shape[0])
         Nx = int(cols / esc)  # numero de puntos del recorte en x
-        Ny = int(rows / esc)  # numero de puntos del recorte en x
-        f0 = int(
+        Ny = int(rows / esc)  # numero de puntos del recorte en y
+        self.f0 = int(
             (-y0 / psize + N / 2 - 1.5) / esc
         )  # fila del angulo superior izquierdo
-        # columna del angulo superior izquierdo
-        c0 = int((x0 / psize + N / 2 + 0.5) / esc)
-        f1 = int(f0 + Ny)  # fila del angulo inferior derecho
-        c1 = int(c0 + Nx)  # columna del angulo inferior derecho
-        # print('coordenadas filas, col: ', f0, c0, f1, c1)
+        self.c0 = int(
+            (x0 / psize + N / 2 + 0.5) / esc
+        )  # columna del angulo superior izquierdo
+        self.f1 = int(self.f0 + Ny)  # fila del angulo inferior derecho
+        self.c1 = int(self.c0 + Nx)  # columna del angulo inferior derecho
 
-        im_rec = image[f0:f1, c0:c1]
-        return im_rec
+        trim_img = image[self.f0:self.f1, self.c0:self.c1]
+        return trim_img
 
-    def solar_7(self, ch7, ch13, latlon_extent):
+    def solar7(self, ch7, ch13):
         """
         This function does a zenith angle correction to channel 7.
         This correction is needed for daylight images.
@@ -175,24 +176,18 @@ class DayMicro:
         data2b: ``numpy.array``
             Zenith calculation for every pixel.
         """
-        # Calculo del ángulo del sol para banda 7
-        # NOTAR que esto está mal. Está calulando una latitud
-        # y longitud equiespaciadas.
-        # Tengo el codigo para hacerlo bien, ya lo voy a subir.
-        lat = np.linspace(
-            self.latlon_extent[3], self.latlon_extent[1], ch7.shape[0]
-        )
-        lon = np.linspace(
-            self.latlon_extent[0], self.latlon_extent[2], ch7.shape[1]
-        )
-        print(lat.shape)
-        print(lon.shape)
+        lat = np.load(
+            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        )[self.f0:self.f1]
+        lon = np.load(
+            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        )[self.c0:self.c1]
 
         zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
         # Calculate the solar zenith angle
-        utc_time = datetime(2019, 1, 2, 18, 00)
-        for x in range(len(lat)):
-            for y in range(len(lon)):
+        utc_time = datetime(self.julian_date[:4], 1, 2, self.utc_hour, 00)
+        for x in range(len(self.lat)):
+            for y in range(len(self.lon)):
                 zenith[x, y] = astronomy.sun_zenith_angle(
                     utc_time, lon[y], lat[x]
                 )
@@ -202,7 +197,7 @@ class DayMicro:
         data2b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
         return data2b
 
-    def RGBdmp(self, rec03, rec07, rec13):
+    def RGB(self, rec03, rec07, rec13):
         """
         This function creates an RGB image that represents the day microphysics
         according to the GOES webpage manual.
@@ -221,26 +216,6 @@ class DayMicro:
         RGB: ``numpy.array``
             RGB day microphysics image.
         """
-
-        # Correccion del zenith
-        lat = np.linspace(
-            self.latlon_extent[3], self.latlon_extent[1], rec07.shape[0]
-        )
-        lon = np.linspace(
-            self.latlon_extent[0], self.latlon_extent[2], rec07.shape[1]
-        )
-        zenith = np.zeros((rec07.shape[0], rec07.shape[1]))
-        # Calculate the solar zenith angle
-        utc_time = datetime(2019, 1, 2, 18, 00)
-        for x in range(len(lat)):
-            for y in range(len(lon)):
-                zenith[x, y] = astronomy.sun_zenith_angle(
-                    utc_time, lon[y], lat[x]
-                )
-        # refl39 = Calculator(
-        #     platform_name="GOES-16", instrument="abi", band="ch7"
-        # )
-        # data07b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
 
         R = rec03  # banda3
         G = rec07  # banda7 con corrección zenith
@@ -281,6 +256,105 @@ class DayMicro:
         # Create the RGB
         RGB = np.stack([R, G, B], axis=2)
         # el axis está para que el shape sea fil col dim y no dim col fil
-        RRGB = np.stack([RR, GG, BB], axis=2)
+        self.RRGB = np.stack([RR, GG, BB], axis=2)
         print(RGB.shape)
-        return RRGB
+        return self.RRGB
+
+    def to_dataframe(self, rec):
+
+        """Returns a pandas dataframe containing Latitude and Longitude for
+        every pixel of a GOES full disk image, and the value of the pixel,
+        from a numpy array.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        rgb_df: Pandas DataFrame
+
+        """
+        lat = np.load(
+            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        )[self.f0:self.f1]
+        lon = np.load(
+            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        )[self.c0:self.c1]
+
+        rgb_df = pd.DataFrame({"Latitude": lat, "Longitude": lon})
+
+        return rgb_df
+
+
+def mask(rgb):
+    """This function returns a labeled-by-color image according to
+    the interpretation of the product Day Microphysics
+    (https://weather.msfc.nasa.gov/sport/training/quickGuides/
+    rgb/QuickGuide_DtMicroRGB_NASA_SPoRT.pdf)
+
+    Parameters:
+    -----------
+    rgb: numpy array
+    Numpy Array object containig the Day Microphysics RGB product
+
+    Returns:
+    -------
+    img_mask: numpy array
+    Masked RGB
+
+    """
+
+    img_mask = np.zeros(rgb.shape)
+
+    # Large drops, Low clouds-> pink/magenta
+    lc_rfilter = rgb[:, :, 0] > 0.7  # R>0.8
+    lc_gfilter = rgb[:, :, 1] < 0.4  # G
+    lc_bfilter = rgb[:, :, 2] > 0.6  # B
+    lc_filter = lc_rfilter * lc_gfilter * lc_bfilter
+    # Mask= magenta
+    img_mask[lc_filter, 0] = 1.0
+    img_mask[lc_filter, 1] = 0.0
+    img_mask[lc_filter, 2] = 1.0
+
+    # Stratus/Stratoculumus (small drops, low clouds) -> bright green/blue
+    st_rfilter = (rgb[:, :, 0] > 0.3) * (rgb[:, :, 0] < 0.45)  # R
+    st_gfilter = (rgb[:, :, 1] > 0.5) * (rgb[:, :, 1] < 0.8)  # G
+    st_bfilter = rgb[:, :, 2] < 0.7
+    st_filter = st_rfilter * st_gfilter * st_bfilter
+    # Mask=Light blue
+    img_mask[st_filter, 0] = 0.0
+    img_mask[st_filter, 1] = 1.0
+    img_mask[st_filter, 2] = 1.0
+
+    # CumuloNimbis (high clouds) -> red, dark orange
+    cb_rfilter = rgb[:, :, 0] > 0.7  # R
+    cb_gfilter = rgb[:, :, 1] < 0.3  # G
+    cb_bfilter = rgb[:, :, 2] < 0.3  # B
+    cb_filter = cb_rfilter * cb_gfilter * cb_bfilter
+    # Mask=Red
+    img_mask[cb_filter, 0] = 1.0
+    img_mask[cb_filter, 1] = 0.0
+    img_mask[cb_filter, 2] = 0.0
+
+    # Cirrus (high clouds)-> green, dark green
+    cr_rfilter = rgb[:, :, 0] < 0.3  # R
+    cr_gfilter = rgb[:, :, 1] > 0.7  # G
+    cr_bfilter = rgb[:, :, 2] < 0.3  # B
+    cr_filter = cr_rfilter * cr_gfilter * cr_bfilter
+    # Mask= Green
+    img_mask[cr_filter, 0] = 0.0
+    img_mask[cr_filter, 1] = 1.0
+    img_mask[cr_filter, 2] = 0.0
+
+    # supercooled clouds Thick, small drops, medium clouds-> yellow
+    super_rfilter = rgb[:, :, 0] > 0.8
+    super_gfilter = rgb[:, :, 1] > 0.8
+    super_bfilter = rgb[:, :, 2] < 0.2  # amarillo
+    super_filter = super_rfilter * super_gfilter * super_bfilter
+    # Mask=Yellow
+    img_mask[super_filter, 0] = 1.0
+    img_mask[super_filter, 1] = 1.0
+    img_mask[super_filter, 2] = 0.0
+
+    return img_mask[:, :, [0, 1, 2]]
