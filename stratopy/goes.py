@@ -55,7 +55,7 @@ class GoesDataFrame:
 
     def __init__(self, path_channel_3, path_channel_7, path_channel_13):
         self.file_path = (path_channel_3, path_channel_7, path_channel_13)
-        self.metadata = read_nc(self.file_path[0])
+        self.metadato = read_nc(self.file_path[0])
 
         find_numbers = re.findall(r"\d+", self.file_path)
         # start_date = [
