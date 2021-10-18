@@ -1,4 +1,5 @@
 import re
+
 from datetime import datetime
 
 from netCDF4 import Dataset
@@ -32,8 +33,8 @@ def read_nc(file_path):
     """
     # Open netcdf file and extract variables
     data = Dataset(file_path, "r")
-    metadato = data.variables
-    return metadato
+    result = data.variables
+    return result
 
 
 class DayMicro:
