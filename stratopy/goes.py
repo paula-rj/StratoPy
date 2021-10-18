@@ -1,8 +1,6 @@
 import re
 from datetime import datetime
 
-import core
-
 from netCDF4 import Dataset
 
 import numpy as np
@@ -14,6 +12,8 @@ from pyorbital import astronomy
 from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
+
+from . import core
 
 
 def read_nc(file_path):
