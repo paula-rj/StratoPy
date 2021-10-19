@@ -53,8 +53,8 @@ def read_hdf(path, layer="CloudLayerType", convert=False):
         vd_lon = vs.attach("Longitude", write=0)
         lon = np.array(vd_lon[:]).flatten()
         vd_lon.detach
-    except Exception as e:
-        raise e
+    except Exception as error:
+        raise error
     else:
         # Read sd data
         file_path = SD(path)
