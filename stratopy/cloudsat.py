@@ -84,7 +84,9 @@ def convert_coordinates(hdf_df, projection=None):
             +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
 
     geo_df = gpd.GeoDataFrame(
-        hdf_df,
+        hdf_df.values,
+        columns=hdf_df.columns,
+        index=hdf_df.index,
         geometry=gpd.points_from_xy(hdf_df["Longitude"], hdf_df["Latitude"]),
     )
     # EPSG 4326 corresponds to coordinates in latitude and longitude
@@ -105,8 +107,7 @@ class CloudDataFrame:
     )
 
     def __getitem__(self, slice):
-        sliced = self.cld_df.__getitem__(slice)
-        return CloudDataFrame(cld_df=sliced)
+        return self.cld_df.__getitem__(slice)
 
     def __dir__(self):
         return super().__dir__() + dir(self.cld_df)
@@ -120,7 +121,7 @@ class CloudDataFrame:
             df_body = repr(self.cld_df).splitlines()
         df_dim = list(self.cld_df.shape)
         sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
-        footer = f"\nCloudSatDataFrame - {sdf_dim}"
+        footer = f"\nCloudDataFrame - {sdf_dim}"
         cloudsat_cldcls_repr = "\n".join(df_body + [footer])
         return cloudsat_cldcls_repr
 
@@ -155,32 +156,30 @@ class CloudDataFrame:
                     lon_1, longitude of maximal position
 
         """
+        df = self.cld_df
         if not area:
-            return CloudDataFrame(
-                self.cld_df.loc[
-                    (self.cld_df.Latitude < 0) & (self.cld_df.Longitude < 0)
-                ]
-            )
+            cld_layertype = df[df.Latitude < 0]
         elif len(area) == 4:
             latitude_min = area[0]
             latitude_max = area[1]
             longitude_min = area[2]
             longitude_max = area[3]
-
-            return CloudDataFrame(
-                self.cld_df.loc[
-                    self.cld_df["Latitude"].between(latitude_min, latitude_max)
-                    & self.cld_df["Longitude"].between(
-                        longitude_min, longitude_max
-                    )
-                ]
-            )
+            cld_layertype = df[
+                df["Latitude"].between(latitude_min, latitude_max)
+            ]
+            cld_layertype = cld_layertype[
+                cld_layertype["Longitude"].between(
+                    longitude_min, longitude_max
+                )
+            ]
         else:
             raise TypeError(
                 "Spected list. "
                 "For example:\n"
                 "[lat_min, lat_max, lon_min, lon_max]"
             )
+
+        return cld_layertype
 
 
 def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
