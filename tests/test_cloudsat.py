@@ -1,3 +1,5 @@
+import pandas as pd
+
 from stratopy import cloudsat
 
 path = (
@@ -6,15 +8,15 @@ path = (
 )
 
 
-def test_hdf_read(monkeypatch):
-    monkeypatch.setattr(cloudsat, "read_hdf", lambda x: 4)
-    dado = cloudsat
-    assert dado.read_hdf(path) == 4
+def test_hdf_read():
+    assert isinstance(cloudsat.read_hdf(path), cloudsat.CloudDataFrame)
 
 
-# @pytest.mark.slow
+def test_CloudDataFrame():
+    assert not isinstance(cloudsat.CloudDataFrame, pd.DataFrame)
+
+
 def test_cut():
     path_hdf = cloudsat.read_hdf(path)
     corte = path_hdf.cut()
     assert corte.shape < path_hdf.shape
-    # assert cloudsat.CloudClass(path).cut() is None
