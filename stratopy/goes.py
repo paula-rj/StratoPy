@@ -32,41 +32,45 @@ def read_nc(file_path):
     """
     # Open netcdf file and extract variables
     data = Dataset(file_path, "r")
-    metadato = data.variables
-    return metadato
+    result = data.variables
+    return result
 
 
-class DayMicro:
+class GoesDataFrame:
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
 
     Parameters
     ----------
-    file_path: ``str tuple``
-        Tuple of length three containing the paths of the channels 3, 7
-        and 13 of the CMIPF GOES-16 product.
+    path_channel_3: ``str``
+        String containing the path to "nc" file for channel 3 of the
+        CMIPF GOES-16 product.
+    path_channel_7: ``str``
+        String containing the path to "nc" file for channel 7 of the
+        CMIPF GOES-16 product.
+    path_channel_13: ``str``
+        String containing the path to "nc" file for channel 13 of the
+        CMIPF GOES-16 product.
     """
 
-    def __init__(self, file_path):
-        self.file_path = file_path
-        self.metadato = read_nc(file_path)
+    def __init__(self, path_channel_3, path_channel_7, path_channel_13):
+        self.file_path = (path_channel_3, path_channel_7, path_channel_13)
+        self.metadata = read_nc(self.file_path[0])
 
-        find_numbers = re.findall(r"\d+", self.file_path)
-        # start_date = [
-        #     band_path.split("s20", 1)[1].split("_", 1)[0]
-        #     for band_path in self.file_path
-        # ]
+        # Check for date and product consistency
+        files_date = [
+            band_path.split("s20", 1)[1].split("_", 1)[0]
+            for band_path in self.file_path
+        ]
+        assert all(
+            date == files_date[0] for date in files_date
+        ), "Start date's from all files should be the same."
+        assert all(
+            "L2-CMIPF" in path for path in self.file_path
+        ), "Files must be from the same product."
 
-        # # Check for date and product consistency
-        # assert all(
-        #     date == start_date[0] for date in start_date
-        # ), "Start date's from all files should be the same."
-        # assert all(
-        #     "L2-CMIPF" in path for path in self.file_path
-        # ), "Files must be from the same product."
-
-        # guarda desde el nivel L1 o L2
-        # file_name = self.file_path.split("OR_ABI-")[1]
+        # Saves from level L1 or L2
+        find_numbers = re.findall(r"\d+", self.file_path[0])
         self.julian_date = find_numbers[5][:-1]
         start_date = datetime.strptime(self.julian_date, "%Y%j%H%M%S")
         self.sam_date = start_date.strftime("%d-%m-%y")
@@ -99,17 +103,19 @@ class DayMicro:
         im_rec: ``numpy.array`` containing the trimmed image.
 
         """
+        # Pixel and image size in meters
+        psize = 2000
+        N = 5424
 
-        psize = 2000  # Tamaño del pixel en m
-        N = 5424  # Tamaño de imagen con psize=2000 m
+        # Extract variables and band
+        metadata = self.metadata
+        band = metadata["band_id"][:].data[0]
 
-        metadato = self.metadato  # Extraigo todas las variables
-        banda = metadato["band_id"][:].data[0]  # Extraigo el nro de banda
-        # altura del satelite
-        h = metadato["goes_imager_projection"].perspective_point_height
-        semieje_may = metadato["goes_imager_projection"].semi_major_axis
-        semieje_men = metadato["goes_imager_projection"].semi_minor_axis
-        lon_cen = metadato[
+        # Satellite high
+        h = metadata["goes_imager_projection"].perspective_point_height
+        semieje_may = metadata["goes_imager_projection"].semi_major_axis
+        semieje_men = metadata["goes_imager_projection"].semi_minor_axis
+        lon_cen = metadata[
             "goes_imager_projection"
         ].longitude_of_projection_origin
 
@@ -119,13 +125,12 @@ class DayMicro:
         x0 = pto_sup_izq[1] * h
         y0 = pto_sup_izq[0] * h
 
-        # Extraigo la imagen y la guardo en un array de np
-        image = np.array(metadato["CMI"][:].data)
+        # Extract image to np.array
+        image = np.array(metadata["CMI"][:].data)
 
-        if int(banda) == 3:
+        # Rescale channel 3
+        if int(band) == 3:
             esc = 0.5
-            # escala es 1/2 porque tamaño de pixel de banda 3 = 1 km
-            # y tamaño pixel del resto = 2 km
             x = range(0, 10848)
             y = range(0, 10848)
             f = interpolate.interp2d(x, y, image, kind="cubic")
@@ -133,12 +138,10 @@ class DayMicro:
             ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
             image = f(xnew, ynew)
 
-        # tamaño del recorte en proyeccion goes
-        # img_extentr = [x0, x0+columnas*psize, y0 -filas*psize, y0]
-
+        # Goes trimed image size
         esc = int(N / image.shape[0])
-        Nx = int(cols / esc)  # numero de puntos del recorte en x
-        Ny = int(rows / esc)  # numero de puntos del recorte en x
+        Nx = int(cols / esc)  # Number of points in x
+        Ny = int(rows / esc)  # Number of points in y
         f0 = int(
             (-y0 / psize + N / 2 - 1.5) / esc
         )  # fila del angulo superior izquierdo
@@ -146,7 +149,6 @@ class DayMicro:
         c0 = int((x0 / psize + N / 2 + 0.5) / esc)
         f1 = int(f0 + Ny)  # fila del angulo inferior derecho
         c1 = int(c0 + Nx)  # columna del angulo inferior derecho
-        # print('coordenadas filas, col: ', f0, c0, f1, c1)
 
         im_rec = image[f0:f1, c0:c1]
         return im_rec
@@ -175,10 +177,6 @@ class DayMicro:
         data2b: ``numpy.array``
             Zenith calculation for every pixel.
         """
-        # Calculo del ángulo del sol para banda 7
-        # NOTAR que esto está mal. Está calulando una latitud
-        # y longitud equiespaciadas.
-        # Tengo el codigo para hacerlo bien, ya lo voy a subir.
         lat = np.linspace(
             self.latlon_extent[3], self.latlon_extent[1], ch7.shape[0]
         )
@@ -222,7 +220,7 @@ class DayMicro:
             RGB day microphysics image.
         """
 
-        # Correccion del zenith
+        # Zenith correction
         lat = np.linspace(
             self.latlon_extent[3], self.latlon_extent[1], rec07.shape[0]
         )
@@ -230,6 +228,7 @@ class DayMicro:
             self.latlon_extent[0], self.latlon_extent[2], rec07.shape[1]
         )
         zenith = np.zeros((rec07.shape[0], rec07.shape[1]))
+
         # Calculate the solar zenith angle
         utc_time = datetime(2019, 1, 2, 18, 00)
         for x in range(len(lat)):
@@ -242,9 +241,10 @@ class DayMicro:
         # )
         # data07b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
 
-        R = rec03  # banda3
-        G = rec07  # banda7 con corrección zenith
-        B = rec13  # banda13
+        # Asign channels, channel 7 with correction
+        R = rec03
+        G = rec07
+        B = rec13
 
         # Minimuns and Maximuns
         Rmin = 0
@@ -256,17 +256,16 @@ class DayMicro:
         Bmin = 203
         Bmax = 323
 
-        # Choose the gamma -> STANDARIZADAS
+        # Choose the gamma -> STANDARIZED
         gamma_R = 1
         gamma_G = 2.5
         gamma_B = 1
 
-        # Normalize the data
+        # Normalize the data and copying
         R = ((R - Rmin) / (Rmax - Rmin)) ** (1 / gamma_R)
         G = ((G - Gmin) / (Gmax - Gmin)) ** (1 / gamma_G)
         B = ((B - Bmin) / (Bmax - Bmin)) ** (1 / gamma_B)
 
-        # Normalizamos (matplotlib lo normaliza de todas formas)
         RR = np.copy(R)
         BB = np.copy(B)
         GG = np.copy(G)
@@ -280,7 +279,6 @@ class DayMicro:
 
         # Create the RGB
         RGB = np.stack([R, G, B], axis=2)
-        # el axis está para que el shape sea fil col dim y no dim col fil
         RRGB = np.stack([RR, GG, BB], axis=2)
         print(RGB.shape)
         return RRGB

@@ -23,6 +23,7 @@ setup(
          and GOES-R and generate labeled images containing cloud types.",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
+    install_requires=REQUIREMENTS,
     author=[
         "Paula Romero",
         "Georgynio Rosales",
@@ -33,7 +34,6 @@ setup(
     url="https://github.com/paula-rj/StratoPy",
     py_modules=None,
     packages=["stratopy"],
-    install_requires=REQUIREMENTS,
     include_package_data=True,
     license="The MIT License",
     keywords=["stratopy", "clouds"],
