@@ -156,30 +156,32 @@ class CloudDataFrame:
                     lon_1, longitude of maximal position
 
         """
-        df = self.cld_df
         if not area:
-            cld_layertype = df[df.Latitude < 0]
+            return CloudDataFrame(
+                self.cld_df.loc[
+                    (self.cld_df.Latitude < 0) & (self.cld_df.Longitude < 0)
+                ]
+            )
         elif len(area) == 4:
             latitude_min = area[0]
             latitude_max = area[1]
             longitude_min = area[2]
             longitude_max = area[3]
-            cld_layertype = df[
-                df["Latitude"].between(latitude_min, latitude_max)
-            ]
-            cld_layertype = cld_layertype[
-                cld_layertype["Longitude"].between(
-                    longitude_min, longitude_max
-                )
-            ]
+
+            return CloudDataFrame(
+                self.cld_df.loc[
+                    self.cld_df["Latitude"].between(latitude_min, latitude_max)
+                    & self.cld_df["Longitude"].between(
+                        longitude_min, longitude_max
+                    )
+                ]
+            )
         else:
             raise TypeError(
                 "Spected list. "
                 "For example:\n"
                 "[lat_min, lat_max, lon_min, lon_max]"
             )
-
-        return cld_layertype
 
 
 def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
