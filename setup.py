@@ -24,12 +24,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     install_requires=REQUIREMENTS,
-    author=[
-        "Paula Romero",
-        "Georgynio Rosales",
-        "Jose Robledo",
-        "Julian Villa",
-    ],
+    author="Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa",
     author_email="paula.romero@mi.unc.edu.ar",
     url="https://github.com/paula-rj/StratoPy",
     py_modules=None,
