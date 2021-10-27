@@ -27,6 +27,8 @@
 #
 import numpy as np
 
+from pandas import merge  # noqa # pylint: disable=unused-import
+
 
 def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):
     """
@@ -151,7 +153,7 @@ def latlon2scan(
         longitud
     lon0: float, float arr
         longitud del satélite y origen del sistema de coordenadas planas
-    Re: float
+    Re: float,
         radio ecuatorial, en m
     Rp: float
         radio polar, en m
@@ -248,3 +250,22 @@ def scan2colfil(x, y, x0, y0, scale, tipo=0):
         return round(col).astype("int"), round(fil).astype("int")
     else:
         print("error de tipo")
+
+
+def merge_df(cld_df, goes_df):
+    """
+    Merges a cloudDataFrame with a GOES DataFrame by
+    rows and columns
+    Parameters
+    ----------
+    cld_df : Pandas Dataframe
+    Object returned by class CldClass
+
+    cld_df : Pandas Dataframe
+    Object returned by class DayMicro
+
+    """
+    final_df = cld_df.merge(
+        goes_df, how="left", left_on=["row", "col"], right_on=["R", "G", "B"]
+    )
+    return final_df

@@ -105,12 +105,12 @@ class GoesDataFrame:
 
         """
 
-        psize = 2000  # Tamaño del pixel en m
-        N = 5424  # Tamaño de imagen con psize=2000 m
+        psize = 2000  # Pixel size in meters
+        N = 5424  # Image size for psize=2000 m
 
-        metadata = self.metadata  # Extraigo todas las variables
-        banda = metadata["band_id"][:].data[0]  # Extraigo el nro de banda
-        # altura del satelite
+        metadata = self.metadata  # Extract all the variables
+        band = metadata["band_id"][:].data[0]  # Channel number
+        # satellite height
         h = metadata["goes_imager_projection"].perspective_point_height
         semieje_may = metadata["goes_imager_projection"].semi_major_axis
         semieje_men = metadata["goes_imager_projection"].semi_minor_axis
@@ -127,12 +127,12 @@ class GoesDataFrame:
         # Extraigo la imagen y la guardo en un array de np
         image = np.array(metadata["CMI"][:].data)
 
-        if int(banda) == 3:
+        if int(band) == 3:
             esc = 0.5
             # escala es 1/2 porque tamaño de pixel de banda 3 = 1 km
             # y tamaño pixel del resto = 2 km
-            x = range(0, 10848)
-            y = range(0, 10848)
+            x = range(0, image.shape[0])
+            y = range(0, image.shape[1])
             f = interpolate.interp2d(x, y, image, kind="cubic")
             xnew = np.arange(x[0], x[-1], (x[1] - x[0]) / esc)
             ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
@@ -144,16 +144,16 @@ class GoesDataFrame:
         esc = int(N / image.shape[0])
         Nx = int(cols / esc)  # numero de puntos del recorte en x
         Ny = int(rows / esc)  # numero de puntos del recorte en y
-        self.f0 = int(
+        self.r0 = int(
             (-y0 / psize + N / 2 - 1.5) / esc
         )  # fila del angulo superior izquierdo
         self.c0 = int(
             (x0 / psize + N / 2 + 0.5) / esc
         )  # columna del angulo superior izquierdo
-        self.f1 = int(self.f0 + Ny)  # fila del angulo inferior derecho
+        self.r1 = int(self.r0 + Ny)  # fila del angulo inferior derecho
         self.c1 = int(self.c0 + Nx)  # columna del angulo inferior derecho
 
-        trim_img = image[self.f0:self.f1, self.c0:self.c1]
+        trim_img = image[self.r0 : self.r1, self.c0 : self.c1]
         return trim_img
 
     def solar7(self, ch7, ch13):
@@ -182,10 +182,10 @@ class GoesDataFrame:
         """
         lat = np.load(
             "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.f0:self.f1]
+        )[self.r0 : self.r1]
         lon = np.load(
             "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.c0:self.c1]
+        )[self.c0 : self.c1]
 
         zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
         # Calculate the solar zenith angle
@@ -281,10 +281,10 @@ class GoesDataFrame:
         """
         lat = np.load(
             "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.f0:self.f1]
+        )[self.r0 : self.r1]
         lon = np.load(
             "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.c0:self.c1]
+        )[self.c0 : self.c1]
 
         rgb_df = pd.DataFrame({"Latitude": lat, "Longitude": lon})
 
