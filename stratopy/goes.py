@@ -80,7 +80,7 @@ class GoesDataFrame:
     def __repr__(self):
         return f"GOES object. Date: {self.sam_date}; {self.utc_hour} UTC "
 
-    def recorte(self, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0):
+    def trim(self, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0):
 
         """
         This function trims a GOES CMI image according to the width, height
@@ -135,7 +135,7 @@ class GoesDataFrame:
             esc = 0.5
             x = range(0, 10848)
             y = range(0, 10848)
-            f = interpolate.interp2d(x, y, image, kind="cubic")
+            f = interpolate.interp2d(x, y, image, kind="linear")
             xnew = np.arange(x[0], x[-1], (x[1] - x[0]) / esc)
             ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
             image = f(xnew, ynew)
@@ -144,15 +144,15 @@ class GoesDataFrame:
         esc = int(N / image.shape[0])
         Nx = int(cols / esc)  # Number of points in x
         Ny = int(rows / esc)  # Number of points in y
-        f0 = int(
+        r0 = int(
             (-y0 / psize + N / 2 - 1.5) / esc
         )  # fila del angulo superior izquierdo
         # columna del angulo superior izquierdo
         c0 = int((x0 / psize + N / 2 + 0.5) / esc)
-        f1 = int(f0 + Ny)  # fila del angulo inferior derecho
+        r1 = int(r0 + Ny)  # fila del angulo inferior derecho
         c1 = int(c0 + Nx)  # columna del angulo inferior derecho
 
-        trim_img = image[self.r0 : self.r1, self.c0 : self.c1]
+        trim_img = image[r0:r1, c0:c1]
         return trim_img
 
     def solar7(self, ch7, ch13):
@@ -181,10 +181,10 @@ class GoesDataFrame:
         """
         lat = np.load(
             "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.r0 : self.r1]
+        )[r0:r1]
         lon = np.load(
             "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.c0 : self.c1]
+        )[c0:c1]
 
         zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
         # Calculate the solar zenith angle
@@ -255,13 +255,11 @@ class GoesDataFrame:
         GG[GG < 0] = 0.0
         GG[GG > 1] = 1.0
 
-        # Create the RGB
-        RGB = np.stack([R, G, B], axis=2)
+        # Create the norm RGB
         RRGB = np.stack([RR, GG, BB], axis=2)
-        print(RGB.shape)
-        return self.RRGB
+        return RRGB
 
-    def to_dataframe(self, rec):
+    def to_dataframe(self, rgb):
 
         """Returns a pandas dataframe containing Latitude and Longitude for
         every pixel of a GOES full disk image, and the value of the pixel,
@@ -276,14 +274,8 @@ class GoesDataFrame:
         rgb_df: Pandas DataFrame
 
         """
-        lat = np.load(
-            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.r0 : self.r1]
-        lon = np.load(
-            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[self.c0 : self.c1]
 
-        rgb_df = pd.DataFrame({"Latitude": lat, "Longitude": lon})
+        rgb_df = pd.DataFrame(rgb)
 
         return rgb_df
 
