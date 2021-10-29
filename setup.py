@@ -7,6 +7,7 @@ with open("README.md", "r") as fp:
 REQUIREMENTS = [
     "numpy",
     "pandas",
+    "attrs",
     "matplotlib",
     "geopandas",
     "pyhdf",
@@ -33,7 +34,7 @@ setup(
     license="The MIT License",
     keywords=["stratopy", "clouds"],
     classifiers=[
-        "Development Status :: 4 -Beta",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3.9",
