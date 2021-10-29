@@ -179,12 +179,14 @@ class GoesDataFrame:
         data2b: ``numpy.array``
             Zenith calculation for every pixel.
         """
-        lat = np.load(
-            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[r0:r1]
-        lon = np.load(
-            "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
-        )[c0:c1]
+        # lat = np.load(
+        #    "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        # )[r0:r1]
+        # lon = np.load(
+        #    "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        # )[c0:c1]
+        lat = np.arange(len(ch7[1]))
+        lon = np.arange(len(ch7[0]))
 
         zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
         # Calculate the solar zenith angle
