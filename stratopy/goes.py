@@ -5,19 +5,21 @@ from netCDF4 import Dataset
 
 import numpy as np
 
+import pandas as pd
+
 from pyorbital import astronomy
 
 from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
 
-from . import latlon2geos
+from . import core
 
 
 def read_nc(file_path):
-    """Function for reading GOES16 files, with extension ".nc".
-    It works the same for level L1 and L2.
 
+    """
+    Reads netCDF files.
     Parameters
     ----------
     file_path: ``str tuple``
@@ -26,8 +28,7 @@ def read_nc(file_path):
 
     Returns
     -------
-    im_rec: ``netCDF4.Dataset`` object.
-
+    metadat: File variables.
 
     """
     # Open netcdf file and extract variables
@@ -79,10 +80,10 @@ class GoesDataFrame:
     def __repr__(self):
         return f"GOES object. Date: {self.sam_date}; {self.utc_hour} UTC "
 
-    def recorte(self, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0):
+    def trim(self, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0):
 
         """
-        This function trim a GOES CMI image according to the width, height
+        This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.
 
         Parameters
@@ -100,18 +101,19 @@ class GoesDataFrame:
 
         Returns
         -------
-        im_rec: ``numpy.array`` containing the trimmed image.
+        trim_img: ``numpy.array`` containing the trimmed image.
 
         """
         # Pixel and image size in meters
         psize = 2000
         N = 5424
 
-        # Extract variables and band
-        metadata = self.metadata
-        band = metadata["band_id"][:].data[0]
+        psize = 2000  # Pixel size in meters
+        N = 5424  # Image size for psize=2000 m
 
-        # Satellite high
+        metadata = self.metadata  # Extract all the variables
+        band = metadata["band_id"][:].data[0]  # Channel number
+        # satellite height
         h = metadata["goes_imager_projection"].perspective_point_height
         semieje_may = metadata["goes_imager_projection"].semi_major_axis
         semieje_men = metadata["goes_imager_projection"].semi_minor_axis
@@ -119,7 +121,7 @@ class GoesDataFrame:
             "goes_imager_projection"
         ].longitude_of_projection_origin
 
-        pto_sup_izq = latlon2geos.latlon2scan(
+        pto_sup_izq = core.latlon2scan(
             lat_sup, lon_west, lon_cen, Re=semieje_may, Rp=semieje_men, h=h
         )
         x0 = pto_sup_izq[1] * h
@@ -133,7 +135,7 @@ class GoesDataFrame:
             esc = 0.5
             x = range(0, 10848)
             y = range(0, 10848)
-            f = interpolate.interp2d(x, y, image, kind="cubic")
+            f = interpolate.interp2d(x, y, image, kind="linear")
             xnew = np.arange(x[0], x[-1], (x[1] - x[0]) / esc)
             ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
             image = f(xnew, ynew)
@@ -142,18 +144,18 @@ class GoesDataFrame:
         esc = int(N / image.shape[0])
         Nx = int(cols / esc)  # Number of points in x
         Ny = int(rows / esc)  # Number of points in y
-        f0 = int(
+        r0 = int(
             (-y0 / psize + N / 2 - 1.5) / esc
         )  # fila del angulo superior izquierdo
         # columna del angulo superior izquierdo
         c0 = int((x0 / psize + N / 2 + 0.5) / esc)
-        f1 = int(f0 + Ny)  # fila del angulo inferior derecho
+        r1 = int(r0 + Ny)  # fila del angulo inferior derecho
         c1 = int(c0 + Nx)  # columna del angulo inferior derecho
 
-        im_rec = image[f0:f1, c0:c1]
-        return im_rec
+        trim_img = image[r0:r1, c0:c1]
+        return trim_img
 
-    def solar_7(self, ch7, ch13, latlon_extent):
+    def solar7(self, ch7, ch13):
         """
         This function does a zenith angle correction to channel 7.
         This correction is needed for daylight images.
@@ -177,20 +179,20 @@ class GoesDataFrame:
         data2b: ``numpy.array``
             Zenith calculation for every pixel.
         """
-        lat = np.linspace(
-            self.latlon_extent[3], self.latlon_extent[1], ch7.shape[0]
-        )
-        lon = np.linspace(
-            self.latlon_extent[0], self.latlon_extent[2], ch7.shape[1]
-        )
-        print(lat.shape)
-        print(lon.shape)
+        # lat = np.load(
+        #    "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        # )[r0:r1]
+        # lon = np.load(
+        #    "/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/lat_vec.npy"
+        # )[c0:c1]
+        lat = np.arange(len(ch7[1]))
+        lon = np.arange(len(ch7[0]))
 
         zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
         # Calculate the solar zenith angle
-        utc_time = datetime(2019, 1, 2, 18, 00)
-        for x in range(len(lat)):
-            for y in range(len(lon)):
+        utc_time = datetime(self.julian_date[:4], 1, 2, self.utc_hour, 00)
+        for x in range(len(self.lat)):
+            for y in range(len(self.lon)):
                 zenith[x, y] = astronomy.sun_zenith_angle(
                     utc_time, lon[y], lat[x]
                 )
@@ -200,7 +202,7 @@ class GoesDataFrame:
         data2b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
         return data2b
 
-    def RGBdmp(self, rec03, rec07, rec13):
+    def RGB(self, rec03, rec07, rec13):
         """
         This function creates an RGB image that represents the day microphysics
         according to the GOES webpage manual.
@@ -220,31 +222,9 @@ class GoesDataFrame:
             RGB day microphysics image.
         """
 
-        # Zenith correction
-        lat = np.linspace(
-            self.latlon_extent[3], self.latlon_extent[1], rec07.shape[0]
-        )
-        lon = np.linspace(
-            self.latlon_extent[0], self.latlon_extent[2], rec07.shape[1]
-        )
-        zenith = np.zeros((rec07.shape[0], rec07.shape[1]))
-
-        # Calculate the solar zenith angle
-        utc_time = datetime(2019, 1, 2, 18, 00)
-        for x in range(len(lat)):
-            for y in range(len(lon)):
-                zenith[x, y] = astronomy.sun_zenith_angle(
-                    utc_time, lon[y], lat[x]
-                )
-        # refl39 = Calculator(
-        #     platform_name="GOES-16", instrument="abi", band="ch7"
-        # )
-        # data07b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
-
-        # Asign channels, channel 7 with correction
-        R = rec03
-        G = rec07
-        B = rec13
+        R = rec03  # banda3
+        G = rec07  # banda7 con corrección zenith
+        B = rec13  # banda13
 
         # Minimuns and Maximuns
         Rmin = 0
@@ -277,8 +257,99 @@ class GoesDataFrame:
         GG[GG < 0] = 0.0
         GG[GG > 1] = 1.0
 
-        # Create the RGB
-        RGB = np.stack([R, G, B], axis=2)
+        # Create the norm RGB
         RRGB = np.stack([RR, GG, BB], axis=2)
-        print(RGB.shape)
         return RRGB
+
+    def to_dataframe(self, rgb):
+
+        """Returns a pandas dataframe containing Latitude and Longitude for
+        every pixel of a GOES full disk image, and the value of the pixel,
+        from a numpy array.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        rgb_df: Pandas DataFrame
+
+        """
+
+        rgb_df = pd.DataFrame(rgb)
+
+        return rgb_df
+
+
+def mask(rgb):
+    """This function returns a labeled-by-color image according to
+    the interpretation of the product Day Microphysics
+    (https://weather.msfc.nasa.gov/sport/training/quickGuides/
+    rgb/QuickGuide_DtMicroRGB_NASA_SPoRT.pdf)
+
+    Parameters:
+    -----------
+    rgb: numpy array
+    Numpy Array object containig the Day Microphysics RGB product
+
+    Returns:
+    -------
+    img_mask: numpy array
+    Masked RGB
+
+    """
+
+    img_mask = np.zeros(rgb.shape)
+
+    # Large drops, Low clouds-> pink/magenta
+    lc_rfilter = rgb[:, :, 0] > 0.7  # R>0.8
+    lc_gfilter = rgb[:, :, 1] < 0.4  # G
+    lc_bfilter = rgb[:, :, 2] > 0.6  # B
+    lc_filter = lc_rfilter * lc_gfilter * lc_bfilter
+    # Mask= magenta
+    img_mask[lc_filter, 0] = 1.0
+    img_mask[lc_filter, 1] = 0.0
+    img_mask[lc_filter, 2] = 1.0
+
+    # Stratus/Stratoculumus (small drops, low clouds) -> bright green/blue
+    st_rfilter = (rgb[:, :, 0] > 0.3) * (rgb[:, :, 0] < 0.45)  # R
+    st_gfilter = (rgb[:, :, 1] > 0.5) * (rgb[:, :, 1] < 0.8)  # G
+    st_bfilter = rgb[:, :, 2] < 0.7
+    st_filter = st_rfilter * st_gfilter * st_bfilter
+    # Mask=Light blue
+    img_mask[st_filter, 0] = 0.0
+    img_mask[st_filter, 1] = 1.0
+    img_mask[st_filter, 2] = 1.0
+
+    # CumuloNimbis (high clouds) -> red, dark orange
+    cb_rfilter = rgb[:, :, 0] > 0.7  # R
+    cb_gfilter = rgb[:, :, 1] < 0.3  # G
+    cb_bfilter = rgb[:, :, 2] < 0.3  # B
+    cb_filter = cb_rfilter * cb_gfilter * cb_bfilter
+    # Mask=Red
+    img_mask[cb_filter, 0] = 1.0
+    img_mask[cb_filter, 1] = 0.0
+    img_mask[cb_filter, 2] = 0.0
+
+    # Cirrus (high clouds)-> green, dark green
+    cr_rfilter = rgb[:, :, 0] < 0.3  # R
+    cr_gfilter = rgb[:, :, 1] > 0.7  # G
+    cr_bfilter = rgb[:, :, 2] < 0.3  # B
+    cr_filter = cr_rfilter * cr_gfilter * cr_bfilter
+    # Mask= Green
+    img_mask[cr_filter, 0] = 0.0
+    img_mask[cr_filter, 1] = 1.0
+    img_mask[cr_filter, 2] = 0.0
+
+    # supercooled clouds Thick, small drops, medium clouds-> yellow
+    super_rfilter = rgb[:, :, 0] > 0.8
+    super_gfilter = rgb[:, :, 1] > 0.8
+    super_bfilter = rgb[:, :, 2] < 0.2  # amarillo
+    super_filter = super_rfilter * super_gfilter * super_bfilter
+    # Mask=Yellow
+    img_mask[super_filter, 0] = 1.0
+    img_mask[super_filter, 1] = 1.0
+    img_mask[super_filter, 2] = 0.0
+
+    return img_mask[:, :, [0, 1, 2]]
