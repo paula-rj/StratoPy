@@ -7,25 +7,26 @@ import pandas as pd
 class StratoFrame:
     """[summary]"""
 
-    cld_df = attr.ib(
+    _df = attr.ib(
         validator=attr.validators.instance_of(pd.DataFrame),
         converter=pd.DataFrame,
     )
+    _metadata = attr.ib(factory=dict)
 
     def __getitem__(self, slice):
-        return self.cld_df.__getitem__(slice)
+        return self._df.__getitem__(slice)
 
     def __dir__(self):
-        return super().__dir__() + dir(self.cld_df)
+        return super().__dir__() + dir(self._df)
 
     def __getattr__(self, a):
-        return getattr(self.cld_df, a)
+        return getattr(self._df, a)
 
     def __repr__(self) -> (str):
         """repr(x) <=> x.__repr__()."""
         with pd.option_context("display.show_dimensions", False):
-            df_body = repr(self.cld_df).splitlines()
-        df_dim = list(self.cld_df.shape)
+            df_body = repr(self._df).splitlines()
+        df_dim = list(self._df.shape)
         sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
         footer = f"\nStratoFrame - {sdf_dim}"
         cloudsat_cldcls_repr = "\n".join(df_body + [footer])
@@ -35,9 +36,9 @@ class StratoFrame:
         ad_id = id(self)
 
         with pd.option_context("display.show_dimensions", False):
-            df_html = self.cld_df.__repr_html__()
-        rows = f"{self.cld_df.shape[0]} rows"
-        columns = f"{self.cld_df.shape[1]} columns"
+            df_html = self._df.__repr_html__()
+        rows = f"{self._df.shape[0]} rows"
+        columns = f"{self._df.shape[1]} columns"
 
         footer = f"StratoFrame - {rows} x {columns}"
 
