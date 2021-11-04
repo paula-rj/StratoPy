@@ -107,7 +107,7 @@ class CloudSat(StratoFrame):
         """
         Parameters
         ----------
-        ndf: ``new DataFrame``, optional (default=None)
+        ndf: new ``pandas.DataFrame``, optional (default=None)
         projection: ``str``, optional (default=geostationary, GOES-R)
             The reprojection that the user desires.
 
