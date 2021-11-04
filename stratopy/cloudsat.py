@@ -16,7 +16,7 @@ from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD
 from pyhdf.VS import VS
 
-from .core import StratoFrame
+from stratopy.core import StratoFrame
 
 # type: ignore
 DEFAULT_CACHE_PATH = pathlib.Path(
@@ -60,8 +60,8 @@ def read_hdf(path, layer="CloudLayerType"):
         for i, v in enumerate(np.transpose(cld_layertype)):
             layers_df[f"capa_{i}"] = v
         cld_df = CloudSat(layers_df)
-    finally:
         vs.end()
+
     return cld_df
 
 
@@ -100,12 +100,14 @@ class CloudSat(StratoFrame):
                     )
                 ]
             )
+        else:
+            raise ValueError("area must have length four")
 
     def convert_coordinates(self, ndf=None, projection=None):
         """
         Parameters
         ----------
-        ndf: ``new DataFrame``, optional (default=None)
+        ndf: new ``pandas.DataFrame``, optional (default=None)
         projection: ``str``, optional (default=geostationary, GOES-R)
             The reprojection that the user desires.
 
