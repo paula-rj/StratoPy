@@ -54,7 +54,6 @@ class StratoFrame:
         return html
 
 
-
 def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):
     """
     Transforma coordenadas de scaneo geostacionarias x,y

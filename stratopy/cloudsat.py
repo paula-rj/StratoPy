@@ -17,6 +17,7 @@ from pyhdf.SD import SD
 from pyhdf.VS import VS
 
 from .core import StratoFrame
+
 # type: ignore
 DEFAULT_CACHE_PATH = pathlib.Path(
     os.path.expanduser(os.path.join("~", "stratopy_cache"))
@@ -121,7 +122,8 @@ class CloudSat(StratoFrame):
             columns=self._df.columns,
             index=self._df.index,
             geometry=gpd.points_from_xy(
-                self._df["Longitude"], self._df["Latitude"]),
+                self._df["Longitude"], self._df["Latitude"]
+            ),
         )
         # EPSG 4326 corresponds to coordinates in latitude and longitude
         geo_df.crs = "EPSG:4326"
