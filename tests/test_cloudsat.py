@@ -9,11 +9,11 @@ path = (
 
 
 def test_hdf_read():
-    assert isinstance(cloudsat.read_hdf(path), cloudsat.CloudDataFrame)
+    assert isinstance(cloudsat.read_hdf(path), cloudsat.CloudSat)
 
 
 def test_CloudDataFrame():
-    assert not isinstance(cloudsat.CloudDataFrame, pd.DataFrame)
+    assert not isinstance(cloudsat.CloudSat, pd.DataFrame)
 
 
 def test_cut():

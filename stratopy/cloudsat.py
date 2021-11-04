@@ -5,8 +5,6 @@ import pathlib
 import tempfile
 from ftplib import FTP
 
-import attr
-
 from diskcache import Cache
 from diskcache.core import ENOVAL
 
@@ -14,12 +12,11 @@ import geopandas as gpd
 
 import numpy as np
 
-
-import pandas as pd
-
 from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD
 from pyhdf.VS import VS
+
+from .core import StratoFrame
 
 # type: ignore
 DEFAULT_CACHE_PATH = pathlib.Path(
@@ -27,7 +24,7 @@ DEFAULT_CACHE_PATH = pathlib.Path(
 )
 
 
-def read_hdf(path, layer="CloudLayerType", convert=False):
+def read_hdf(path, layer="CloudLayerType"):
     """
     Function for reading CloudSat data files, with extension ".hdf".
 
@@ -62,87 +59,14 @@ def read_hdf(path, layer="CloudLayerType", convert=False):
         layers_df = {"Longitude": lon, "Latitude": lat}
         for i, v in enumerate(np.transpose(cld_layertype)):
             layers_df[f"capa_{i}"] = v
-        cld_df = CloudDataFrame(layers_df)
+        cld_df = CloudSat(layers_df)
     finally:
         vs.end()
-    if convert:
-        return convert_coordinates(cld_df)
     return cld_df
 
 
-def convert_coordinates(hdf_df, projection=None):
-    """
-    Parameters
-    ----------
-    layers_df: ``pandas.DataFrame``, optional (default=None)
-    projection: ``str``, optional (default=geostationary, GOES-R)
-        The reprojection that the user desires.
-
-    """
-    if projection is None:
-        projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
-            +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
-
-    geo_df = gpd.GeoDataFrame(
-        hdf_df.values,
-        columns=hdf_df.columns,
-        index=hdf_df.index,
-        geometry=gpd.points_from_xy(hdf_df["Longitude"], hdf_df["Latitude"]),
-    )
-    # EPSG 4326 corresponds to coordinates in latitude and longitude
-    geo_df.crs = "EPSG:4326"
-
-    # Reprojecting into GOES16 geostationary projection
-    geodf_to_proj = geo_df.to_crs(projection)
-    return geodf_to_proj
-
-
-@attr.s(frozen=True, repr=False)
-class CloudDataFrame:
+class CloudSat(StratoFrame):
     """[summary]"""
-
-    cld_df = attr.ib(
-        validator=attr.validators.instance_of(pd.DataFrame),
-        converter=pd.DataFrame,
-    )
-
-    def __getitem__(self, slice):
-        return self.cld_df.__getitem__(slice)
-
-    def __dir__(self):
-        return super().__dir__() + dir(self.cld_df)
-
-    def __getattr__(self, a):
-        return getattr(self.cld_df, a)
-
-    def __repr__(self) -> (str):
-        """repr(x) <=> x.__repr__()."""
-        with pd.option_context("display.show_dimensions", False):
-            df_body = repr(self.cld_df).splitlines()
-        df_dim = list(self.cld_df.shape)
-        sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
-        footer = f"\nCloudDataFrame - {sdf_dim}"
-        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
-        return cloudsat_cldcls_repr
-
-    def __repr_html__(self) -> str:
-        ad_id = id(self)
-
-        with pd.option_context("display.show_dimensions", False):
-            df_html = self.cld_df.__repr_html__()
-        rows = f"{self.cld_df.shape[0]} rows"
-        columns = f"{self.cld_df.shape[1]} columns"
-
-        footer = f"CloudSatDataFrame - {rows} x {columns}"
-
-        parts = [
-            f'<div class="stratopy-data-container" id={ad_id}>',
-            df_html,
-            footer,
-            "</div>",
-        ]
-        html = "".join(parts)
-        return html
 
     def cut(self, area=None):
         """
@@ -157,9 +81,9 @@ class CloudDataFrame:
 
         """
         if not area:
-            return CloudDataFrame(
-                self.cld_df.loc[
-                    (self.cld_df.Latitude < 0) & (self.cld_df.Longitude < 0)
+            return CloudSat(
+                self._df.loc[
+                    (self._df.Latitude < 0) & (self._df.Longitude < 0)
                 ]
             )
         elif len(area) == 4:
@@ -168,20 +92,45 @@ class CloudDataFrame:
             longitude_min = area[2]
             longitude_max = area[3]
 
-            return CloudDataFrame(
-                self.cld_df.loc[
-                    self.cld_df["Latitude"].between(latitude_min, latitude_max)
-                    & self.cld_df["Longitude"].between(
+            return CloudSat(
+                self._df.loc[
+                    self._df["Latitude"].between(latitude_min, latitude_max)
+                    & self._df["Longitude"].between(
                         longitude_min, longitude_max
                     )
                 ]
             )
-        else:
-            raise TypeError(
-                "Spected list. "
-                "For example:\n"
-                "[lat_min, lat_max, lon_min, lon_max]"
-            )
+
+    def convert_coordinates(self, ndf=None, projection=None):
+        """
+        Parameters
+        ----------
+        ndf: ``new DataFrame``, optional (default=None)
+        projection: ``str``, optional (default=geostationary, GOES-R)
+            The reprojection that the user desires.
+
+        """
+        if ndf:
+            self._df = ndf
+
+        if projection is None:
+            projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
+                +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
+
+        geo_df = gpd.GeoDataFrame(
+            self._df.values,
+            columns=self._df.columns,
+            index=self._df.index,
+            geometry=gpd.points_from_xy(
+                self._df["Longitude"], self._df["Latitude"]
+            ),
+        )
+        # EPSG 4326 corresponds to coordinates in latitude and longitude
+        geo_df.crs = "EPSG:4326"
+
+        # Reprojecting into GOES16 geostationary projection
+        geodf_to_proj = geo_df.to_crs(projection)
+        return CloudSat(geodf_to_proj)
 
 
 def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
@@ -217,6 +166,6 @@ def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
         with open(fname, "wb") as fp:
             fp.write(result)
 
-        df = CloudDataFrame(fname)
+        df = StratoFrame(fname)
 
     return df

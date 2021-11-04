@@ -1,33 +1,57 @@
-# ============================================================================
-# CLASSES
-# ============================================================================
+import attr
 
-
-# cdf = stpy.read_goes(....)
-# sdf = stpy.read_csat(...)
-
-# stpy.merge(sdf, cdf)
-
-# df = stpy.StratropyDataframe(goes=gds, cloudsat=cdf, ...)
-
-# def repr(...):
-#     '''Deberia retornar algunas cosas que queremos,
-#     - cantidad de datos
-#     - satelites
-#     - ....
-#     '''
-#
-
-#
-# @author: sergio masuelli
-
-# Funciones de transformacion de coordenadas Geos a LatLon y viceversa
-# con verificación basada en Pug3
-
-#
 import numpy as np
 
-from pandas import merge  # noqa # pylint: disable=unused-import
+import pandas as pd
+
+
+@attr.s(frozen=True, repr=False)
+class StratoFrame:
+    """[summary]"""
+
+    _df = attr.ib(
+        validator=attr.validators.instance_of(pd.DataFrame),
+        converter=pd.DataFrame,
+    )
+    _metadata = attr.ib(factory=dict)
+
+    def __getitem__(self, slice):
+        return self._df.__getitem__(slice)
+
+    def __dir__(self):
+        return super().__dir__() + dir(self._df)
+
+    def __getattr__(self, a):
+        return getattr(self._df, a)
+
+    def __repr__(self) -> (str):
+        """repr(x) <=> x.__repr__()."""
+        with pd.option_context("display.show_dimensions", False):
+            df_body = repr(self._df).splitlines()
+        df_dim = list(self._df.shape)
+        sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
+        footer = f"\nStratoFrame - {sdf_dim}"
+        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
+        return cloudsat_cldcls_repr
+
+    def __repr_html__(self) -> str:
+        ad_id = id(self)
+
+        with pd.option_context("display.show_dimensions", False):
+            df_html = self._df.__repr_html__()
+        rows = f"{self._df.shape[0]} rows"
+        columns = f"{self._df.shape[1]} columns"
+
+        footer = f"StratoFrame - {rows} x {columns}"
+
+        parts = [
+            f'<div class="stratopy-data-container" id={ad_id}>',
+            df_html,
+            footer,
+            "</div>",
+        ]
+        html = "".join(parts)
+        return html
 
 
 def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):
@@ -35,7 +59,6 @@ def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):
     Transforma coordenadas de scaneo geostacionarias x,y
     en coordenadas cartesianas con origen en el satelite sx,sy,sz
     En base a 5.2.8.1 de PUG3
-
     Parameters
     ----------
     x : float, float arr numpy.ma.core.MaskedArray
@@ -102,7 +125,6 @@ def sat2latlon(
     en el satelite sx,sy,sz
     en coordenadas de latitud/longitud
     En base a 5.2.8.1 de PUG3
-
     Parameters
     ----------
     sx : float, float arr
@@ -144,7 +166,6 @@ def latlon2scan(
     Transforma coordenadas de latitud/longitud
     a x/y en proyeccion geoestacionaria
     En base a 5.2.8.2 de PUG3
-
     Parameters
     ----------
     lat: float, float arr
@@ -159,7 +180,6 @@ def latlon2scan(
         radio polar, en m
     h: float
         altura del satélite respecto de la superficie, en m
-
     Returns
     -------
     x : float, float arr
@@ -232,7 +252,6 @@ def scan2colfil(x, y, x0, y0, scale, tipo=0):
     y0 : float
         coordenada horizontal del primer punto, en radianes.
         Paralelo al eje terrestre
-
     scale : float
         tamaño del pixel en radianes
     tipo : TYPE, optional
@@ -260,10 +279,8 @@ def merge_df(cld_df, goes_df):
     ----------
     cld_df : Pandas Dataframe
     Object returned by class CldClass
-
     cld_df : Pandas Dataframe
     Object returned by class DayMicro
-
     """
     final_df = cld_df.merge(
         goes_df, how="left", left_on=["row", "col"], right_on=["R", "G", "B"]
