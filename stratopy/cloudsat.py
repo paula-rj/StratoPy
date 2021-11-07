@@ -112,6 +112,7 @@ class CloudSat(StratoFrame):
             The reprojection that the user desires.
 
         """
+        # Revisar si sin necesarios los dos primeros if
         if ndf:
             self._df = ndf
 
