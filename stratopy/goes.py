@@ -25,33 +25,43 @@ def read_nc(file_path):
     Parameters
     ----------
     file_path: ``str tuple``
-        Contains a file path or paths of
+        Contains a file path of one or all three paths of
         channels 3, 7 and 13 of the CMIPF GOES-16 product.
 
     Returns
     -------
-    result: File variables.
+    result: ``netCDF4.Dataset``
+        File variables.
 
     """
     # Open netcdf file and extract variables
 
-    if isinstance(file_path, tuple):
+    if len(file_path) == 3:
         # Check for date and product consistency
         files_date = [
             band_path.split("s20", 1)[1].split("_", 1)[0]
             for band_path in file_path
         ]
-        assert all(
-            date == files_date[0] for date in files_date
-        ), "Start date's from all files should be the same."
-        assert all(
-            "L2-CMIPF" in path for path in file_path
-        ), "Files must be from the same product."
 
-    if len(file_path) != 1 or 3:
-        raise ValueError("You need 3 channels to generate RGB")
-    for fp in file_path:
-        data = Dataset(fp, "r")
+        # Create boolean for consistency evaluation
+        eq_dates = all(date == files_date[0] for date in files_date)
+        eq_product = all("L2-CMIPF" in path for path in file_path)
+
+        if not eq_dates:
+            raise ValueError("Start date's from all files should be the same.")
+        elif not eq_product:
+            raise ValueError("Files must be from the same product.")
+
+    elif len(file_path) == 1:
+        pass
+
+    else:
+        raise ValueError(
+            "File path must be a tuple of length 1 or 3 (in case of RGB)."
+        )
+
+    for paths in file_path:
+        data = Dataset(paths, "r")
         result = data.variables
         # Falta ver acá como lo devolvemos,
         # Creo que lo mejor es un dict
@@ -65,27 +75,12 @@ class GoesDataFrame:
 
     Parameters
     ----------
-    path_channel_3: ``str``
-        String containing the path to "nc" file for channel 3 of the
-        CMIPF GOES-16 product.
-    path_channel_7: ``str``
-        String containing the path to "nc" file for channel 7 of the
-        CMIPF GOES-16 product.
-    path_channel_13: ``str``
-        String containing the path to "nc" file for channel 13 of the
-        CMIPF GOES-16 product.
+    data: data from netcdf file. Dataset(file_path).variables
     """
 
     def __init__(
         self, data, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0
     ):
-
-        """
-        Parameters
-        ----------
-        data: data from netcdf file. Dataset(file_path).variables
-
-        """
 
         self.vars = data
         self.rows = rows
