@@ -103,7 +103,7 @@ class CloudSat(StratoFrame):
         else:
             raise ValueError("area must have length four")
 
-    def convert_coordinates(self, ndf=None, projection=None):
+    def convert_coordinates(self):
         """
         Parameters
         ----------
@@ -112,12 +112,8 @@ class CloudSat(StratoFrame):
             The reprojection that the user desires.
 
         """
-        # Revisar si sin necesarios los dos primeros if
-        if ndf:
-            self._df = ndf
 
-        if projection is None:
-            projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
+        projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
                 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
 
         geo_df = gpd.GeoDataFrame(
