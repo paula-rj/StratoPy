@@ -1,13 +1,3 @@
-import getpass
-import io
-import os
-import pathlib
-import tempfile
-from ftplib import FTP
-
-from diskcache import Cache
-from diskcache.core import ENOVAL
-
 import geopandas as gpd
 
 import numpy as np
@@ -17,11 +7,6 @@ from pyhdf.SD import SD
 from pyhdf.VS import VS
 
 from stratopy.core import StratoFrame
-
-# type: ignore
-DEFAULT_CACHE_PATH = pathlib.Path(
-    os.path.expanduser(os.path.join("~", "stratopy_cache"))
-)
 
 
 def read_hdf(path, layer="CloudLayerType"):
@@ -130,41 +115,3 @@ class CloudSat(StratoFrame):
         # Reprojecting into GOES16 geostationary projection
         geodf_to_proj = geo_df.to_crs(projection)
         return CloudSat(geodf_to_proj)
-
-
-def fetch_cloudsat(dirname, path=DEFAULT_CACHE_PATH):
-    """Fetch files of a certain date from cloudsat server and
-    stores in a local cache.
-    """
-    cache = Cache(path)
-
-    # Transform dirname into cache id
-    id_ = os.path.split(dirname)[-1]
-
-    # Search in local cache
-    cache.expire()
-    result = cache.get(id_, default=ENOVAL, retry=True)
-
-    if result is ENOVAL:
-
-        ftp = FTP()
-        ftp.connect(host="ftp.cloudsat.cira.colostate.edu")
-        user = input("login user name:")
-        passwd = getpass.getpass(prompt="login password: ")
-        ftp.login(user, passwd)
-
-        buffer_file = io.BytesIO()
-        ftp.retrbinary(f"RETR {dirname}", buffer_file.write)
-        result = buffer_file.getvalue()
-
-        cache.set(id_, result, tag="stratopy-cloudsat")
-
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        fname = os.path.join(tmpdirname, id_)
-
-        with open(fname, "wb") as fp:
-            fp.write(result)
-
-        df = StratoFrame(fname)
-
-    return df
