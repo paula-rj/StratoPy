@@ -1,3 +1,5 @@
+import attr
+
 import datetime
 import os
 
@@ -30,8 +32,34 @@ def read_nc(file_path):
 
     Returns
     -------
-    result: ``netCDF4.Dataset``
+    result: ``CloudFrame``
         File variables.
+
+    Examples
+    --------
+    For only channel
+        >>> nc_file = read_nc((PATH_CHANNEL_3,))
+
+    For three channels
+    >>> PATH_CHANNEL_3 = (
+        "data/GOES16/"
+        "OR_ABI-L2-CMIPF-M3C03_G16_s20190021800363_e20190021811129_\
+        c20190021811205.nc"
+    )
+    >>> PATH_CHANNEL_7 = (
+        "data/GOES16/"
+        "OR_ABI-L2-CMIPF-M3C07_G16_s20190021800363_e20190021811141_"
+        "c20190021811202.nc"
+    )
+    >>>PATH_CHANNEL_13 = (
+        "data/GOES16/"
+        "OR_ABI-L2-CMIPF-M3C13_G16_s20190021800363_e20190021811141_"
+        "c20190021811221.nc"
+    )
+
+    >>> FILE_PATH = (PATH_CHANNEL_3, PATH_CHANNEL_7, PATH_CHANNEL_13)
+
+    >>> nc_file = read_nc(FILE_PATH)
 
     """
     # Open netcdf file and extract variables
@@ -66,9 +94,10 @@ def read_nc(file_path):
         # Falta ver acá como lo devolvemos,
         # Creo que lo mejor es un dict
 
-    return result
+    return TreatGOES(result)
 
 
+@attr.s(frozen=True, repr=False)
 class GoesDataFrame:
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
@@ -77,35 +106,50 @@ class GoesDataFrame:
     ----------
     data: data from netcdf file. Dataset(file_path).variables
     """
+    _df = attr.ib(
+        validator=attr.validators.instance_of(pd.DataFrame),
+        converter=pd.DataFrame,
+    )
 
-    def __init__(
-        self, data, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0
-    ):
+    def __getattr__(self, a):
+        return getattr(self._df, a)
 
-        self.vars = data
-        self.rows = rows
-        self.cols = cols
-        self.lat_sup = lat_sup
-        self.lon_west = lon_west
-        self._trim_coord = self.trim_coord()
+    def __dir__(self):
+        return super().__dir__() + dir(self._df)
+
+    def __getitem__(self, slice):
+        return self._df.__getitem__(slice)
 
     def __repr__(self):
         # original = repr(self._df)
         time_delta = datetime.timedelta(
-            seconds=int(self.vars["t"][:].data)
+            seconds=int(self._df["t"][:].data)
         )  # img date in sec
         date0 = datetime.datetime(year=2000, month=1, day=1, hour=12)
         img_date = (date0 + time_delta).strftime("%d/%m/%y-%H:%M")
-        return f"GOES Object -- {img_date} "
+        return f"GoesDataFrame -- {img_date} "
 
     def _repr_html_(self):
         original = self._df._repr_html_()
-        footer = "<b>-- Goes Object</b>"
+        footer = "<b>-- GoesDataFrame</b>"
         return f"<div>{original}{footer}</div>"
 
-    def trim_coord(self):
+
+class TreatGOES:
+
+    def __init__(
+        self, data, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0
+    ):
+        self._data = data
+        self.rows = rows
+        self.cols = cols
+        self.lat_sup = lat_sup
+        self.lon_west = lon_west
+
+    @property
+    def _trim_coord(self):
         # Extract all the variables
-        metadata = self.vars
+        metadata = self._data
 
         # satellite height
         h = metadata["goes_imager_projection"].perspective_point_height
@@ -144,7 +188,6 @@ class GoesDataFrame:
         return r0, r1, c0, c1
 
     def trim(self, for_RGB=True):
-
         """
         This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.
@@ -170,12 +213,12 @@ class GoesDataFrame:
         trim_img: ``numpy.array`` containing the trimmed image.
 
         """
-        metadata = self.vars
+        metadata = self._data
         band = int(metadata["band_id"][:].data[0])  # Channel number
         image = np.array(metadata["CMI"][:].data)  # Extract image to np.array
         N = 5424  # Image size for psize=2000 m
         esc = N / image.shape[0]
-        r0, r1, c0, c1 = self._trim_coordc
+        r0, r1, c0, c1 = self._trim_coord()
         trim_img = image[r0:r1, c0:c1]
 
         # Rescale channels with psize = 1000 m
@@ -214,7 +257,7 @@ class GoesDataFrame:
             Zenith calculation for every pixel.
 
         """
-        r0, r1, c0, c1 = self._trim_coord
+        r0, r1, c0, c1 = self.trim_coord
         lat = np.load(path / "lat_vec.npy")[r0:r1]
         lon = np.load(path / "lon_vec.npy")[c0:c1]
 
@@ -295,9 +338,8 @@ class GoesDataFrame:
 
         return RRGB
 
-    def to_dataframe(self, rgb):
-
-        """Returns a pandas dataframe containing Latitude and Longitude for
+    def to_dataframe(self):
+        """Returns a GOES dataframe containing Latitude and Longitude for
         every pixel of a GOES full disk image, and the value of the pixel,
         from a numpy array.
 
@@ -311,9 +353,9 @@ class GoesDataFrame:
 
         """
 
-        rgb_df = pd.DataFrame(rgb)
+        rgb_df = pd.DataFrame(self.RGB, columns=['R', 'G', 'B'])
 
-        return rgb_df
+        return GoesDataFrame(rgb_df)
 
 
 def mask(rgb):
