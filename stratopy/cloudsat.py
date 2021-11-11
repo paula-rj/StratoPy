@@ -177,39 +177,3 @@ class CloudSatFrame:
         # Reprojecting into GOES16 geostationary projection
         geodf_to_proj = geo_df.to_crs(projection)
         return CloudSatFrame(geodf_to_proj)
-
-
-def fetch_cloudsat(dirname, user, passwd, path=DEFAULT_CACHE_PATH):
-    """Fetch files of a certain date from cloudsat server and
-    stores in a local cache.
-    """
-    cache = Cache(path)
-
-    # Transform dirname into cache id
-    id_ = os.path.split(dirname)[-1]
-
-    # Search in local cache
-    cache.expire()
-    result = cache.get(id_, default=ENOVAL, retry=True)
-
-    if result is ENOVAL:
-
-        ftp = FTP()
-        ftp.connect(host="ftp.cloudsat.cira.colostate.edu")
-        ftp.login(user, passwd)
-
-        buffer_file = io.BytesIO()
-        ftp.retrbinary(f"RETR {dirname}", buffer_file.write)
-        result = buffer_file.getvalue()
-
-        cache.set(id_, result, tag="stratopy-cloudsat")
-
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        fname = os.path.join(tmpdirname, id_)
-
-        with open(fname, "wb") as fp:
-            fp.write(result)
-
-        df = CloudSatFrame(fname)
-
-    return df
