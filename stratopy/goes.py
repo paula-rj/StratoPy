@@ -1,7 +1,7 @@
-import attr
-
 import datetime
 import os
+
+import attr
 
 from netCDF4 import Dataset
 
@@ -106,6 +106,7 @@ class GoesDataFrame:
     ----------
     data: data from netcdf file. Dataset(file_path).variables
     """
+
     _df = attr.ib(
         validator=attr.validators.instance_of(pd.DataFrame),
         converter=pd.DataFrame,
@@ -136,7 +137,6 @@ class GoesDataFrame:
 
 
 class TreatGOES:
-
     def __init__(
         self, data, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0
     ):
@@ -146,10 +146,9 @@ class TreatGOES:
         self.lat_sup = lat_sup
         self.lon_west = lon_west
 
-    @property
-    def _trim_coord(self):
+    def _trim_coord(_data, lat_sup, lon_west, cols, rows):
         # Extract all the variables
-        metadata = self._data
+        metadata = _data
 
         # satellite height
         h = metadata["goes_imager_projection"].perspective_point_height
@@ -158,11 +157,11 @@ class TreatGOES:
         lon_cen = metadata[
             "goes_imager_projection"
         ].longitude_of_projection_origin
-        image = np.array(metadata["CMI"][:].data)
+        image = np.asarray(metadata["CMI"][:].data)
 
         pto_sup_izq = core.latlon2scan(
-            self.lat_sup,
-            self.lon_west,
+            lat_sup,
+            lon_west,
             lon_cen,
             Re=semieje_may,
             Rp=semieje_men,
@@ -176,8 +175,8 @@ class TreatGOES:
         esc = N / image.shape[0]
 
         # Goes trimed image size
-        Nx = int(self.cols / esc)  # Number of points in x
-        Ny = int(self.rows / esc)  # Number of points in y
+        Nx = int(cols / esc)  # Number of points in x
+        Ny = int(rows / esc)  # Number of points in y
         r0 = int(
             (-y0 / psize + N / 2 - 1.5) / esc
         )  # fila del angulo superior izquierdo
@@ -215,10 +214,13 @@ class TreatGOES:
         """
         metadata = self._data
         band = int(metadata["band_id"][:].data[0])  # Channel number
-        image = np.array(metadata["CMI"][:].data)  # Extract image to np.array
+        # Extract image to np.array
+        image = np.asarray(metadata["CMI"][:].data)
         N = 5424  # Image size for psize=2000 m
         esc = N / image.shape[0]
-        r0, r1, c0, c1 = self._trim_coord()
+        r0, r1, c0, c1 = TreatGOES._trim_coord(
+            self._data, self.lat_sup, self.lon_west, self.cols, self.rows
+        )
         trim_img = image[r0:r1, c0:c1]
 
         # Rescale channels with psize = 1000 m
@@ -257,7 +259,9 @@ class TreatGOES:
             Zenith calculation for every pixel.
 
         """
-        r0, r1, c0, c1 = self.trim_coord
+        r0, r1, c0, c1 = TreatGOES._trim_coord(
+            self._data, self.lat_sup, self.lon_west, self.cols, self.rows
+        )
         lat = np.load(path / "lat_vec.npy")[r0:r1]
         lon = np.load(path / "lon_vec.npy")[c0:c1]
 
@@ -352,10 +356,7 @@ class TreatGOES:
         rgb_df: Pandas DataFrame
 
         """
-
-        rgb_df = pd.DataFrame(self.RGB, columns=['R', 'G', 'B'])
-
-        return GoesDataFrame(rgb_df)
+        return GoesDataFrame(self.RGB)
 
 
 def mask(rgb):

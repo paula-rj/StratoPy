@@ -1,11 +1,10 @@
-import attr
-
-import getpass
 import io
 import os
 import pathlib
 import tempfile
 from ftplib import FTP
+
+import attr
 
 from diskcache import Cache
 from diskcache.core import ENOVAL
@@ -70,6 +69,7 @@ def read_hdf(path, layer="CloudLayerType"):
 @attr.s(frozen=True, repr=False)
 class CloudSatFrame:
     """[summary]"""
+
     _df = attr.ib(
         validator=attr.validators.instance_of(pd.DataFrame),
         converter=pd.DataFrame,
@@ -158,8 +158,10 @@ class CloudSatFrame:
 
         """
 
-        projection = ("+proj=geos +h=35786023.0 +lon_0=-75.0 "
-                      "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x")
+        projection = (
+            "+proj=geos +h=35786023.0 +lon_0=-75.0 "
+            "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"
+        )
 
         geo_df = gpd.GeoDataFrame(
             self._df.values,

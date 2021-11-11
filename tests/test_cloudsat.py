@@ -13,7 +13,7 @@ HDF_FILE = cloudsat.read_hdf(PATH)
 
 
 def test_hdf_read():
-    assert isinstance(HDF_FILE, cloudsat.CloudSat)
+    assert isinstance(HDF_FILE, cloudsat.CloudSatFrame)
 
 
 def test_hdf_read_exception():
@@ -22,7 +22,7 @@ def test_hdf_read_exception():
 
 
 def test_CloudDataFrame():
-    assert not isinstance(cloudsat.CloudSat, pd.DataFrame)
+    assert not isinstance(cloudsat.CloudSatFrame, pd.DataFrame)
 
 
 def test_cut():

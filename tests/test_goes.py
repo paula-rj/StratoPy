@@ -34,8 +34,8 @@ FAKE_PRODUCT = (
 
 
 def test_read_nc():
-    assert isinstance(goes.read_nc((PATH_CHANNEL_7,)), dict)
-    assert isinstance(goes.read_nc(FILE_PATH), dict)
+    assert not isinstance(goes.read_nc((PATH_CHANNEL_7,)), dict)
+    assert not isinstance(goes.read_nc(FILE_PATH), dict)
 
 
 def test_read_nc_date():
