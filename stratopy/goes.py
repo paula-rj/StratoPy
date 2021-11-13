@@ -30,7 +30,7 @@ def read_nc(file_path):
 
     Returns
     -------
-    result: ``netCDF4.Dataset``
+        result: ``netCDF4.Dataset``
         File variables.
 
     """
@@ -79,29 +79,38 @@ class GoesDataFrame:
     """
 
     def __init__(
-        self, data, rows=2891, cols=1352, lat_sup=10.0, lon_west=-80.0
+        self, data, lat_sup=10.0, lon_west=-80.0, lat_inf=-40.0, lon_east=-37.0
     ):
 
+        """
+        Parameters
+        ----------
+        data: data from netcdf file. Dataset(file_path).variables
+
+        """
+
         self.vars = data
-        self.rows = rows
-        self.cols = cols
         self.lat_sup = lat_sup
         self.lon_west = lon_west
+        self.lat_inf = lat_inf
+        self.lon_east = lon_east
         self._trim_coord = self.trim_coord()
+        time_delta = datetime.timedelta(
+            seconds=int(data["t"][:].data)
+        )  # img date in sec
+        date0 = datetime.datetime(year=2000, month=1, day=1, hour=12)
+        self.img_date = date0 + time_delta
 
     def __repr__(self):
         # original = repr(self._df)
-        time_delta = datetime.timedelta(
-            seconds=int(self.vars["t"][:].data)
-        )  # img date in sec
-        date0 = datetime.datetime(year=2000, month=1, day=1, hour=12)
-        img_date = (date0 + time_delta).strftime("%d/%m/%y-%H:%M")
+        img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
         return f"GOES Object -- {img_date} "
 
     def _repr_html_(self):
-        original = self._df._repr_html_()
+        # original = self._df._repr_html_()
+        img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
         footer = "<b>-- Goes Object</b>"
-        return f"<div>{original}{footer}</div>"
+        return f"<div>{img_date}{footer}</div>"
 
     def trim_coord(self):
         # Extract all the variables
@@ -114,7 +123,8 @@ class GoesDataFrame:
         lon_cen = metadata[
             "goes_imager_projection"
         ].longitude_of_projection_origin
-        image = np.array(metadata["CMI"][:].data)
+        scale_factor = metadata["x"].scale_factor
+        offset = np.array([metadata["x"].add_offset, metadata["y"].add_offset])
 
         pto_sup_izq = core.latlon2scan(
             self.lat_sup,
@@ -124,23 +134,33 @@ class GoesDataFrame:
             Rp=semieje_men,
             h=h,
         )
-        x0 = pto_sup_izq[1] * h
-        y0 = pto_sup_izq[0] * h
 
-        psize = 2000  # Pixel size in meters
-        N = 5424  # Image size for psize=2000 m
-        esc = N / image.shape[0]
+        pto_inf_der = core.latlon2scan(
+            self.lat_inf,
+            self.lon_east,
+            lon_cen,
+            Re=semieje_may,
+            Rp=semieje_men,
+            h=h,
+        )
 
-        # Goes trimed image size
-        Nx = int(self.cols / esc)  # Number of points in x
-        Ny = int(self.rows / esc)  # Number of points in y
-        r0 = int(
-            (-y0 / psize + N / 2 - 1.5) / esc
-        )  # fila del angulo superior izquierdo
-        # columna del angulo superior izquierdo
-        c0 = int((x0 / psize + N / 2 + 0.5) / esc)
-        r1 = int(r0 + Ny)  # fila del angulo inferior derecho
-        c1 = int(c0 + Nx)  # columna del angulo inferior derecho
+        c0, r0 = core.scan2colfil(
+            pto_sup_izq[1],
+            pto_sup_izq[0],
+            offset[0],
+            offset[1],
+            scale_factor,
+            1,
+        )
+        c1, r1 = core.scan2colfil(
+            pto_inf_der[1],
+            pto_inf_der[0],
+            offset[0],
+            offset[1],
+            scale_factor,
+            1,
+        )
+
         return r0, r1, c0, c1
 
     def trim(self, for_RGB=True):
