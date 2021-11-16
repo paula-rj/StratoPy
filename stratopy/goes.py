@@ -1,6 +1,8 @@
 import datetime
 import os
 
+import attr
+
 from netCDF4 import Dataset
 
 import numpy as np
@@ -69,6 +71,7 @@ def read_nc(file_path):
     return result
 
 
+@attr.s(frozen=True, repr=False)
 class GoesDataFrame:
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
@@ -78,28 +81,13 @@ class GoesDataFrame:
     data: data from netcdf file. Dataset(file_path).variables
     """
 
-    def __init__(
-        self, data, lat_sup=10.0, lon_west=-80.0, lat_inf=-40.0, lon_east=-37.0
-    ):
-
-        """
-        Parameters
-        ----------
-        data: data from netcdf file. Dataset(file_path).variables
-
-        """
-
-        self.vars = data
-        self.lat_sup = lat_sup
-        self.lon_west = lon_west
-        self.lat_inf = lat_inf
-        self.lon_east = lon_east
-        self._trim_coord = self.trim_coord()
-        time_delta = datetime.timedelta(
-            seconds=int(data["t"][:].data)
-        )  # img date in sec
-        date0 = datetime.datetime(year=2000, month=1, day=1, hour=12)
-        self.img_date = date0 + time_delta
+    data = attr.ib()
+    lat_sup = attr.ib(default=10.0)
+    lon_west = attr.ib(default=-80.0)
+    lat_inf = attr.ib(default=-40.0)
+    lon_east = attr.ib(default=-37.0)
+    _trim_coord = attr.ib(init=False)
+    image_date = attr.ib(init=False)
 
     def __repr__(self):
         # original = repr(self._df)
@@ -112,9 +100,18 @@ class GoesDataFrame:
         footer = "<b>-- Goes Object</b>"
         return f"<div>{img_date}{footer}</div>"
 
+    @image_date.default
+    def image_date_default(self):
+        time_delta = datetime.timedelta(
+            seconds=int(self.data["t"][:].data)
+        )  # img date in sec
+        date_0 = datetime.datetime(year=2000, month=1, day=1, hour=12)
+        return date_0 + time_delta
+
+    @_trim_coord.default
     def trim_coord(self):
         # Extract all the variables
-        metadata = self.vars
+        metadata = self.data
 
         # satellite height
         h = metadata["goes_imager_projection"].perspective_point_height
@@ -190,7 +187,7 @@ class GoesDataFrame:
         trim_img: ``numpy.array`` containing the trimmed image.
 
         """
-        metadata = self.vars
+        metadata = self.data
         band = int(metadata["band_id"][:].data[0])  # Channel number
         image = np.array(metadata["CMI"][:].data)  # Extract image to np.array
         N = 5424  # Image size for psize=2000 m
