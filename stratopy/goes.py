@@ -54,25 +54,20 @@ def read_nc(file_path):
         elif not eq_product:
             raise ValueError("Files must be from the same product.")
 
-    elif len(file_path) == 1:
-        pass
+    elif len(file_path) != 1 and len(file_path) != 3:
 
-    else:
         raise ValueError(
             "File path must be a tuple of length 1 or 3 (in case of RGB)."
         )
 
     for paths in file_path:
         data = Dataset(paths, "r")
-        result = data.variables
-        # Falta ver acá como lo devolvemos,
-        # Creo que lo mejor es un dict
 
-    return result
+    return Goes(data.variables)
 
 
 @attr.s(frozen=True, repr=False)
-class GoesDataFrame:
+class Goes:
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
 
@@ -81,13 +76,13 @@ class GoesDataFrame:
     data: data from netcdf file. Dataset(file_path).variables
     """
 
-    data = attr.ib()
+    data = attr.ib()  # Podriamos validar DataFrame y Transformar
     lat_sup = attr.ib(default=10.0)
     lon_west = attr.ib(default=-80.0)
     lat_inf = attr.ib(default=-40.0)
     lon_east = attr.ib(default=-37.0)
     _trim_coord = attr.ib(init=False)
-    image_date = attr.ib(init=False)
+    img_date = attr.ib(init=False)
 
     def __repr__(self):
         # original = repr(self._df)
@@ -100,8 +95,8 @@ class GoesDataFrame:
         footer = "<b>-- Goes Object</b>"
         return f"<div>{img_date}{footer}</div>"
 
-    @image_date.default
-    def image_date_default(self):
+    @img_date.default
+    def img_date_default(self):
         time_delta = datetime.timedelta(
             seconds=int(self.data["t"][:].data)
         )  # img date in sec
