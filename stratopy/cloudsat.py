@@ -1,13 +1,7 @@
-import io
 import os
 import pathlib
-import tempfile
-from ftplib import FTP
 
 import attr
-
-from diskcache import Cache
-from diskcache.core import ENOVAL
 
 import geopandas as gpd
 
