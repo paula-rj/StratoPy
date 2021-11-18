@@ -23,18 +23,15 @@ path = os.path.abspath(os.path.dirname(__file__))
 def read_nc(file_path):
     """
     Reads netCDF files through the netCDF4 library.
-
     Parameters
     ----------
     file_path: ``str tuple``
         Contains a file path of one or all three paths of
         channels 3, 7 and 13 of the CMIPF GOES-16 product.
-
     Returns
     -------
         result: ``netCDF4.Dataset``
         File variables.
-
     """
     # Open netcdf file and extract variables
 
@@ -68,9 +65,9 @@ def read_nc(file_path):
 
 @attr.s(frozen=True, repr=False)
 class Goes:
+
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
-
     Parameters
     ----------
     data: data from netcdf file. Dataset(file_path).variables
@@ -83,6 +80,7 @@ class Goes:
     lon_east = attr.ib(default=-37.0)
     _trim_coord = attr.ib(init=False)
     img_date = attr.ib(init=False)
+
 
     def __repr__(self):
         # original = repr(self._df)
@@ -156,12 +154,10 @@ class Goes:
         return r0, r1, c0, c1
 
     def trim(self, for_RGB=True):
-
         """
         This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.
         Default parameters are set to return a Southamerica image
-
         Parameters
         ----------
         data_path: ``str``
@@ -176,11 +172,9 @@ class Goes:
             Maximum longitude to the west.
         lat_sup: ``float``
             Maximum upper latitude.
-
         Returns
         -------
         trim_img: ``numpy.array`` containing the trimmed image.
-
         """
         metadata = self.data
         band = int(metadata["band_id"][:].data[0])  # Channel number
@@ -205,7 +199,6 @@ class Goes:
         """
         This function does a zenith angle correction to channel 7.
         This correction is needed for daylight images.
-
         Parameters
         ----------
         ch7: ``numpy.array``
@@ -219,12 +212,10 @@ class Goes:
                 y1, further south latitude
                 x2, further east longitude
                 y2, further north latitude
-
         Returns
         -------
         data2b: ``numpy.array``
             Zenith calculation for every pixel.
-
         """
         r0, r1, c0, c1 = self._trim_coord
         lat = np.load(path / "lat_vec.npy")[r0:r1]
@@ -248,7 +239,6 @@ class Goes:
         """
         This function creates an RGB image that represents the day microphysics
         according to the GOES webpage manual.
-
         Parameters
         ----------
         rec03: ``numpy.array``
@@ -260,7 +250,6 @@ class Goes:
         masked: bool
             If True, returns a masked RGB
             according to day MP quick guide
-
         Returns
         -------
         RGB: ``numpy.array``
@@ -308,19 +297,15 @@ class Goes:
         return RRGB
 
     def to_dataframe(self, rgb):
-
         """Returns a pandas dataframe containing Latitude and Longitude for
         every pixel of a GOES full disk image, and the value of the pixel,
         from a numpy array.
-
         Parameters
         ----------
         None
-
         Returns
         -------
         rgb_df: Pandas DataFrame
-
         """
 
         rgb_df = pd.DataFrame(rgb)
@@ -333,17 +318,14 @@ def mask(rgb):
     the interpretation of the product Day Microphysics
     (https://weather.msfc.nasa.gov/sport/training/quickGuides/
     rgb/QuickGuide_DtMicroRGB_NASA_SPoRT.pdf)
-
     Parameters:
     -----------
     rgb: numpy array
     Numpy Array object containig the Day Microphysics RGB product
-
     Returns:
     -------
     img_mask: numpy array
     Masked RGB
-
     """
 
     img_mask = np.zeros(rgb.shape)
