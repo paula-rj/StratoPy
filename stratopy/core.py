@@ -266,9 +266,9 @@ def scan2colfil(x, y, x0, y0, scale, tipo=0):
     if tipo == 0:
         return col, fil
     elif tipo == 1:
-        return round(col).astype("int"), round(fil).astype("int")
+        return round(col), round(fil)
     else:
-        print("error de tipo")
+        raise TypeError("Type must be 0 (float) or 1 (int)")
 
 
 def merge_df(cld_df, goes_df):
