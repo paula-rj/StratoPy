@@ -76,7 +76,8 @@ class Goes:
     data: data from netcdf file. Dataset(file_path).variables
     """
 
-    data = attr.ib()  # Podriamos validar DataFrame y Transformar
+    data = attr.ib(validator=attr.validators.instance_of(dict))
+    CMI = attr.ib(init=False)
     lat_sup = attr.ib(default=10.0)
     lon_west = attr.ib(default=-80.0)
     lat_inf = attr.ib(default=-40.0)
@@ -95,6 +96,10 @@ class Goes:
         footer = "<b>-- Goes Object</b>"
         return f"<div>{img_date}{footer}</div>"
 
+    @CMI.default
+    def CMI_default(self):
+        return self.data["CMI"]
+
     @img_date.default
     def img_date_default(self):
         time_delta = datetime.timedelta(
@@ -104,7 +109,7 @@ class Goes:
         return date_0 + time_delta
 
     @_trim_coord.default
-    def trim_coord(self):
+    def _trim_coord(self):
         # Extract all the variables
         metadata = self.data
 
