@@ -81,7 +81,6 @@ class Goes:
     _trim_coord = attr.ib(init=False)
     img_date = attr.ib(init=False)
 
-
     def __repr__(self):
         # original = repr(self._df)
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
