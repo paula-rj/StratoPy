@@ -10,14 +10,15 @@ class StratoFrame:
     goes = attr.ib()
     cs = attr.ib()
 
-    _df = attr.ib(init=False,
-                  validator=attr.validators.instance_of(pd.DataFrame),
-                  converter=pd.DataFrame,
-                  )
+    _df = attr.ib(
+        init=False,
+        validator=attr.validators.instance_of(pd.DataFrame),
+        converter=pd.DataFrame,
+    )
 
     @_df.default
     def _df_default(self):
-        return pd.DataFrame({'goes': self.goes.data, 'cs': self.cs.datum})
+        return pd.DataFrame({"goes": self.goes.data, "cs": self.cs.datum})
 
     def __getitem__(self, slice):
         return self._df.__getitem__(slice)
