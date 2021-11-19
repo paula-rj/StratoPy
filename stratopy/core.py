@@ -1,57 +1,57 @@
-import attr
+import math
 
 import numpy as np
 
-import pandas as pd
+
+def geo2grid(lat, lon, nc):
+
+    # Apply scale and offset
+    xscale, xoffset = nc["x"].scale_factor, nc["x"].add_offset
+    yscale, yoffset = nc["y"].scale_factor, nc["y"].add_offset
+
+    x, y = latlon2xy(lat, lon)
+    col = (x - xoffset) / xscale
+    lin = (y - yoffset) / yscale
+    return int(lin), int(col)
 
 
-@attr.s(frozen=True, repr=False)
-class StratoFrame:
-    """[summary]"""
+def latlon2xy(lat, lon):
+    # goes_imagery_projection:semi_major_axis
+    req = 6378137  # meters
+    #  goes_imagery_projection:inverse_flattening
+    # invf = 298.257222096
+    # goes_imagery_projection:semi_minor_axis
+    rpol = 6356752.31414  # meters
+    e = 0.0818191910435
+    # goes_imagery_projection:perspective_point_height
+    # + goes_imagery_projection:semi_major_axis
 
-    _df = attr.ib(
-        validator=attr.validators.instance_of(pd.DataFrame),
-        converter=pd.DataFrame,
+    H = 42164160  # meters
+    # goes_imagery_projection: longitude_of_projection_origin
+    lambda0 = -1.308996939
+
+    # Convert to radians
+    latRad = lat * (math.pi / 180)
+    lonRad = lon * (math.pi / 180)
+
+    # (1) geocentric latitude
+    Phi_c = math.atan(((rpol * rpol) / (req * req)) * math.tan(latRad))
+    # (2) geocentric distance to the point on the ellipsoid
+    rc = rpol / (
+        math.sqrt(1 - ((e * e) * (math.cos(Phi_c) * math.cos(Phi_c))))
     )
-    _metadata = attr.ib(factory=dict)
+    # (3) sx
+    sx = H - (rc * math.cos(Phi_c) * math.cos(lonRad - lambda0))
+    # (4) sy
+    sy = -rc * math.cos(Phi_c) * math.sin(lonRad - lambda0)
+    # (5)
+    sz = rc * math.sin(Phi_c)
 
-    def __getitem__(self, slice):
-        return self._df.__getitem__(slice)
+    # x,y
+    x = math.asin((-sy) / math.sqrt((sx * sx) + (sy * sy) + (sz * sz)))
+    y = math.atan(sz / sx)
 
-    def __dir__(self):
-        return super().__dir__() + dir(self._df)
-
-    def __getattr__(self, a):
-        return getattr(self._df, a)
-
-    def __repr__(self) -> (str):
-        """repr(x) <=> x.__repr__()."""
-        with pd.option_context("display.show_dimensions", False):
-            df_body = repr(self._df).splitlines()
-        df_dim = list(self._df.shape)
-        sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
-        footer = f"\nStratoFrame - {sdf_dim}"
-        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
-        return cloudsat_cldcls_repr
-
-    def __repr_html__(self) -> str:
-        ad_id = id(self)
-
-        with pd.option_context("display.show_dimensions", False):
-            df_html = self._df.__repr_html__()
-        rows = f"{self._df.shape[0]} rows"
-        columns = f"{self._df.shape[1]} columns"
-
-        footer = f"StratoFrame - {rows} x {columns}"
-
-        parts = [
-            f'<div class="stratopy-data-container" id={ad_id}>',
-            df_html,
-            footer,
-            "</div>",
-        ]
-        html = "".join(parts)
-        return html
+    return x, y
 
 
 def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):

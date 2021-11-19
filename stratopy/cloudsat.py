@@ -1,12 +1,22 @@
+import os
+import pathlib
+
+import attr
+
 import geopandas as gpd
 
 import numpy as np
+
+import pandas as pd
 
 from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD
 from pyhdf.VS import VS
 
-from stratopy.core import StratoFrame
+# type: ignore
+DEFAULT_CACHE_PATH = pathlib.Path(
+    os.path.expanduser(os.path.join("~", "stratopy_cache"))
+)
 
 
 def read_hdf(path, layer="CloudLayerType"):
@@ -44,14 +54,58 @@ def read_hdf(path, layer="CloudLayerType"):
         layers_df = {"Longitude": lon, "Latitude": lat}
         for i, v in enumerate(np.transpose(cld_layertype)):
             layers_df[f"capa_{i}"] = v
-        cld_df = CloudSat(layers_df)
+        cld_df = CloudSatFrame(layers_df)
         vs.end()
 
     return cld_df
 
 
-class CloudSat(StratoFrame):
+@attr.s(frozen=True, repr=False)
+class CloudSatFrame:
     """[summary]"""
+
+    _df = attr.ib(
+        validator=attr.validators.instance_of(pd.DataFrame),
+        converter=pd.DataFrame,
+    )
+
+    def __getitem__(self, slice):
+        return self._df.__getitem__(slice)
+
+    def __dir__(self):
+        return super().__dir__() + dir(self._df)
+
+    def __getattr__(self, a):
+        return getattr(self._df, a)
+
+    def __repr__(self) -> (str):
+        """repr(x) <=> x.__repr__()."""
+        with pd.option_context("display.show_dimensions", False):
+            df_body = repr(self._df).splitlines()
+        df_dim = list(self._df.shape)
+        sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
+        footer = f"\nCloudSatFrame - {sdf_dim}"
+        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
+        return cloudsat_cldcls_repr
+
+    def __repr_html__(self) -> str:
+        ad_id = id(self)
+
+        with pd.option_context("display.show_dimensions", False):
+            df_html = self._df.__repr_html__()
+        rows = f"{self._df.shape[0]} rows"
+        columns = f"{self._df.shape[1]} columns"
+
+        footer = f"CloudSatFrame - {rows} x {columns}"
+
+        parts = [
+            f'<div class="stratopy-data-container" id={ad_id}>',
+            df_html,
+            footer,
+            "</div>",
+        ]
+        html = "".join(parts)
+        return html
 
     def cut(self, area=None):
         """
@@ -66,7 +120,7 @@ class CloudSat(StratoFrame):
 
         """
         if not area:
-            return CloudSat(
+            return CloudSatFrame(
                 self._df.loc[
                     (self._df.Latitude < 0) & (self._df.Longitude < 0)
                 ]
@@ -77,7 +131,7 @@ class CloudSat(StratoFrame):
             longitude_min = area[2]
             longitude_max = area[3]
 
-            return CloudSat(
+            return CloudSatFrame(
                 self._df.loc[
                     self._df["Latitude"].between(latitude_min, latitude_max)
                     & self._df["Longitude"].between(
@@ -98,8 +152,10 @@ class CloudSat(StratoFrame):
 
         """
 
-        projection = """+proj=geos +h=35786023.0 +lon_0=-75.0
-                +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"""
+        projection = (
+            "+proj=geos +h=35786023.0 +lon_0=-75.0 "
+            "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"
+        )
 
         geo_df = gpd.GeoDataFrame(
             self._df.values,
@@ -114,4 +170,4 @@ class CloudSat(StratoFrame):
 
         # Reprojecting into GOES16 geostationary projection
         geodf_to_proj = geo_df.to_crs(projection)
-        return CloudSat(geodf_to_proj)
+        return CloudSatFrame(geodf_to_proj)
