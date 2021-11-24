@@ -17,7 +17,7 @@ from scipy import interpolate
 
 from . import core
 
-path = os.path.abspath(os.path.dirname(__file__))
+PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_nc(file_path):
@@ -57,10 +57,12 @@ def read_nc(file_path):
             "File path must be a tuple of length 1 or 3 (in case of RGB)."
         )
 
+    data = dict()
     for paths in file_path:
-        data = Dataset(paths, "r")
+        channel = paths.split("-")[3].split("_")[0]
+        data[channel] = Dataset(paths, "r").variables
 
-    return Goes(data.variables)
+    return data
 
 
 @attr.s(frozen=True, repr=False)
@@ -68,17 +70,23 @@ class Goes:
 
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
+
     Parameters
     ----------
-    data: data from netcdf file. Dataset(file_path).variables
+    data: ``netCDF4.Dataset.variables dict``
+        Dictionary with variables data from each channel of the
+        GOES Day Microphysics product.
+    coordinates: ``tuple``  (default: cut will be south hemisphere)
+        (lat_inf, lat_sup, lon_east, lon_west) where:
+            lat_inf, latitude of minimal position
+            lat_sup, latitude of maximal position
+            lon_east, longitude of
+            lon_west, longitude of
     """
 
-    data = attr.ib(validator=attr.validators.instance_of(dict))
-    CMI = attr.ib(init=False)
-    lat_sup = attr.ib(default=10.0)
-    lon_west = attr.ib(default=-80.0)
-    lat_inf = attr.ib(default=-40.0)
-    lon_east = attr.ib(default=-37.0)
+    _data = attr.ib(validator=attr.validators.instance_of(dict))
+    coordinates = attr.ib(default=(-40.0, 10.0, -37.0, -80.0))
+    #    CMI = attr.ib(init=False)
     _trim_coord = attr.ib(init=False)
     img_date = attr.ib(init=False)
 
@@ -93,109 +101,112 @@ class Goes:
         footer = "<b>-- Goes Object</b>"
         return f"<div>{img_date}{footer}</div>"
 
-    @CMI.default
-    def CMI_default(self):
-        return self.data["CMI"]
+    # @CMI.default
+    # def CMI_default(self):
+    #     return self.RGB(*self.trim().values())
 
     @img_date.default
     def img_date_default(self):
-        time_delta = datetime.timedelta(
-            seconds=int(self.data["t"][:].data)
-        )  # img date in sec
+        # Using channel 3 date (same for all)
+        channel_3 = self._data["M3C03"]
+
+        # Img date in sec
+        time_delta = datetime.timedelta(seconds=int(channel_3["t"][:].data))
         date_0 = datetime.datetime(year=2000, month=1, day=1, hour=12)
         return date_0 + time_delta
 
     @_trim_coord.default
-    def _trim_coord(self):
-        # Extract all the variables
-        metadata = self.data
+    def _trim_coord_default(self):
+        # Coordinates in deegres
+        lat_inf, lat_sup, lon_east, lon_west = self.coordinates
 
-        # satellite height
-        h = metadata["goes_imager_projection"].perspective_point_height
-        semieje_may = metadata["goes_imager_projection"].semi_major_axis
-        semieje_men = metadata["goes_imager_projection"].semi_minor_axis
-        lon_cen = metadata[
-            "goes_imager_projection"
-        ].longitude_of_projection_origin
-        scale_factor = metadata["x"].scale_factor
-        offset = np.array([metadata["x"].add_offset, metadata["y"].add_offset])
+        trim_coordinates = dict()
+        for ch_id, dataset in self._data.items():
+            # Extract all the variables
+            metadata = dataset
 
-        pto_sup_izq = core.latlon2scan(
-            self.lat_sup,
-            self.lon_west,
-            lon_cen,
-            Re=semieje_may,
-            Rp=semieje_men,
-            h=h,
-        )
+            # satellite height
+            h = metadata["goes_imager_projection"].perspective_point_height
+            semieje_may = metadata["goes_imager_projection"].semi_major_axis
+            semieje_men = metadata["goes_imager_projection"].semi_minor_axis
+            lon_cen = metadata[
+                "goes_imager_projection"
+            ].longitude_of_projection_origin
+            scale_factor = metadata["x"].scale_factor
+            offset = np.array(
+                [metadata["x"].add_offset, metadata["y"].add_offset]
+            )
 
-        pto_inf_der = core.latlon2scan(
-            self.lat_inf,
-            self.lon_east,
-            lon_cen,
-            Re=semieje_may,
-            Rp=semieje_men,
-            h=h,
-        )
+            pto_sup_izq = core.latlon2scan(
+                lat_sup,
+                lon_west,
+                lon_cen,
+                Re=semieje_may,
+                Rp=semieje_men,
+                h=h,
+            )
 
-        c0, r0 = core.scan2colfil(
-            pto_sup_izq[1],
-            pto_sup_izq[0],
-            offset[0],
-            offset[1],
-            scale_factor,
-            1,
-        )
-        c1, r1 = core.scan2colfil(
-            pto_inf_der[1],
-            pto_inf_der[0],
-            offset[0],
-            offset[1],
-            scale_factor,
-            1,
-        )
+            pto_inf_der = core.latlon2scan(
+                lat_inf,
+                lon_east,
+                lon_cen,
+                Re=semieje_may,
+                Rp=semieje_men,
+                h=h,
+            )
 
-        return r0, r1, c0, c1
+            c0, r0 = core.scan2colfil(
+                pto_sup_izq[1],
+                pto_sup_izq[0],
+                offset[0],
+                offset[1],
+                scale_factor,
+                1,
+            )
+            c1, r1 = core.scan2colfil(
+                pto_inf_der[1],
+                pto_inf_der[0],
+                offset[0],
+                offset[1],
+                scale_factor,
+                1,
+            )
+
+            trim_coordinates[ch_id] = (r0, r1, c0, c1)
+
+        return trim_coordinates
 
     def trim(self, for_RGB=True):
         """
         This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.
-        Default parameters are set to return a Southamerica image
+        Default parameters are set to return a South America image.
         Parameters
         ----------
-        data_path: ``str``
-            Path to GOES CMI image.
-        rows: ``int``
-            Height of the trimmed image in pixels.
-            0<rows<5424
-        cols: ``int``
-            Height of the trimmed image in pixels.
-            0<cols<5424
-        lon_west: ``float``
-            Maximum longitude to the west.
-        lat_sup: ``float``
-            Maximum upper latitude.
+
         Returns
         -------
         trim_img: ``numpy.array`` containing the trimmed image.
         """
-        metadata = self.data
-        band = int(metadata["band_id"][:].data[0])  # Channel number
-        image = np.array(metadata["CMI"][:].data)  # Extract image to np.array
-        N = 5424  # Image size for psize=2000 m
-        esc = N / image.shape[0]
-        r0, r1, c0, c1 = self._trim_coordc
-        trim_img = image[r0:r1, c0:c1]
+        trim_img = dict()
+        for ch_id, dataset in self._data.items():
+            image = np.array(
+                dataset["CMI"][:].data
+            )  # Extract image to np.array
+            N = 5424  # Image size for psize=2000 m
+            esc = N / image.shape[0]
+            r0, r1, c0, c1 = self._trim_coord[ch_id]
+            trim_img[ch_id] = image[r0:r1, c0:c1]
 
-        # Rescale channels with psize = 1000 m
-        if for_RGB and band == 3:
-            x = range(0, trim_img.shape[1])
-            y = range(0, trim_img.shape[0])
-            f = interpolate.interp2d(x, y, trim_img, kind="cubic")
-            xnew = np.arange(x[0], x[-1], (x[1] - x[0]) / esc)
-            ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
-            trim_img = f(xnew, ynew)
+            # Rescale channels with psize = 1000 m
+            if for_RGB and ch_id == "M3C03":
+                x = range(0, trim_img[ch_id][:].shape[1])
+                y = range(0, trim_img[ch_id][:].shape[0])
+                # import ipdb; ipdb.set_trace()
+                f = interpolate.interp2d(x, y, trim_img[ch_id], kind="cubic")
+                xnew = np.arange(x[0], x[-1], (x[1] - x[0]) / esc)
+                ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
+                trim_img[ch_id] = f(xnew, ynew)
 
         return trim_img
 
@@ -222,8 +233,8 @@ class Goes:
             Zenith calculation for every pixel.
         """
         r0, r1, c0, c1 = self._trim_coord
-        lat = np.load(path / "lat_vec.npy")[r0:r1]
-        lon = np.load(path / "lon_vec.npy")[c0:c1]
+        lat = np.load(PATH / "lat_vec.npy")[r0:r1]
+        lon = np.load(PATH / "lon_vec.npy")[c0:c1]
 
         zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
         # Calculate the solar zenith angle
