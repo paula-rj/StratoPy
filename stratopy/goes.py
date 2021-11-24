@@ -93,13 +93,15 @@ class Goes:
     def __repr__(self):
         # original = repr(self._df)
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        return f"GOES Object -- {img_date} "
+        band = self.data["band_id"][:].data
+        return f"GOES Object -- {img_date}, CH={band}"
 
     def _repr_html_(self):
         # original = self._df._repr_html_()
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
+        band = self.data["band_id"][:].data
         footer = "<b>-- Goes Object</b>"
-        return f"<div>{img_date}{footer}</div>"
+        return f"<div>{img_date}, , CH={band} {footer}</div>"
 
     # @CMI.default
     # def CMI_default(self):
@@ -176,7 +178,7 @@ class Goes:
 
         return trim_coordinates
 
-    def trim(self, for_RGB=True):
+    def trim(self):
         """
         This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.
@@ -250,10 +252,15 @@ class Goes:
         data2b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
         return data2b
 
-    def RGB(self, rec03, rec07, rec13, masked=False):
+    def RGB(
+        self, rec03, rec07, rec13, masked=False
+    ):  # acá no irian los rec, solo self y masked
         """
         This function creates an RGB image that represents the day microphysics
         according to the GOES webpage manual.
+
+        goes_obj.RGB() tira la imagen en np array recortada, corregida
+
         Parameters
         ----------
         rec03: ``numpy.array``
@@ -270,8 +277,15 @@ class Goes:
         RGB: ``numpy.array``
             RGB day microphysics image.
         """
+        # for band in goes_obj:
+        #   band_data = self.data
+        #   rec03 = obj1.trim()
+        #   rec07 = obj2.trim()
+        #   rec13 = obj3.trim()
 
-        R = rec03  # banda3
+        # rec7b = obj2.solar7(rec07,rec13)
+
+        R = rec03  # acá iria
         G = rec07  # banda7 con corrección zenith
         B = rec13  # banda13
 
@@ -285,15 +299,10 @@ class Goes:
         Bmin = 203
         Bmax = 323
 
-        # Choose the gamma -> STANDARIZED
-        gamma_R = 1
-        gamma_G = 2.5
-        gamma_B = 1
-
         # Normalize the data and copying
-        R = ((R - Rmin) / (Rmax - Rmin)) ** (1 / gamma_R)
-        G = ((G - Gmin) / (Gmax - Gmin)) ** (1 / gamma_G)
-        B = ((B - Bmin) / (Bmax - Bmin)) ** (1 / gamma_B)
+        R = (R - Rmin) / (Rmax - Rmin)
+        G = ((G - Gmin) / (Gmax - Gmin)) ** 0.4
+        B = (B - Bmin) / (Bmax - Bmin)
 
         RR = np.copy(R)
         BB = np.copy(B)
@@ -309,9 +318,15 @@ class Goes:
         # Create the norm RGB
         RRGB = np.stack([RR, GG, BB], axis=2)
 
+        if masked is True:
+            RRGB = mask(RRGB)
+
         return RRGB
 
-    def to_dataframe(self, rgb):
+    def to_dataframe(self, goes_obj, **kwargs):
+        # NO estoy segura que deberia tomar,
+        # creo que nada! directamente que a un goes recortado lo trasforme a df
+        # Tendria que probarlo para ver bien
         """Returns a pandas dataframe containing Latitude and Longitude for
         every pixel of a GOES full disk image, and the value of the pixel,
         from a numpy array.
@@ -323,7 +338,7 @@ class Goes:
         rgb_df: Pandas DataFrame
         """
 
-        rgb_df = pd.DataFrame(rgb)
+        rgb_df = pd.DataFrame(goes_obj)
 
         return rgb_df
 
@@ -335,6 +350,7 @@ def mask(rgb):
     rgb/QuickGuide_DtMicroRGB_NASA_SPoRT.pdf)
     Parameters:
     -----------
+
     rgb: numpy array
     Numpy Array object containig the Day Microphysics RGB product
     Returns:
