@@ -178,7 +178,7 @@ class Goes:
 
         return trim_coordinates
 
-    def trim(self):
+    def trim(self, for_RGB=True):
         """
         This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.

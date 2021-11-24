@@ -33,7 +33,7 @@ FAKE_PRODUCT = (
 )
 
 
-#def test_read_nc():
+# def test_read_nc():
 #    assert isinstance(goes.read_nc((PATH_CHANNEL_7,)), goes.Goes)
 #    assert isinstance(goes.read_nc(FILE_PATH), goes.Goes)
 
