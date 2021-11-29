@@ -18,7 +18,7 @@ class StratoFrame:
 
     @_df.default
     def _df_default(self):
-        return pd.DataFrame({"goes": self.goes.data, "cs": self.cs.datum})
+        return pd.DataFrame({"GOES": self.goes.RGB, "CloudSat": self.cs._df})
 
     def __getitem__(self, slice):
         return self._df.__getitem__(slice)

@@ -113,7 +113,7 @@ class Goes:
             )
 
     @img_date.default
-    def img_date_default(self):
+    def _img_date_default(self):
         # Using existing channel date (same for all)
         channel_data = list(self._data.values())[0]
 
@@ -318,10 +318,7 @@ class Goes:
 
             return RRGB
 
-    def to_dataframe(self, goes_obj, **kwargs):
-        # NO estoy segura que deberia tomar,
-        # creo que nada! directamente que a un goes recortado lo trasforme a df
-        # Tendria que probarlo para ver bien
+    def to_dataframe(self, **kwargs):
         """Returns a pandas dataframe containing Latitude and Longitude for
         every pixel of a GOES full disk image, and the value of the pixel,
         from a numpy array.
@@ -333,7 +330,7 @@ class Goes:
         rgb_df: Pandas DataFrame
         """
 
-        rgb_df = pd.DataFrame(goes_obj)
+        rgb_df = pd.DataFrame(self.RGB, **kwargs)
 
         return rgb_df
 
