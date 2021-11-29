@@ -33,7 +33,6 @@ def read_nc(file_path):
         result: ``netCDF4.Dataset``
         File variables.
     """
-    # Open netcdf file and extract variables
 
     if len(file_path) == 3:
         # Check for date and product consistency
@@ -114,7 +113,7 @@ class Goes:
             )
 
     @img_date.default
-    def img_date_default(self):
+    def _img_date_default(self):
         # Using existing channel date (same for all)
         channel_data = list(self._data.values())[0]
 
@@ -198,15 +197,13 @@ class Goes:
         """
         trim_img = dict()
         for ch_id, dataset in self._data.items():
-            image = np.array(
-                dataset["CMI"][:].data
-            )  # Extract image to np.array
-            N = 5424  # Image size for psize=2000 m
+            image = np.array(dataset["CMI"][:].data)
+            N = 5424  # Image size for psize = 2000 [m]
             esc = N / image.shape[0]
             r0, r1, c0, c1 = self._trim_coord[ch_id]
             trim_img[ch_id] = image[r0:r1, c0:c1]
 
-            # Rescale channels with psize = 1000 m
+            # Rescale channels with psize = 1000 [m]
             if for_RGB and ch_id == "M3C03":
                 x = range(0, trim_img[ch_id][:].shape[1])
                 y = range(0, trim_img[ch_id][:].shape[0])
@@ -236,7 +233,7 @@ class Goes:
         latitude_path = os.path.join(PATH, "lat_vec.npy")
         longitude_path = os.path.join(PATH, "lon_vec.npy")
 
-        #
+        # Trimmed coordinates
         r0, r1, c0, c1 = self._trim_coord["M3C07"]
         lat = np.load(latitude_path)[r0:r1]
         lon = np.load(longitude_path)[c0:c1]
@@ -298,7 +295,8 @@ class Goes:
 
             # Normalize the data and copying
             R = (R - Rmin) / (Rmax - Rmin)
-            G = ((G - Gmin) / (Gmax - Gmin)) ** 0.4
+            with np.errstate(invalid="ignore"):
+                G = ((G - Gmin) / (Gmax - Gmin)) ** 0.4
             B = (B - Bmin) / (Bmax - Bmin)
 
             RR = np.copy(R)
@@ -320,10 +318,7 @@ class Goes:
 
             return RRGB
 
-    def to_dataframe(self, goes_obj, **kwargs):
-        # NO estoy segura que deberia tomar,
-        # creo que nada! directamente que a un goes recortado lo trasforme a df
-        # Tendria que probarlo para ver bien
+    def to_dataframe(self, **kwargs):
         """Returns a pandas dataframe containing Latitude and Longitude for
         every pixel of a GOES full disk image, and the value of the pixel,
         from a numpy array.
@@ -335,7 +330,7 @@ class Goes:
         rgb_df: Pandas DataFrame
         """
 
-        rgb_df = pd.DataFrame(goes_obj)
+        rgb_df = pd.DataFrame(self.RGB, **kwargs)
 
         return rgb_df
 

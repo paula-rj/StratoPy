@@ -93,6 +93,7 @@ class CloudSatFrame:
 
         with pd.option_context("display.show_dimensions", False):
             df_html = self._df.__repr_html__()
+
         rows = f"{self._df.shape[0]} rows"
         columns = f"{self._df.shape[1]} columns"
 
