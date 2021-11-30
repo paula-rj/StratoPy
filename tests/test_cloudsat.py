@@ -25,6 +25,15 @@ def test_CloudDataFrame():
     assert not isinstance(cloudsat.CloudSatFrame, pd.DataFrame)
 
 
+def test__getitem__():
+    assert HDF_FILE[0:10].shape == (10, HDF_FILE.shape[1])
+    assert HDF_FILE["Longitude"].shape == (HDF_FILE.shape[0],)
+
+
+def test__dir__():
+    assert len(dir(HDF_FILE)) > len(dir(HDF_FILE._data))
+
+
 def test_cut():
     trimmed_file = HDF_FILE.cut()
     assert trimmed_file.shape < HDF_FILE.shape
