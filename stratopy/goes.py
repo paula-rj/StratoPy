@@ -85,6 +85,7 @@ class Goes:
 
     _data = attr.ib(validator=attr.validators.instance_of(dict))
     coordinates = attr.ib(default=(-40.0, 10.0, -37.0, -80.0))
+
     _trim_coord = attr.ib(init=False)
     RGB = attr.ib(init=False)
     img_date = attr.ib(init=False)
