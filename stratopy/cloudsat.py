@@ -64,25 +64,25 @@ def read_hdf(path, layer="CloudLayerType"):
 class CloudSatFrame:
     """[summary]"""
 
-    _df = attr.ib(
+    _data = attr.ib(
         validator=attr.validators.instance_of(pd.DataFrame),
         converter=pd.DataFrame,
     )
 
     def __getitem__(self, slice):
-        return self._df.__getitem__(slice)
+        return self._data.__getitem__(slice)
 
     def __dir__(self):
-        return super().__dir__() + dir(self._df)
+        return super().__dir__() + dir(self._data)
 
     def __getattr__(self, a):
-        return getattr(self._df, a)
+        return getattr(self._data, a)
 
-    def __repr__(self) -> (str):
+    def __repr__(self) -> (str):  # Es necesario el type hint?
         """repr(x) <=> x.__repr__()."""
         with pd.option_context("display.show_dimensions", False):
-            df_body = repr(self._df).splitlines()
-        df_dim = list(self._df.shape)
+            df_body = repr(self._data).splitlines()
+        df_dim = list(self._data.shape)
         sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
         footer = f"\nCloudSatFrame - {sdf_dim}"
         cloudsat_cldcls_repr = "\n".join(df_body + [footer])
@@ -92,9 +92,10 @@ class CloudSatFrame:
         ad_id = id(self)
 
         with pd.option_context("display.show_dimensions", False):
-            df_html = self._df.__repr_html__()
-        rows = f"{self._df.shape[0]} rows"
-        columns = f"{self._df.shape[1]} columns"
+            df_html = self._data.__repr_html__()
+
+        rows = f"{self._data.shape[0]} rows"
+        columns = f"{self._data.shape[1]} columns"
 
         footer = f"CloudSatFrame - {rows} x {columns}"
 
@@ -121,8 +122,8 @@ class CloudSatFrame:
         """
         if not area:
             return CloudSatFrame(
-                self._df.loc[
-                    (self._df.Latitude < 0) & (self._df.Longitude < 0)
+                self._data.loc[
+                    (self._data.Latitude < 0) & (self._data.Longitude < 0)
                 ]
             )
         elif len(area) == 4:
@@ -132,9 +133,9 @@ class CloudSatFrame:
             longitude_max = area[3]
 
             return CloudSatFrame(
-                self._df.loc[
-                    self._df["Latitude"].between(latitude_min, latitude_max)
-                    & self._df["Longitude"].between(
+                self._data.loc[
+                    self._data["Latitude"].between(latitude_min, latitude_max)
+                    & self._data["Longitude"].between(
                         longitude_min, longitude_max
                     )
                 ]
@@ -158,11 +159,11 @@ class CloudSatFrame:
         )
 
         geo_df = gpd.GeoDataFrame(
-            self._df.values,
-            columns=self._df.columns,
-            index=self._df.index,
+            self._data.values,
+            columns=self._data.columns,
+            index=self._data.index,
             geometry=gpd.points_from_xy(
-                self._df["Longitude"], self._df["Latitude"]
+                self._data["Longitude"], self._data["Latitude"]
             ),
         )
         # EPSG 4326 corresponds to coordinates in latitude and longitude

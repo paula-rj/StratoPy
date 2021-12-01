@@ -17,7 +17,7 @@ from scipy import interpolate
 
 from . import core
 
-path = os.path.abspath(os.path.dirname(__file__))
+PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_nc(file_path):
@@ -33,7 +33,6 @@ def read_nc(file_path):
         result: ``netCDF4.Dataset``
         File variables.
     """
-    # Open netcdf file and extract variables
 
     if len(file_path) == 3:
         # Check for date and product consistency
@@ -57,10 +56,12 @@ def read_nc(file_path):
             "File path must be a tuple of length 1 or 3 (in case of RGB)."
         )
 
+    data = dict()
     for paths in file_path:
-        data = Dataset(paths, "r")
+        channel = paths.split("-")[3].split("_")[0]
+        data[channel] = Dataset(paths, "r").variables
 
-    return Goes(data.variables)
+    return Goes(data)
 
 
 @attr.s(frozen=True, repr=False)
@@ -68,131 +69,149 @@ class Goes:
 
     """Generates an object containing de Day Microphysics state
     according to GOES-16 manual.
+
     Parameters
     ----------
-    data: data from netcdf file. Dataset(file_path).variables
+    data: ``netCDF4.Dataset.variables dict``
+        Dictionary with variables data from each channel of the
+        GOES Day Microphysics product.
+    coordinates: ``tuple``  (default: cut will be south hemisphere)
+        (lat_inf, lat_sup, lon_east, lon_west) where:
+            lat_inf, latitude of minimal position
+            lat_sup, latitude of maximal position
+            lon_east, longitude of
+            lon_west, longitude of
     """
 
-    data = attr.ib()  # Podriamos validar DataFrame y Transformar
-    lat_sup = attr.ib(default=10.0)
-    lon_west = attr.ib(default=-80.0)
-    lat_inf = attr.ib(default=-40.0)
-    lon_east = attr.ib(default=-37.0)
+    _data = attr.ib(validator=attr.validators.instance_of(dict))
+    coordinates = attr.ib(default=(-40.0, 10.0, -37.0, -80.0))
+
     _trim_coord = attr.ib(init=False)
+    RGB = attr.ib(init=False)
     img_date = attr.ib(init=False)
 
     def __repr__(self):
-        # original = repr(self._df)
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        band = self.data["band_id"][:].data
-        return f"GOES Object -- {img_date}, CH={band}"
+        bands = [int(band.split("C")[1]) for band in self._data.keys()]
+        if len(bands) == 1:
+            return f"GOES Object -- {img_date}, CH={bands[0]}"
+        else:
+            return (
+                f"GOES Object -- {img_date}, "
+                f"CH={bands[0]}, {bands[1]} and {bands[2]}"
+            )
 
     def _repr_html_(self):
-        # original = self._df._repr_html_()
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        band = self.data["band_id"][:].data
+        bands = [int(band.split("C")[1]) for band in self._data.keys()]
         footer = "<b>-- Goes Object</b>"
-        return f"<div>{img_date}, , CH={band} {footer}</div>"
+        if len(bands) == 1:
+            return f"<div>{img_date}, , CH={bands[0]} {footer}</div>"
+        else:
+            return (
+                f"<div>{img_date}, , "
+                f"CH={bands[0]}, {bands[1]} and {bands[2]} {footer}</div>"
+            )
 
     @img_date.default
-    def img_date_default(self):
-        time_delta = datetime.timedelta(
-            seconds=int(self.data["t"][:].data)
-        )  # img date in sec
+    def _img_date_default(self):
+        # Using existing channel date (same for all)
+        channel_data = list(self._data.values())[0]
+
+        # Img date in sec
+        time_delta = datetime.timedelta(seconds=int(channel_data["t"][:].data))
         date_0 = datetime.datetime(year=2000, month=1, day=1, hour=12)
         return date_0 + time_delta
 
     @_trim_coord.default
-    def trim_coord(self):
-        # Extract all the variables
-        metadata = self.data
+    def _trim_coord_default(self):
+        # Coordinates in deegres
+        lat_inf, lat_sup, lon_east, lon_west = self.coordinates
 
-        # satellite height
-        h = metadata["goes_imager_projection"].perspective_point_height
-        semieje_may = metadata["goes_imager_projection"].semi_major_axis
-        semieje_men = metadata["goes_imager_projection"].semi_minor_axis
-        lon_cen = metadata[
-            "goes_imager_projection"
-        ].longitude_of_projection_origin
-        scale_factor = metadata["x"].scale_factor
-        offset = np.array([metadata["x"].add_offset, metadata["y"].add_offset])
+        trim_coordinates = dict()
+        for ch_id, dataset in self._data.items():
+            # Extract all the variables
+            metadata = dataset
 
-        pto_sup_izq = core.latlon2scan(
-            self.lat_sup,
-            self.lon_west,
-            lon_cen,
-            Re=semieje_may,
-            Rp=semieje_men,
-            h=h,
-        )
+            # satellite height
+            h = metadata["goes_imager_projection"].perspective_point_height
+            semieje_may = metadata["goes_imager_projection"].semi_major_axis
+            semieje_men = metadata["goes_imager_projection"].semi_minor_axis
+            lon_cen = metadata[
+                "goes_imager_projection"
+            ].longitude_of_projection_origin
+            scale_factor = metadata["x"].scale_factor
+            offset = np.array(
+                [metadata["x"].add_offset, metadata["y"].add_offset]
+            )
 
-        pto_inf_der = core.latlon2scan(
-            self.lat_inf,
-            self.lon_east,
-            lon_cen,
-            Re=semieje_may,
-            Rp=semieje_men,
-            h=h,
-        )
+            pto_sup_izq = core.latlon2scan(
+                lat_sup,
+                lon_west,
+                lon_cen,
+                Re=semieje_may,
+                Rp=semieje_men,
+                h=h,
+            )
 
-        c0, r0 = core.scan2colfil(
-            pto_sup_izq[1],
-            pto_sup_izq[0],
-            offset[0],
-            offset[1],
-            scale_factor,
-            1,
-        )
-        c1, r1 = core.scan2colfil(
-            pto_inf_der[1],
-            pto_inf_der[0],
-            offset[0],
-            offset[1],
-            scale_factor,
-            1,
-        )
+            pto_inf_der = core.latlon2scan(
+                lat_inf,
+                lon_east,
+                lon_cen,
+                Re=semieje_may,
+                Rp=semieje_men,
+                h=h,
+            )
 
-        return r0, r1, c0, c1
+            c0, r0 = core.scan2colfil(
+                pto_sup_izq[1],
+                pto_sup_izq[0],
+                offset[0],
+                offset[1],
+                scale_factor,
+                1,
+            )
+            c1, r1 = core.scan2colfil(
+                pto_inf_der[1],
+                pto_inf_der[0],
+                offset[0],
+                offset[1],
+                scale_factor,
+                1,
+            )
 
-    def trim(self):
+            trim_coordinates[ch_id] = (r0, r1, c0, c1)
+
+        return trim_coordinates
+
+    def trim(self, for_RGB=True):
         """
         This function trims a GOES CMI image according to the width, height
         max west longitude and upper latitude specified on the parameters.
-        Default parameters are set to return a Southamerica image
+        Default parameters are set to return a South America image.
         Parameters
         ----------
-        data_path: ``str``
-            Path to GOES CMI image.
-        rows: ``int``
-            Height of the trimmed image in pixels.
-            0<rows<5424
-        cols: ``int``
-            Height of the trimmed image in pixels.
-            0<cols<5424
-        lon_west: ``float``
-            Maximum longitude to the west.
-        lat_sup: ``float``
-            Maximum upper latitude.
+
         Returns
         -------
         trim_img: ``numpy.array`` containing the trimmed image.
         """
-        metadata = self.data
-        band = int(metadata["band_id"][:].data[0])  # Channel number
-        image = np.array(metadata["CMI"][:].data)  # Extract image to np.array
-        N = 5424  # Image size for psize=2000 m
-        esc = N / image.shape[0]
-        r0, r1, c0, c1 = self._trim_coordc
-        trim_img = image[r0:r1, c0:c1]
+        trim_img = dict()
+        for ch_id, dataset in self._data.items():
+            image = np.array(dataset["CMI"][:].data)
+            N = 5424  # Image size for psize = 2000 [m]
+            esc = N / image.shape[0]
+            r0, r1, c0, c1 = self._trim_coord[ch_id]
+            trim_img[ch_id] = image[r0:r1, c0:c1]
 
-        # Rescale channels with psize = 1000 m
-        if band == 3:
-            x = range(0, trim_img.shape[1])
-            y = range(0, trim_img.shape[0])
-            f = interpolate.interp2d(x, y, trim_img, kind="cubic")
-            xnew = np.arange(x[0], x[-1], (x[1] - x[0]) / esc)
-            ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
-            trim_img = f(xnew, ynew)
+            # Rescale channels with psize = 1000 [m]
+            if for_RGB and ch_id == "M3C03":
+                x = range(0, trim_img[ch_id][:].shape[1])
+                y = range(0, trim_img[ch_id][:].shape[0])
+                f = interpolate.interp2d(x, y, trim_img[ch_id], kind="cubic")
+                xnew = np.arange(x[0], x[-1] + 1, (x[1] - x[0]) / esc)
+                ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
+                trim_img[ch_id] = f(xnew, ynew)
 
         return trim_img
 
@@ -206,39 +225,32 @@ class Goes:
             Trimmed image of channel 7.
         ch13: ``numpy.array``
             Trimed image of channel 13.
-        latlon_extent: ``list``
-            List containing the borders of the image in latitude and
-            longitude [x1,y1,x2,y2] where:
-                x1, further west longitude
-                y1, further south latitude
-                x2, further east longitude
-                y2, further north latitude
         Returns
         -------
         data2b: ``numpy.array``
             Zenith calculation for every pixel.
         """
-        r0, r1, c0, c1 = self._trim_coord
-        lat = np.load(path / "lat_vec.npy")[r0:r1]
-        lon = np.load(path / "lon_vec.npy")[c0:c1]
+        # Construct paths
+        latitude_path = os.path.join(PATH, "lat_vec.npy")
+        longitude_path = os.path.join(PATH, "lon_vec.npy")
 
-        zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
+        # Trimmed coordinates
+        r0, r1, c0, c1 = self._trim_coord["M3C07"]
+        lat = np.load(latitude_path)[r0:r1]
+        lon = np.load(longitude_path)[c0:c1]
+
         # Calculate the solar zenith angle
-        utc_time = datetime(2019, 1, 2, 18, 00)
-        for x in range(len(lat)):
-            for y in range(len(lon)):
-                zenith[x, y] = astronomy.sun_zenith_angle(
-                    utc_time, lon[y], lat[x]
-                )
+        utc_time = datetime.datetime(2019, 1, 2, 18, 00)
+        LON, LAT = np.meshgrid(lon, lat)
+        zenith = astronomy.sun_zenith_angle(utc_time, LON, LAT)
         refl39 = Calculator(
             platform_name="GOES-16", instrument="abi", band="ch7"
         )
         data2b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
         return data2b
 
-    def RGB(
-        self, rec03, rec07, rec13, masked=False
-    ):  # acá no irian los rec, solo self y masked
+    @RGB.default
+    def _RGB_default(self, masked=False):
         """
         This function creates an RGB image that represents the day microphysics
         according to the GOES webpage manual.
@@ -261,56 +273,53 @@ class Goes:
         RGB: ``numpy.array``
             RGB day microphysics image.
         """
-        # for band in goes_obj:
-        #   band_data = self.data
-        #   rec03 = obj1.trim()
-        #   rec07 = obj2.trim()
-        #   rec13 = obj3.trim()
+        # Starts with all channels trimmed images
+        trimmed_img = self.trim()
 
-        # rec7b = obj2.solar7(rec07,rec13)
+        if len(trimmed_img) == 1:
+            return trimmed_img.values()
+        else:
+            # Asign color to bands and make zenith correction on band 7.
+            R = trimmed_img["M3C03"]
+            G = self.solar7(trimmed_img["M3C07"], trimmed_img["M3C13"])
+            B = trimmed_img["M3C13"]
 
-        R = rec03  # acá iria
-        G = rec07  # banda7 con corrección zenith
-        B = rec13  # banda13
+            # Minimuns and Maximuns
+            Rmin = 0
+            Rmax = 1
 
-        # Minimuns and Maximuns
-        Rmin = 0
-        Rmax = 1
+            Gmin = 0
+            Gmax = 0.6
 
-        Gmin = 0
-        Gmax = 0.6
+            Bmin = 203
+            Bmax = 323
 
-        Bmin = 203
-        Bmax = 323
+            # Normalize the data and copying
+            R = (R - Rmin) / (Rmax - Rmin)
+            with np.errstate(invalid="ignore"):
+                G = ((G - Gmin) / (Gmax - Gmin)) ** 0.4
+            B = (B - Bmin) / (Bmax - Bmin)
 
-        # Normalize the data and copying
-        R = (R - Rmin) / (Rmax - Rmin)
-        G = ((G - Gmin) / (Gmax - Gmin)) ** 0.4
-        B = (B - Bmin) / (Bmax - Bmin)
+            RR = np.copy(R)
+            BB = np.copy(B)
+            GG = np.copy(G)
 
-        RR = np.copy(R)
-        BB = np.copy(B)
-        GG = np.copy(G)
+            RR[RR < 0] = 0.0
+            RR[RR > 1] = 1.0
+            BB[BB < 0] = 0.0
+            BB[BB > 1] = 1.0
+            GG[GG < 0] = 0.0
+            GG[GG > 1] = 1.0
 
-        RR[RR < 0] = 0.0
-        RR[RR > 1] = 1.0
-        BB[BB < 0] = 0.0
-        BB[BB > 1] = 1.0
-        GG[GG < 0] = 0.0
-        GG[GG > 1] = 1.0
+            # Create the norm RGB
+            RRGB = np.stack([RR, GG, BB], axis=2)
 
-        # Create the norm RGB
-        RRGB = np.stack([RR, GG, BB], axis=2)
+            if masked is True:
+                RRGB = mask(RRGB)
 
-        if masked is True:
-            RRGB = mask(RRGB)
+            return RRGB
 
-        return RRGB
-
-    def to_dataframe(self, goes_obj, **kwargs):
-        # NO estoy segura que deberia tomar,
-        # creo que nada! directamente que a un goes recortado lo trasforme a df
-        # Tendria que probarlo para ver bien
+    def to_dataframe(self, **kwargs):
         """Returns a pandas dataframe containing Latitude and Longitude for
         every pixel of a GOES full disk image, and the value of the pixel,
         from a numpy array.
@@ -322,7 +331,7 @@ class Goes:
         rgb_df: Pandas DataFrame
         """
 
-        rgb_df = pd.DataFrame(goes_obj)
+        rgb_df = pd.DataFrame(self.RGB, **kwargs)
 
         return rgb_df
 

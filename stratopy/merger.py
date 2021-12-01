@@ -18,7 +18,7 @@ class StratoFrame:
 
     @_df.default
     def _df_default(self):
-        return pd.DataFrame({"goes": self.goes.data, "cs": self.cs.datum})
+        return pd.DataFrame({"GOES": self.goes.RGB, "CloudSat": self.cs._data})
 
     def __getitem__(self, slice):
         return self._df.__getitem__(slice)
@@ -29,7 +29,7 @@ class StratoFrame:
     def __getattr__(self, a):
         return getattr(self._df, a)
 
-    def __repr__(self) -> (str):
+    def __repr__(self):
         """repr(x) <=> x.__repr__()."""
         with pd.option_context("display.show_dimensions", False):
             df_body = repr(self._df).splitlines()
@@ -39,7 +39,7 @@ class StratoFrame:
         cloudsat_cldcls_repr = "\n".join(df_body + [footer])
         return cloudsat_cldcls_repr
 
-    def __repr_html__(self) -> str:
+    def __repr_html__(self):
         ad_id = id(self)
 
         with pd.option_context("display.show_dimensions", False):
