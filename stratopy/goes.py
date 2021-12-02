@@ -277,7 +277,7 @@ class Goes:
         trimmed_img = self.trim()
 
         if len(trimmed_img) == 1:
-            return trimmed_img.values()
+            return np.array(list(trimmed_img.values()))
         else:
             # Asign color to bands and make zenith correction on band 7.
             R = trimmed_img["M3C03"]
