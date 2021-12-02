@@ -7,6 +7,8 @@ from ftplib import FTP
 from diskcache import Cache
 from diskcache.core import ENOVAL
 
+import s3fs
+
 from .cloudsat import read_hdf
 from .goes import read_nc
 
@@ -61,9 +63,6 @@ def fetch_cloudsat(
 
 def fetch_goes(
     dirname,
-    user,
-    passwd,
-    host="ftp.avl.class.noaa.gov",
     tag="stratopy-goes",
     path=DEFAULT_CACHE_PATH,
 ):
@@ -80,13 +79,13 @@ def fetch_goes(
     result = cache.get(id_, default=ENOVAL, retry=True)
 
     if result is ENOVAL:
+        # Starts connection with AWS S3 bucket
+        s3 = s3fs.S3FileSystem(anon=True)
 
-        ftp = FTP()
-        ftp.connect(host=host)
-        ftp.login()
-
+        # Open in-memory binary and write it
         buffer_file = io.BytesIO()
-        ftp.retrbinary(f"RETR {dirname}", buffer_file.write)
+        with s3.open(dirname, "rb") as f:
+            buffer_file.write(f.read())
         result = buffer_file.getvalue()
 
         cache.set(id_, result, tag=tag)
@@ -97,6 +96,6 @@ def fetch_goes(
         with open(fname, "wb") as fp:
             fp.write(result)
 
-        rgb = read_nc(fname)
+        goes_obj = read_nc((fname,))
 
-    return rgb
+    return goes_obj
