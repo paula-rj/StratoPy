@@ -9,6 +9,7 @@ from diskcache.core import ENOVAL
 
 import s3fs
 
+from . import merger
 from .cloudsat import read_hdf
 from .goes import read_nc
 
@@ -61,6 +62,11 @@ def fetch_cloudsat(
     return df
 
 
+# Esta función es fácilmente extendible a descargar por fecha aprox.
+# Simplemente es guardar en una lista los archivos de la carpeta(con s3fs.ls)
+# luego buscar el que más se acerca al horario deseado dentro de cierto margen.
+# Se podría implementar en caso de poder hacer lo mismo con cloudstat
+# (el problema ahí es el número de órbita).
 def fetch_goes(
     dirname,
     tag="stratopy-goes",
@@ -99,3 +105,19 @@ def fetch_goes(
         goes_obj = read_nc((fname,))
 
     return goes_obj
+
+
+def fetch(cloudsat_id, goes_id, cloudsat_kw=None, goes_kw=None):
+    """[Summary]"""
+    # Anon connection.
+    goes_kw = {} if goes_kw is None else goes_kw
+    goes_data = fetch_goes(goes_id, **goes_kw)
+
+    # In this case cloudsat_kw can't be empty:
+    # must have user and password to connect with server
+    cloudsat_kw = {} if cloudsat_kw is None else cloudsat_kw
+    cloudsat_data = fetch_cloudsat(cloudsat_id, **cloudsat_kw)
+
+    df = merger.StratoFrame(goes_data, cloudsat_data)
+
+    return df
