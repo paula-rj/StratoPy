@@ -36,8 +36,7 @@ class StratoFrame:
         df_dim = list(self._df.shape)
         sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
         footer = f"\nStratoFrame - {sdf_dim}"
-        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
-        return cloudsat_cldcls_repr
+        return "\n".join(df_body + [footer])
 
     def __repr_html__(self):
         ad_id = id(self)
@@ -55,5 +54,4 @@ class StratoFrame:
             footer,
             "</div>",
         ]
-        html = "".join(parts)
-        return html
+        return "".join(parts)
