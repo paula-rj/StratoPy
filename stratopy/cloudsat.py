@@ -85,14 +85,13 @@ class CloudSatFrame:
         df_dim = list(self._data.shape)
         sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
         footer = f"\nCloudSatFrame - {sdf_dim}"
-        cloudsat_cldcls_repr = "\n".join(df_body + [footer])
-        return cloudsat_cldcls_repr
+        return "\n".join(df_body + [footer])
 
-    def __repr_html__(self) -> str:
+    def _repr_html_(self) -> str:
         ad_id = id(self)
 
         with pd.option_context("display.show_dimensions", False):
-            df_html = self._data.__repr_html__()
+            df_html = self._data._repr_html_()
 
         rows = f"{self._data.shape[0]} rows"
         columns = f"{self._data.shape[1]} columns"
@@ -105,8 +104,7 @@ class CloudSatFrame:
             footer,
             "</div>",
         ]
-        html = "".join(parts)
-        return html
+        return "".join(parts)
 
     def cut(self, area=None):
         """

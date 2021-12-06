@@ -35,10 +35,10 @@ def latlon2xy(lat, lon):
     lonRad = lon * (math.pi / 180)
 
     # (1) geocentric latitude
-    Phi_c = math.atan(((rpol * rpol) / (req * req)) * math.tan(latRad))
+    Phi_c = math.atan(((rpol ** 2) / (req ** 2)) * math.tan(latRad))
     # (2) geocentric distance to the point on the ellipsoid
     rc = rpol / (
-        math.sqrt(1 - ((e * e) * (math.cos(Phi_c) * math.cos(Phi_c))))
+        math.sqrt(1 - ((e ** 2) * (math.cos(Phi_c) * math.cos(Phi_c))))
     )
     # (3) sx
     sx = H - (rc * math.cos(Phi_c) * math.cos(lonRad - lambda0))
@@ -282,7 +282,6 @@ def merge_df(cld_df, goes_df):
     cld_df : Pandas Dataframe
     Object returned by class DayMicro
     """
-    final_df = cld_df.merge(
+    return cld_df.merge(
         goes_df, how="left", left_on=["row", "col"], right_on=["R", "G", "B"]
     )
-    return final_df

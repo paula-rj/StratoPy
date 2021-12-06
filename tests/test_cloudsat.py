@@ -4,6 +4,7 @@ import pytest
 
 from stratopy import cloudsat
 
+
 PATH = (
     "data/CloudSat/"
     "2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
@@ -32,6 +33,36 @@ def test__getitem__():
 
 def test__dir__():
     assert len(dir(HDF_FILE)) > len(dir(HDF_FILE._data))
+
+
+def test_repr():
+    pdf = HDF_FILE
+    with pd.option_context("display.show_dimensions", False):
+        df_body = repr(pdf._data).splitlines()
+    df_dim = list(pdf._data.shape)
+    sdf_dim = f"{df_dim[0]} rows x {df_dim[1]} columns"
+    footer = f"\nCloudSatFrame - {sdf_dim}"
+    expected = "\n".join(df_body + [footer])
+    assert repr(pdf) == expected
+
+
+def test_repr_html():
+    pdf = HDF_FILE
+    ad_id = id(pdf)
+    with pd.option_context("display.show_dimensions", False):
+        df_html = pdf._data._repr_html_()
+    rows = f"{pdf._data.shape[0]} rows"
+    columns = f"{pdf._data.shape[1]} columns"
+    footer = f"CloudSatFrame - {rows} x {columns}"
+    parts = [
+        f'<div class="stratopy-data-container" id={ad_id}>',
+        df_html,
+        footer,
+        "</div>",
+    ]
+    expected = "".join(parts)
+
+    assert pdf._repr_html_() == expected
 
 
 def test_cut():

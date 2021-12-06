@@ -197,17 +197,17 @@ class Goes:
         trim_img: ``numpy.array`` containing the trimmed image.
         """
         trim_img = dict()
+        N = 5424  # Image size for psize = 2000 [m]
         for ch_id, dataset in self._data.items():
             image = np.array(dataset["CMI"][:].data)
-            N = 5424  # Image size for psize = 2000 [m]
             esc = N / image.shape[0]
             r0, r1, c0, c1 = self._trim_coord[ch_id]
             trim_img[ch_id] = image[r0:r1, c0:c1]
 
             # Rescale channels with psize = 1000 [m]
             if for_RGB and ch_id == "M3C03":
-                x = range(0, trim_img[ch_id][:].shape[1])
-                y = range(0, trim_img[ch_id][:].shape[0])
+                x = range(trim_img[ch_id][:].shape[1])
+                y = range(trim_img[ch_id][:].shape[0])
                 f = interpolate.interp2d(x, y, trim_img[ch_id], kind="cubic")
                 xnew = np.arange(x[0], x[-1] + 1, (x[1] - x[0]) / esc)
                 ynew = np.arange(y[0], y[-1], (y[1] - y[0]) / esc)
@@ -246,8 +246,7 @@ class Goes:
         refl39 = Calculator(
             platform_name="GOES-16", instrument="abi", band="ch7"
         )
-        data2b = refl39.reflectance_from_tbs(zenith, ch7, ch13)
-        return data2b
+        return refl39.reflectance_from_tbs(zenith, ch7, ch13)
 
     @RGB.default
     def _RGB_default(self, masked=False):
@@ -331,9 +330,7 @@ class Goes:
         rgb_df: Pandas DataFrame
         """
 
-        rgb_df = pd.DataFrame(self.RGB, **kwargs)
-
-        return rgb_df
+        return pd.DataFrame(self.RGB, **kwargs)
 
 
 def mask(rgb):
