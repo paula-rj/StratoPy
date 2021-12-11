@@ -17,7 +17,7 @@ from scipy import interpolate
 
 from . import core
 
-path = os.path.abspath(os.path.dirname(__file__))
+PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_nc(file_path):
@@ -57,10 +57,9 @@ def read_nc(file_path):
             "File path must be a tuple of length 1 or 3 (in case of RGB)."
         )
 
-    for paths in file_path:
-        data = Dataset(paths, "r")
+    data = Dataset(file_path[0], "r").variables
 
-    return Goes(data.variables)
+    return Goes(data)
 
 
 @attr.s(frozen=True, repr=False)
@@ -73,7 +72,7 @@ class Goes:
     data: data from netcdf file. Dataset(file_path).variables
     """
 
-    data = attr.ib()  # Podriamos validar DataFrame y Transformar
+    data = attr.ib()
     lat_sup = attr.ib(default=10.0)
     lon_west = attr.ib(default=-80.0)
     lat_inf = attr.ib(default=-40.0)
@@ -84,15 +83,15 @@ class Goes:
     def __repr__(self):
         # original = repr(self._df)
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        band = self.data["band_id"][:].data
-        return f"GOES Object -- {img_date}, CH={band}"
+        # band = self.data["band_id"][:].data
+        return f"GOES Object -- {img_date}"
 
     def _repr_html_(self):
         # original = self._df._repr_html_()
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        band = self.data["band_id"][:].data
+        # band = self.data["band_id"][:].data
         footer = "<b>-- Goes Object</b>"
-        return f"<div>{img_date}, , CH={band} {footer}</div>"
+        return f"<div>{img_date},  {footer}</div>"
 
     @img_date.default
     def img_date_default(self):
@@ -182,9 +181,9 @@ class Goes:
         image = np.array(metadata["CMI"][:].data)  # Extract image to np.array
         N = 5424  # Image size for psize=2000 m
         esc = N / image.shape[0]
-        r0, r1, c0, c1 = self._trim_coordc
+        r0, r1, c0, c1 = self._trim_coord
         trim_img = image[r0:r1, c0:c1]
-
+       
         # Rescale channels with psize = 1000 m
         if band == 3:
             x = range(0, trim_img.shape[1])
@@ -219,8 +218,8 @@ class Goes:
             Zenith calculation for every pixel.
         """
         r0, r1, c0, c1 = self._trim_coord
-        lat = np.load(path / "lat_vec.npy")[r0:r1]
-        lon = np.load(path / "lon_vec.npy")[c0:c1]
+        lat = np.load(PATH / "lat_vec.npy")[r0:r1]
+        lon = np.load(PATH / "lon_vec.npy")[c0:c1]
 
         zenith = np.zeros((ch7.shape[0], ch7.shape[1]))
         # Calculate the solar zenith angle
