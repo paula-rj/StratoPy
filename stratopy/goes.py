@@ -92,7 +92,7 @@ class Goes:
 
     def __repr__(self):
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        bands = [int(band.split("C")[1]) for band in self._data.keys()]
+        bands = [int(band.split("C")[1]) for band in self._data]
         if len(bands) == 1:
             return f"GOES Object -- {img_date}, CH={bands[0]}"
         else:
@@ -103,7 +103,7 @@ class Goes:
 
     def _repr_html_(self):
         img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        bands = [int(band.split("C")[1]) for band in self._data.keys()]
+        bands = [int(band.split("C")[1]) for band in self._data]
         footer = "<b>-- Goes Object</b>"
         if len(bands) == 1:
             return f"<div>{img_date}, , CH={bands[0]} {footer}</div>"
