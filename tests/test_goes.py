@@ -55,28 +55,52 @@ def test_read_nc_len():
 
 def test_repr():
     pdf = goes.read_nc((PATH_CHANNEL_7,))
-    pdf_image = pdf.img_date.strftime("%d/%m/%y-%H:%M")
-    bands = [int(band.split("C")[1]) for band in pdf._data.keys()]
-    if len(bands) == 1:
-        expected = f"GOES Object -- {pdf_image}, CH={bands[0]}"
-    else:
-        expected = (
-            f"GOES Object -- {pdf_image}, "
-            f"CH={bands[0]}, {bands[1]} and {bands[2]}"
-        )
-    assert repr(pdf) == expected
+    pdf_2 = goes.read_nc(FILE_PATH)
+
+    def pdf_repr(pdf):
+        pdf_image = pdf.img_date.strftime("%d/%m/%y-%H:%M")
+        bands = [int(band.split("C")[1]) for band in pdf._data.keys()]
+        if len(bands) == 1:
+            return f"GOES Object -- {pdf_image}, CH={bands[0]}"
+        else:
+            return (
+                f"GOES Object -- {pdf_image}, "
+                f"CH={bands[0]}, {bands[1]} and {bands[2]}"
+            )
+
+    expected_1 = pdf_repr(pdf)
+    expected_2 = pdf_repr(pdf_2)
+    assert repr(pdf) == expected_1
+    assert repr(pdf_2) == expected_2
 
 
 def test_repr_html_():
     pdf = goes.read_nc((PATH_CHANNEL_7,))
-    img_date = pdf.img_date.strftime("%d/%m/%y-%H:%M")
-    bands = [int(band.split("C")[1]) for band in pdf._data.keys()]
-    footer = "<b>-- Goes Object</b>"
-    if len(bands) == 1:
-        expected = f"<div>{img_date}, , CH={bands[0]} {footer}</div>"
-    else:
-        expected = (
-            f"<div>{img_date}, , "
-            f"CH={bands[0]}, {bands[1]} and {bands[2]} {footer}</div>"
-        )
-    assert pdf._repr_html_() == expected
+    pdf_2 = goes.read_nc(FILE_PATH)
+
+    def pdf_repr(pdf):
+        img_date = pdf.img_date.strftime("%d/%m/%y-%H:%M")
+        bands = [int(band.split("C")[1]) for band in pdf._data.keys()]
+        footer = "<b>-- Goes Object</b>"
+        if len(bands) == 1:
+            return f"<div>{img_date}, , CH={bands[0]} {footer}</div>"
+        else:
+            return (
+                f"<div>{img_date}, , "
+                f"CH={bands[0]}, {bands[1]} and {bands[2]} {footer}</div>"
+            )
+
+    expected_1 = pdf_repr(pdf)
+    expected_2 = pdf_repr(pdf_2)
+    assert pdf._repr_html_() == expected_1
+    assert pdf_2._repr_html_() == expected_2
+
+
+def test_RGB_default():
+    pass
+
+def test_to_dataframe():
+    pass
+
+def test_mask():
+    pass
