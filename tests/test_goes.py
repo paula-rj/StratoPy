@@ -1,3 +1,7 @@
+import numpy as np
+
+import pandas as pd
+
 import pytest
 
 from stratopy import goes
@@ -97,10 +101,20 @@ def test_repr_html_():
 
 
 def test_RGB_default():
-    pass
+    dat = goes.read_nc(FILE_PATH)
+    rgb = dat.RGB
+    rgb_mask = dat._RGB_default(masked=True)
+
+    assert isinstance(rgb, np.ndarray)
+    np.testing.assert_equal(rgb_mask, goes.mask(rgb))
+
 
 def test_to_dataframe():
-    pass
+    dat = goes.read_nc(FILE_PATH)
+    rgb = dat.RGB
+
+    assert dat.to_dataframe() == pd.DataFrame(rgb)
+
 
 def test_mask():
     pass
