@@ -10,11 +10,7 @@ class StratoFrame:
     goes = attr.ib()
     cs = attr.ib()
 
-    _df = attr.ib(
-        init=False,
-        validator=attr.validators.instance_of(pd.DataFrame),
-        converter=pd.DataFrame,
-    )
+    _df = attr.ib(init=False)
 
     @_df.default
     def _df_default(self):
