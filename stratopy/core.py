@@ -12,6 +12,7 @@ def geo2grid(lat, lon, nc):
     x, y = latlon2xy(lat, lon)
     col = (x - xoffset) / xscale
     lin = (y - yoffset) / yscale
+    
     return int(lin), int(col)
 
 
