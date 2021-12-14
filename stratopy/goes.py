@@ -88,32 +88,32 @@ class Goes:
 
     _trim_coord = attr.ib(init=False)
     RGB = attr.ib(init=False)
-    img_date = attr.ib(init=False)
+    _img_date = attr.ib(init=False)
 
     def __repr__(self):
-        img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
+        _img_date = self._img_date.strftime("%d/%m/%y-%H:%M")
         bands = [int(band.split("C")[1]) for band in self._data]
         if len(bands) == 1:
-            return f"GOES Object -- {img_date}, CH={bands[0]}"
+            return f"GOES Object -- {_img_date}, CH={bands[0]}"
         else:
             return (
-                f"GOES Object -- {img_date}, "
+                f"GOES Object -- {_img_date}, "
                 f"CH={bands[0]}, {bands[1]} and {bands[2]}"
             )
 
     def _repr_html_(self):
-        img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
+        _img_date = self._img_date.strftime("%d/%m/%y-%H:%M")
         bands = [int(band.split("C")[1]) for band in self._data]
         footer = "<b>-- Goes Object</b>"
         if len(bands) == 1:
-            return f"<div>{img_date}, , CH={bands[0]} {footer}</div>"
+            return f"<div>{_img_date}, , CH={bands[0]} {footer}</div>"
         else:
             return (
-                f"<div>{img_date}, , "
+                f"<div>{_img_date}, , "
                 f"CH={bands[0]}, {bands[1]} and {bands[2]} {footer}</div>"
             )
 
-    @img_date.default
+    @_img_date.default
     def _img_date_default(self):
         # Using existing channel date (same for all)
         channel_data = list(self._data.values())[0]

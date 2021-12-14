@@ -109,12 +109,5 @@ def test_RGB_default():
     np.testing.assert_equal(rgb_mask, goes.mask(rgb))
 
 
-def test_to_dataframe():
-    dat = goes.read_nc(FILE_PATH)
-    rgb = dat.RGB
-
-    assert dat.to_dataframe() == pd.DataFrame(rgb)
-
-
 def test_mask():
     pass
