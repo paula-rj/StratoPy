@@ -269,19 +269,3 @@ def scan2colfil(x, y, x0, y0, scale, tipo=0):
         return round(col), round(fil)
     else:
         raise TypeError("Type must be 0 (float) or 1 (int)")
-
-
-def merge_df(cld_df, goes_df):
-    """
-    Merges a cloudDataFrame with a GOES DataFrame by
-    rows and columns
-    Parameters
-    ----------
-    cld_df : Pandas Dataframe
-    Object returned by class CldClass
-    cld_df : Pandas Dataframe
-    Object returned by class DayMicro
-    """
-    return cld_df.merge(
-        goes_df, how="left", left_on=["row", "col"], right_on=["R", "G", "B"]
-    )
