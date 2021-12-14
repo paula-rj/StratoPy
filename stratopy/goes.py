@@ -213,39 +213,6 @@ class Goes:
 
         return trim_img
 
-    def solar7(self, ch7, ch13):
-        """
-        This function does a zenith angle correction to channel 7.
-        This correction is needed for daylight images.
-        Parameters
-        ----------
-        ch7: ``numpy.array``
-            Trimmed image of channel 7.
-        ch13: ``numpy.array``
-            Trimed image of channel 13.
-        Returns
-        -------
-        data2b: ``numpy.array``
-            Zenith calculation for every pixel.
-        """
-        # Construct paths
-        latitude_path = os.path.join(PATH, "lat_vec.npy")
-        longitude_path = os.path.join(PATH, "lon_vec.npy")
-
-        # Trimmed coordinates
-        r0, r1, c0, c1 = self._trim_coord["M3C07"]
-        lat = np.load(latitude_path)[r0:r1]
-        lon = np.load(longitude_path)[c0:c1]
-
-        # Calculate the solar zenith angle
-        utc_time = datetime.datetime(2019, 1, 2, 18, 00)
-        LON, LAT = np.meshgrid(lon, lat)
-        zenith = astronomy.sun_zenith_angle(utc_time, LON, LAT)
-        refl39 = Calculator(
-            platform_name="GOES-16", instrument="abi", band="ch7"
-        )
-        return refl39.reflectance_from_tbs(zenith, ch7, ch13)
-
     @RGB.default
     def _RGB_default(self, masked=False):
         """
@@ -278,7 +245,11 @@ class Goes:
         else:
             # Asign color to bands and make zenith correction on band 7.
             R = trimmed_img["M3C03"]
-            G = self.solar7(trimmed_img["M3C07"], trimmed_img["M3C13"])
+            G = solar7(
+                self._trim_coord["M3C07"],
+                trimmed_img["M3C07"],
+                trimmed_img["M3C13"],
+            )
             B = trimmed_img["M3C13"]
 
             # Minimuns and Maximuns
@@ -315,6 +286,45 @@ class Goes:
                 RRGB = mask(RRGB)
 
             return RRGB
+
+
+def solar7(trim_coord_ch7, ch7, ch13):
+    """
+    This function does a zenith angle correction to channel 7.
+    This correction is needed for daylight images. It is used
+    in RGB method of Goes class.
+    Parameters
+    ----------
+    trim_coord_ch7: ``tuple``
+        (r0, r1, c0, c1) where:
+            r0, latitude of
+            r1, latitude of
+            c0, longitude of
+            c1, longitude of
+    ch7: ``numpy.array``
+        Trimmed image of channel 7.
+    ch13: ``numpy.array``
+        Trimed image of channel 13.
+    Returns
+    -------
+    ``numpy.array``
+        Zenith calculation for every pixel for channel 7.
+    """
+    # Construct paths
+    latitude_path = os.path.join(PATH, "lat_vec.npy")
+    longitude_path = os.path.join(PATH, "lon_vec.npy")
+
+    # Trimmed coordinates
+    r0, r1, c0, c1 = trim_coord_ch7
+    lat = np.load(latitude_path)[r0:r1]
+    lon = np.load(longitude_path)[c0:c1]
+
+    # Calculate the solar zenith angle
+    utc_time = datetime.datetime(2019, 1, 2, 18, 00)
+    LON, LAT = np.meshgrid(lon, lat)
+    zenith = astronomy.sun_zenith_angle(utc_time, LON, LAT)
+    refl39 = Calculator(platform_name="GOES-16", instrument="abi", band="ch7")
+    return refl39.reflectance_from_tbs(zenith, ch7, ch13)
 
 
 def mask(rgb):
