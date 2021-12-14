@@ -1,7 +1,5 @@
 import numpy as np
 
-import pandas as pd
-
 import pytest
 
 from stratopy import goes
@@ -62,7 +60,7 @@ def test_repr():
     pdf_2 = goes.read_nc(FILE_PATH)
 
     def pdf_repr(pdf):
-        pdf_image = pdf.img_date.strftime("%d/%m/%y-%H:%M")
+        pdf_image = pdf._img_date.strftime("%d/%m/%y-%H:%M")
         bands = [int(band.split("C")[1]) for band in pdf._data.keys()]
         if len(bands) == 1:
             return f"GOES Object -- {pdf_image}, CH={bands[0]}"
@@ -83,7 +81,7 @@ def test_repr_html_():
     pdf_2 = goes.read_nc(FILE_PATH)
 
     def pdf_repr(pdf):
-        img_date = pdf.img_date.strftime("%d/%m/%y-%H:%M")
+        img_date = pdf._img_date.strftime("%d/%m/%y-%H:%M")
         bands = [int(band.split("C")[1]) for band in pdf._data.keys()]
         footer = "<b>-- Goes Object</b>"
         if len(bands) == 1:

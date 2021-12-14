@@ -7,8 +7,6 @@ from netCDF4 import Dataset
 
 import numpy as np
 
-import pandas as pd
-
 from pyorbital import astronomy
 
 from pyspectral.near_infrared_reflectance import Calculator
@@ -317,20 +315,6 @@ class Goes:
                 RRGB = mask(RRGB)
 
             return RRGB
-
-    def to_dataframe(self, **kwargs):
-        """Returns a pandas dataframe containing Latitude and Longitude for
-        every pixel of a GOES full disk image, and the value of the pixel,
-        from a numpy array.
-        Parameters
-        ----------
-        None
-        Returns
-        -------
-        rgb_df: Pandas DataFrame
-        """
-
-        return pd.DataFrame(self.RGB, **kwargs)
 
 
 def mask(rgb):
