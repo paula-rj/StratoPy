@@ -78,7 +78,7 @@ class CloudSatFrame:
     def __getattr__(self, a):
         return getattr(self._data, a)
 
-    def __repr__(self): 
+    def __repr__(self):
         """repr(x) <=> x.__repr__()."""
         with pd.option_context("display.show_dimensions", False):
             df_body = repr(self._data).splitlines()
@@ -88,6 +88,15 @@ class CloudSatFrame:
         return "\n".join(df_body + [footer])
 
     def _repr_html_(self):
+        """[summary]
+
+        [extended_summary]
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
         ad_id = id(self)
 
         with pd.option_context("display.show_dimensions", False):
