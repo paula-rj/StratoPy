@@ -11,10 +11,14 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import pathlib
 import sys
 
-sys.path.insert(0, os.path.abspath("../.."))
+# this path is pointing to project/docs/source
+CURRENT_PATH = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
+STRATOPY_PATH = CURRENT_PATH.parent.parent
 
+sys.path.insert(0, str(STRATOPY_PATH))
 # -- Project information -----------------------------------------------------
 
 project = "StratoPy"

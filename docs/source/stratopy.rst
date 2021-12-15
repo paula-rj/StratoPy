@@ -1,37 +1,49 @@
-stratopy package
-================
+Stratopy
+========
 
-Submodules
-----------
-
-stratopy.cloudsat module
-------------------------
+Documentation
+-------------
+____________________________
+``stratopy.cloudsat`` module
+____________________________
 
 .. automodule:: stratopy.cloudsat
    :members:
    :undoc-members:
    :show-inheritance:
 
-stratopy.core module
---------------------
+________________________
+``stratopy.core`` module
+________________________
 
 .. automodule:: stratopy.core
    :members:
    :undoc-members:
    :show-inheritance:
-
-stratopy.goes module
---------------------
+   
+________________________
+``stratopy.goes`` module
+________________________
 
 .. automodule:: stratopy.goes
    :members:
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+______________________
+``stratopy.IO`` module
+______________________
 
-.. automodule:: stratopy
+.. automodule:: stratopy.IO
+   :members:
+   :undoc-members:
+   :show-inheritance:
+ 
+__________________________
+``stratopy.merger`` module
+__________________________
+
+.. automodule:: stratopy.merger
    :members:
    :undoc-members:
    :show-inheritance:

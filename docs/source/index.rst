@@ -7,11 +7,12 @@ Welcome to StratoPy's documentation!
 Python library designed to easily manipulate CloudSat and GOES-R and generate labeled images containing cloud types. 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
-   installation
-   modules
+   installation.rst
+   modules.rst
+   ../tutorials/superposicion_pixel.ipynb
 
 Indices and tables
 ==================
