@@ -10,12 +10,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
+#import os
+#import sys
 
-import stratopy
-
-sys.path.insert(0, os.path.abspath("../.."))
+#sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 
@@ -24,7 +22,7 @@ copyright = "2021, Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa"
 author = "Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa"
 
 # The full version, including alpha/beta/rc tags
-release = stratopy.__version__
+release = "0.1.0"
 
 
 # -- General configuration ---------------------------------------------------
