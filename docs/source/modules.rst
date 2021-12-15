@@ -4,7 +4,7 @@ stratopy package
 Modules
 -------
 
-**Stratopy**'s available modules and documentation are listed below.
+**Stratopy** consists of five main modules. It's available modules and documentation are listed below.
 
 .. toctree::
    :maxdepth: 5
