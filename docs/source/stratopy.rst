@@ -7,7 +7,7 @@ Modules
 **Stratopy**'s available modules and documentation are listed below.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 5
    
 Documentation
 =============
@@ -36,6 +36,23 @@ Documentation
    :undoc-members:
    :show-inheritance:
 
+``stratopy.IO`` module
+------------------------
+
+.. automodule:: stratopy.IO
+   :members:
+   :undoc-members:
+   :show-inheritance:
+ 
+``stratopy.merger`` module
+------------------------
+
+.. automodule:: stratopy.merger
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+   
 Module contents
 ---------------
 
