@@ -27,8 +27,24 @@ def fetch_cloudsat(
     tag="stratopy-cloudsat",
     path=DEFAULT_CACHE_PATH,
 ):
-    """Fetch files of a certain date from cloudsat server and
+    """Fetch files of a certain date from cloudsat ftp server and
     stores in a local cache.
+
+    Parameters:
+    -----------
+
+    dirname : `str`, path to cloudsat image.
+    user : `str`, username for cloudsat ftp connection.
+    passwd : `str`, password for cloudsat ftp connection.
+    host : `str`, name of the url where the file is hosted.
+    tag : `str`, tag to be added to the cached file.
+    path : `str`, path where to save the cached file.
+
+    Returns:
+    --------
+
+    df : `stratopy.cloudsat.CloudSatFrame`,
+    dataframe containing the image data.
     """
     cache = Cache(path)
 
@@ -74,6 +90,17 @@ def fetch_goes(
 ):
     """Fetch files of a certain date from GOES server and
     stores in a local cache.
+
+    Parameters:
+    -----------
+
+    dirname : `str`, name of the cached file.
+    tag : `str`, tag to append to name of cached file.
+    path : `str`, location where to save the cached file.
+
+    Returns:
+    --------
+    goes_obj : `netCDF4.Dataset`, goes image data.
     """
     cache = Cache(path)
 
