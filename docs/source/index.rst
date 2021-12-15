@@ -10,8 +10,8 @@ Python library designed to easily manipulate CloudSat and GOES-R and generate la
    :maxdepth: 2
    :caption: Contents:
 
-   installation
-   stratopy
+   installation.rst
+   stratopy.rst
    ../tutorials/superposicion_pixel.ipynb
 
 Indices and tables
