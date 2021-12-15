@@ -11,7 +11,7 @@ Python library designed to easily manipulate CloudSat and GOES-R and generate la
    :caption: Contents:
 
    installation
-   modules
+   stratopy
 
 Indices and tables
 ==================
