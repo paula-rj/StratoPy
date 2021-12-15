@@ -12,6 +12,7 @@ Python library designed to easily manipulate CloudSat and GOES-R and generate la
 
    installation
    stratopy
+   ../tutorials/superposicion_pixel.ipynb
 
 Indices and tables
 ==================
