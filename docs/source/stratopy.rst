@@ -55,12 +55,3 @@ __________________________
    :members:
    :undoc-members:
    :show-inheritance:
-   
-   
-Module contents
----------------
-
-.. automodule:: stratopy
-   :members:
-   :undoc-members:
-   :show-inheritance:
