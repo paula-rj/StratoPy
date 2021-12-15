@@ -1,7 +1,5 @@
-.. StratoPy documentation master file, created by
-   sphinx-quickstart on Fri Oct 29 16:12:38 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. image:: https://raw.githubusercontent.com/paula-rj/StratoPy/main/res/logo.jpg
+   :width: 400
 
 Welcome to StratoPy's documentation!
 ====================================
@@ -12,6 +10,7 @@ Python library designed to easily manipulate CloudSat and GOES-R and generate la
    :maxdepth: 2
    :caption: Contents:
 
+   installation
    modules
 
 Indices and tables
