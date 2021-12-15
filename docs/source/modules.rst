@@ -1,7 +1,13 @@
-stratopy
-========
+stratopy package
+================
+
+Modules
+-------
+
+**Stratopy**'s available modules and documentation are listed below.
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 5
+   
+   stratopy.rst
 
-   stratopy
