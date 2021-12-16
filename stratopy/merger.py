@@ -51,3 +51,6 @@ class StratoFrame:
             "</div>",
         ]
         return "".join(parts)
+    
+
+
