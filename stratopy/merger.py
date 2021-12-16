@@ -51,6 +51,12 @@ class StratoFrame:
             "</div>",
         ]
         return "".join(parts)
-    
 
-
+    def _verify_datetime(self):
+        time_goes = self.goes._img_date_default
+        time_cldsat = self.cs.read_time
+        if time_goes not in time_cldsat:
+            raise (
+                f"The GOES and CloudSAT database are in different times "
+                f"GOES time: {time_goes} \nCloudSAT time: {time_cldsat}"
+            )

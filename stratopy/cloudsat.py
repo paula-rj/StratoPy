@@ -87,7 +87,6 @@ class CloudSatFrame:
         validator=attr.validators.instance_of(pd.DataFrame),
         converter=pd.DataFrame,
     )
-    _img_date = attr.ib(init=False)
 
     def __getitem__(self, slice):
         return self._data.__getitem__(slice)

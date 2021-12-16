@@ -16,7 +16,7 @@ __version__ = "0.0.1"
 # IMPORTS
 # =============================================================================
 
-from .cloudsat import *
-from .core import *
-from .goes import *
-from .IO import *
+from .cloudsat import *  # noqa
+from .core import *  # noqa
+from .goes import *  # noqa
+from .IO import *  # noqa
