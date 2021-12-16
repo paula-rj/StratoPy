@@ -74,7 +74,14 @@ def attach_vdata(vs, varname):
 
 @attr.s(frozen=True, repr=False)
 class CloudSatFrame:
-    """[summary]"""
+    """DataFrame used for manipulating Cloudsat and GOES data
+    throughout this package.
+
+    Attributes
+    ----------
+    _data: ``attr.ib``
+        sattelite image data.
+    """
 
     _data = attr.ib(
         validator=attr.validators.instance_of(pd.DataFrame),
@@ -101,15 +108,6 @@ class CloudSatFrame:
         return "\n".join(df_body + [footer])
 
     def _repr_html_(self):
-        """[summary]
-
-        [extended_summary]
-
-        Returns
-        -------
-        [type]
-            [description]
-        """
         ad_id = id(self)
 
         with pd.option_context("display.show_dimensions", False):
@@ -132,12 +130,13 @@ class CloudSatFrame:
         """
         Parameters
         ----------
-            area: ``list``, optional (default: cut will be south hemisphere)
-                [lat_0, lat_1, lon_0, lon_1] where:
-                    lat_0, latitude of minimal position
-                    lat_1, latitude of maximal position
-                    lon_0, longitude of minimal position
-                    lon_1, longitude of maximal position
+
+        area: ``list``, optional (default: cut will be south hemisphere)
+            [lat_0, lat_1, lon_0, lon_1] where:
+                lat_0, latitude of minimal position
+                lat_1, latitude of maximal position
+                lon_0, longitude of minimal position
+                lon_1, longitude of maximal position
 
         """
         if not area:
@@ -167,6 +166,7 @@ class CloudSatFrame:
         """
         Parameters
         ----------
+
         ndf: ``pandas.DataFrame``, optional (default=None)
         projection: ``str``, optional (default=geostationary, GOES-R)
             The reprojection that the user desires.
