@@ -12,10 +12,6 @@ class StratoFrame:
 
     _df = attr.ib(init=False)
 
-    @_df.default
-    def _df_default(self):
-        return pd.DataFrame({"GOES": self.goes.RGB, "CloudSat": self.cs._data})
-
     def __getitem__(self, slice):
         return self._df.__getitem__(slice)
 
@@ -60,3 +56,4 @@ class StratoFrame:
                 f"The GOES and CloudSAT database are in different times "
                 f"GOES time: {time_goes} \nCloudSAT time: {time_cldsat}"
             )
+        return True
