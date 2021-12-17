@@ -48,8 +48,8 @@ def fetch_cloudsat(
     """
     cache = Cache(path)
 
-    # Transform dirname into cache id
-    id_ = os.path.split(dirname)[-1]
+    # Transform dirname into cache id (exact date)
+    id_ = os.path.split(dirname)[-1].split("_")[0]
 
     # Search in local cache
     cache.expire()
@@ -105,7 +105,7 @@ def fetch_goes(
     cache = Cache(path)
 
     # Transform dirname into cache id
-    id_ = os.path.split(dirname)[-1]
+    id_ = os.path.split(dirname)[-1].split("_")[0]
 
     # Search in local cache
     cache.expire()
