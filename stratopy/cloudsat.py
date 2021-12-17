@@ -39,25 +39,37 @@ def read_hdf(path, layer="CloudLayerType"):
     try:
         hdf_file = HDF(path, HC.READ)
         vs = VS(hdf_file)
-        vd_lat = vs.attach("Latitude", write=0)
+        vd_lat = attach_vdata(vs, "Latitude")
         lat = np.array(vd_lat[:]).flatten()
-        vd_lat.detach
-        vd_lon = vs.attach("Longitude", write=0)
+        vd_lon = attach_vdata(vs, "Longitude")
         lon = np.array(vd_lon[:]).flatten()
-        vd_lon.detach
+
+        seconds = np.array(attach_vdata(vs, "Profile_time"))[:, 0]
+        TAI = vs.attach("TAI_start")[0][0]
+        start = pd.to_datetime("1993-01-01") + pd.Timedelta(seconds=TAI)
+        offsets = pd.to_timedelta(seconds, unit="s")
+        hdf_time = pd.date_range(start=start, end=start, periods=offsets.size)
+        hdf_time = hdf_time + offsets
     except Exception as error:
         raise error
     else:
         # Read sd data
         file_path = SD(path)
         cld_layertype = file_path.select(layer)[:]
-        layers_df = {"Longitude": lon, "Latitude": lat}
+        layers_df = {"read_time": hdf_time, "Longitude": lon, "Latitude": lat}
         for i, v in enumerate(np.transpose(cld_layertype)):
             layers_df[f"capa_{i}"] = v
         cld_df = CloudSatFrame(layers_df)
         vs.end()
 
     return cld_df
+
+
+def attach_vdata(vs, varname):
+    vdata = vs.attach(varname)
+    data = vdata[:]
+    vdata.detach()
+    return data
 
 
 @attr.s(frozen=True, repr=False)
