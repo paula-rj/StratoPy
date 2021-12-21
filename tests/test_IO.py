@@ -54,7 +54,7 @@ def test_cache_cloudsat(memory_buffer):
     binary = memory_buffer(PATH_CLOUDSAT)
 
     # Initialize cache and store binary
-    cache = Cache(DEFAULT_CACHE_PATH) #HAY QUE MOCKEAR ESTO
+    cache = Cache(DEFAULT_CACHE_PATH)  # HAY QUE MOCKEAR ESTO
     cache.set(id_, binary, tag="stratopy-cloudsat")
 
     # Try to fetch file with wrong username and password
