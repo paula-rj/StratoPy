@@ -31,8 +31,8 @@ CLOUDSAT_SERVER_DIR = (
 
 
 @pytest.fixture
-def cache_mock():
-    def make(file_path, cache_path):
+def memory_buffer():
+    def make(file_path):
         # In memory buffer to store binary
         buffer = io.BytesIO()
 
@@ -45,16 +45,16 @@ def cache_mock():
     return make
 
 
-def test_cache_cloudsat(cache_mock):
+def test_cache_cloudsat(memory_buffer):
     # Generates cache id
     file_name = os.path.split(PATH_CLOUDSAT)[-1]
     id_ = file_name.split("_")[0]
 
     # Brings binary from file
-    binary = cache_mock(PATH_CLOUDSAT, DEFAULT_CACHE_PATH)
+    binary = memory_buffer(PATH_CLOUDSAT)
 
     # Initialize cache and store binary
-    cache = Cache(DEFAULT_CACHE_PATH)
+    cache = Cache(DEFAULT_CACHE_PATH)  # HAY QUE MOCKEAR ESTO
     cache.set(id_, binary, tag="stratopy-cloudsat")
 
     # Try to fetch file with wrong username and password
