@@ -6,8 +6,8 @@ from stratopy import goes
 
 PATH_CHANNEL_3 = (
     "data/GOES16/"
-    "OR_ABI-L2-CMIPF-M3C03_G16_s20190021800363_e20190021811129_\
-c20190021811205.nc"
+    "OR_ABI-L2-CMIPF-M3C03_G16_s20190021800363_e20190021811129_"
+    "c20190021811205.nc"
 )
 PATH_CHANNEL_7 = (
     "data/GOES16/"
@@ -105,7 +105,3 @@ def test_RGB_default():
 
     assert isinstance(rgb, np.ndarray)
     np.testing.assert_equal(rgb_mask, goes.mask(rgb))
-
-
-def test_mask():
-    pass

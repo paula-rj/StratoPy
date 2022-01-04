@@ -324,6 +324,7 @@ def solar7(trim_coord_ch7, ch7, ch13):
     LON, LAT = np.meshgrid(lon, lat)
     zenith = astronomy.sun_zenith_angle(utc_time, LON, LAT)
     refl39 = Calculator(platform_name="GOES-16", instrument="abi", band="ch7")
+
     return refl39.reflectance_from_tbs(zenith, ch7, ch13)
 
 
@@ -350,6 +351,7 @@ def mask(rgb):
     lc_gfilter = rgb[:, :, 1] < 0.4  # G
     lc_bfilter = rgb[:, :, 2] > 0.6  # B
     lc_filter = lc_rfilter * lc_gfilter * lc_bfilter
+
     # Mask= magenta
     img_mask[lc_filter, 0] = 1.0
     img_mask[lc_filter, 1] = 0.0
@@ -360,6 +362,7 @@ def mask(rgb):
     st_gfilter = (rgb[:, :, 1] > 0.5) * (rgb[:, :, 1] < 0.8)  # G
     st_bfilter = rgb[:, :, 2] < 0.7
     st_filter = st_rfilter * st_gfilter * st_bfilter
+
     # Mask=Light blue
     img_mask[st_filter, 0] = 0.0
     img_mask[st_filter, 1] = 1.0
@@ -370,6 +373,7 @@ def mask(rgb):
     cb_gfilter = rgb[:, :, 1] < 0.3  # G
     cb_bfilter = rgb[:, :, 2] < 0.3  # B
     cb_filter = cb_rfilter * cb_gfilter * cb_bfilter
+
     # Mask=Red
     img_mask[cb_filter, 0] = 1.0
     img_mask[cb_filter, 1] = 0.0
@@ -380,6 +384,7 @@ def mask(rgb):
     cr_gfilter = rgb[:, :, 1] > 0.7  # G
     cr_bfilter = rgb[:, :, 2] < 0.3  # B
     cr_filter = cr_rfilter * cr_gfilter * cr_bfilter
+
     # Mask= Green
     img_mask[cr_filter, 0] = 0.0
     img_mask[cr_filter, 1] = 1.0
@@ -390,6 +395,7 @@ def mask(rgb):
     super_gfilter = rgb[:, :, 1] > 0.8
     super_bfilter = rgb[:, :, 2] < 0.2  # amarillo
     super_filter = super_rfilter * super_gfilter * super_bfilter
+
     # Mask=Yellow
     img_mask[super_filter, 0] = 1.0
     img_mask[super_filter, 1] = 1.0
