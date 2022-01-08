@@ -35,10 +35,10 @@ def latlon2xy(lat, lon):
     lonRad = lon * (math.pi / 180)
 
     # (1) geocentric latitude
-    Phi_c = math.atan(((rpol * rpol) / (req * req)) * math.tan(latRad))
+    Phi_c = math.atan(((rpol ** 2) / (req ** 2)) * math.tan(latRad))
     # (2) geocentric distance to the point on the ellipsoid
     rc = rpol / (
-        math.sqrt(1 - ((e * e) * (math.cos(Phi_c) * math.cos(Phi_c))))
+        math.sqrt(1 - ((e ** 2) * (math.cos(Phi_c) * math.cos(Phi_c))))
     )
     # (3) sx
     sx = H - (rc * math.cos(Phi_c) * math.cos(lonRad - lambda0))
@@ -237,10 +237,11 @@ def colfil2scan(col, fil, x0, y0, scale):
     return x, y
 
 
-def scan2colfil(x, y, x0, y0, scale, tipo=0):
+def scan2colfil(x, y, x0, y0, scale, tipo=1):
     """
-    Transforma de x/y en proyeccion geoestacionaria a
-    En base a 5.2.8.2 de PUG3
+    Converts x/y coordinates into row, column coordinartes, 
+    a geostationary projection. Based on PUG3, version 5.2.8.2
+     
     Parameters
     ----------
     x : float, float arr
@@ -256,6 +257,7 @@ def scan2colfil(x, y, x0, y0, scale, tipo=0):
         tamaño del pixel en radianes
     tipo : TYPE, optional
         tipo de salida. The default is 0 para float, 1 para int.
+        
     Returns
     -------
     col : columna
@@ -269,20 +271,3 @@ def scan2colfil(x, y, x0, y0, scale, tipo=0):
         return round(col), round(fil)
     else:
         raise TypeError("Type must be 0 (float) or 1 (int)")
-
-
-def merge_df(cld_df, goes_df):
-    """
-    Merges a cloudDataFrame with a GOES DataFrame by
-    rows and columns
-    Parameters
-    ----------
-    cld_df : Pandas Dataframe
-    Object returned by class CldClass
-    cld_df : Pandas Dataframe
-    Object returned by class DayMicro
-    """
-    final_df = cld_df.merge(
-        goes_df, how="left", left_on=["row", "col"], right_on=["R", "G", "B"]
-    )
-    return final_df

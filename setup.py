@@ -15,6 +15,7 @@ REQUIREMENTS = [
     "pyspectral",
     "netCDF4",
     "diskcache",
+    "s3fs",
 ]
 
 setup(
