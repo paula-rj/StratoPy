@@ -7,8 +7,6 @@ from netCDF4 import Dataset
 
 import numpy as np
 
-import pandas as pd
-
 from pyorbital import astronomy
 
 from pyspectral.near_infrared_reflectance import Calculator
@@ -88,32 +86,32 @@ class Goes:
 
     _trim_coord = attr.ib(init=False)
     RGB = attr.ib(init=False)
-    img_date = attr.ib(init=False)
+    _img_date = attr.ib(init=False)
 
     def __repr__(self):
-        img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        bands = [int(band.split("C")[1]) for band in self._data.keys()]
+        _img_date = self._img_date.strftime("%d/%m/%y-%H:%M")
+        bands = [int(band.split("C")[1]) for band in self._data]
         if len(bands) == 1:
-            return f"GOES Object -- {img_date}, CH={bands[0]}"
+            return f"GOES Object -- {_img_date}, CH={bands[0]}"
         else:
             return (
-                f"GOES Object -- {img_date}, "
+                f"GOES Object -- {_img_date}, "
                 f"CH={bands[0]}, {bands[1]} and {bands[2]}"
             )
 
     def _repr_html_(self):
-        img_date = self.img_date.strftime("%d/%m/%y-%H:%M")
-        bands = [int(band.split("C")[1]) for band in self._data.keys()]
+        _img_date = self._img_date.strftime("%d/%m/%y-%H:%M")
+        bands = [int(band.split("C")[1]) for band in self._data]
         footer = "<b>-- Goes Object</b>"
         if len(bands) == 1:
-            return f"<div>{img_date}, , CH={bands[0]} {footer}</div>"
+            return f"<div>{_img_date}, , CH={bands[0]} {footer}</div>"
         else:
             return (
-                f"<div>{img_date}, , "
+                f"<div>{_img_date}, , "
                 f"CH={bands[0]}, {bands[1]} and {bands[2]} {footer}</div>"
             )
 
-    @img_date.default
+    @_img_date.default
     def _img_date_default(self):
         # Using existing channel date (same for all)
         channel_data = list(self._data.values())[0]
@@ -215,39 +213,6 @@ class Goes:
 
         return trim_img
 
-    def solar7(self, ch7, ch13):
-        """
-        This function does a zenith angle correction to channel 7.
-        This correction is needed for daylight images.
-        Parameters
-        ----------
-        ch7: ``numpy.array``
-            Trimmed image of channel 7.
-        ch13: ``numpy.array``
-            Trimed image of channel 13.
-        Returns
-        -------
-        data2b: ``numpy.array``
-            Zenith calculation for every pixel.
-        """
-        # Construct paths
-        latitude_path = os.path.join(PATH, "lat_vec.npy")
-        longitude_path = os.path.join(PATH, "lon_vec.npy")
-
-        # Trimmed coordinates
-        r0, r1, c0, c1 = self._trim_coord["M3C07"]
-        lat = np.load(latitude_path)[r0:r1]
-        lon = np.load(longitude_path)[c0:c1]
-
-        # Calculate the solar zenith angle
-        utc_time = datetime.datetime(2019, 1, 2, 18, 00)  # Corregir esto
-        LON, LAT = np.meshgrid(lon, lat)
-        zenith = astronomy.sun_zenith_angle(utc_time, LON, LAT)
-        refl39 = Calculator(
-            platform_name="GOES-16", instrument="abi", band="ch7"
-        )
-        return refl39.reflectance_from_tbs(zenith, ch7, ch13)
-
     @RGB.default
     def _RGB_default(self, masked=False):
         """
@@ -280,7 +245,11 @@ class Goes:
         else:
             # Asign color to bands and make zenith correction on band 7.
             R = trimmed_img["M3C03"]
-            G = self.solar7(trimmed_img["M3C07"], trimmed_img["M3C13"])
+            G = solar7(
+                self._trim_coord["M3C07"],
+                trimmed_img["M3C07"],
+                trimmed_img["M3C13"],
+            )
             B = trimmed_img["M3C13"]
 
             # Minimuns and Maximuns
@@ -319,6 +288,46 @@ class Goes:
             return RRGB
 
 
+def solar7(trim_coord_ch7, ch7, ch13):
+    """
+    This function does a zenith angle correction to channel 7.
+    This correction is needed for daylight images. It is used
+    in RGB method of Goes class.
+    Parameters
+    ----------
+    trim_coord_ch7: ``tuple``
+        (r0, r1, c0, c1) where:
+            r0, latitude of
+            r1, latitude of
+            c0, longitude of
+            c1, longitude of
+    ch7: ``numpy.array``
+        Trimmed image of channel 7.
+    ch13: ``numpy.array``
+        Trimed image of channel 13.
+    Returns
+    -------
+    ``numpy.array``
+        Zenith calculation for every pixel for channel 7.
+    """
+    # Construct paths
+    latitude_path = os.path.join(PATH, "lat_vec.npy")
+    longitude_path = os.path.join(PATH, "lon_vec.npy")
+
+    # Trimmed coordinates
+    r0, r1, c0, c1 = trim_coord_ch7
+    lat = np.load(latitude_path)[r0:r1]
+    lon = np.load(longitude_path)[c0:c1]
+
+    # Calculate the solar zenith angle
+    utc_time = datetime.datetime(2019, 1, 2, 18, 00)
+    LON, LAT = np.meshgrid(lon, lat)
+    zenith = astronomy.sun_zenith_angle(utc_time, LON, LAT)
+    refl39 = Calculator(platform_name="GOES-16", instrument="abi", band="ch7")
+
+    return refl39.reflectance_from_tbs(zenith, ch7, ch13)
+
+
 def mask(rgb):
     """This function returns a labeled-by-color image according to
     the interpretation of the product Day Microphysics
@@ -342,6 +351,7 @@ def mask(rgb):
     lc_gfilter = rgb[:, :, 1] < 0.4  # G
     lc_bfilter = rgb[:, :, 2] > 0.6  # B
     lc_filter = lc_rfilter * lc_gfilter * lc_bfilter
+
     # Mask= magenta
     img_mask[lc_filter, 0] = 1.0
     img_mask[lc_filter, 1] = 0.0
@@ -352,6 +362,7 @@ def mask(rgb):
     st_gfilter = (rgb[:, :, 1] > 0.5) * (rgb[:, :, 1] < 0.8)  # G
     st_bfilter = rgb[:, :, 2] < 0.7
     st_filter = st_rfilter * st_gfilter * st_bfilter
+
     # Mask=Light blue
     img_mask[st_filter, 0] = 0.0
     img_mask[st_filter, 1] = 1.0
@@ -362,6 +373,7 @@ def mask(rgb):
     cb_gfilter = rgb[:, :, 1] < 0.3  # G
     cb_bfilter = rgb[:, :, 2] < 0.3  # B
     cb_filter = cb_rfilter * cb_gfilter * cb_bfilter
+
     # Mask=Red
     img_mask[cb_filter, 0] = 1.0
     img_mask[cb_filter, 1] = 0.0
@@ -372,6 +384,7 @@ def mask(rgb):
     cr_gfilter = rgb[:, :, 1] > 0.7  # G
     cr_bfilter = rgb[:, :, 2] < 0.3  # B
     cr_filter = cr_rfilter * cr_gfilter * cr_bfilter
+
     # Mask= Green
     img_mask[cr_filter, 0] = 0.0
     img_mask[cr_filter, 1] = 1.0
@@ -382,6 +395,7 @@ def mask(rgb):
     super_gfilter = rgb[:, :, 1] > 0.8
     super_bfilter = rgb[:, :, 2] < 0.2  # amarillo
     super_filter = super_rfilter * super_gfilter * super_bfilter
+
     # Mask=Yellow
     img_mask[super_filter, 0] = 1.0
     img_mask[super_filter, 1] = 1.0
