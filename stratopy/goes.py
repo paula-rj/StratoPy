@@ -13,7 +13,7 @@ from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
 
-import core
+from . import core
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -162,16 +162,14 @@ class Goes:
             )
 
             c0, r0 = core.scan2colfil(
-                pto_sup_izq[1],
-                pto_sup_izq[0],
+                pto_sup_izq,
                 offset[0],
                 offset[1],
                 scale_factor,
                 1,
             )
             c1, r1 = core.scan2colfil(
-                pto_inf_der[1],
-                pto_inf_der[0],
+                pto_inf_der,
                 offset[0],
                 offset[1],
                 scale_factor,
@@ -184,8 +182,9 @@ class Goes:
 
     def trim(self):
         """
-        This function trims a GOES CMI image according to the width, height
-        max west longitude and upper latitude specified on the parameters.
+        Trims a GOES CMI image according to coordinate:
+        lower latitude, upper latitude, eastern longitude, western longitude
+        specified on the parameters.
         Default parameters are set to return a South America image.
         Parameters
         ----------
@@ -291,7 +290,7 @@ class Goes:
 def solar7(trim_coord_ch7, ch7, ch13):
     """
     This function does a zenith angle correction to channel 7.
-    This correction is needed for daylight images. It is used
+    This correction is needed for day time images. It is used
     in RGB method of Goes class.
     Parameters
     ----------
@@ -404,12 +403,24 @@ def mask(rgb):
     return img_mask[:, :, [0, 1, 2]]
 
 
-def rgb2hsi(imagen):
-    """ """
+def rgb2hsi(image):
+    """Converts a RGB image to a HSI image.
 
-    R = imagen[:, :, 0]
-    G = imagen[:, :, 1]
-    B = imagen[:, :, 2]
+    Parameters:
+    -----------
+
+    image: ``numpy.array``
+        Numpy Array object containig a RGB image.
+
+    Returns:
+    -------
+    HSI: ``numpy.array``
+        Image in HSI color system.
+    """
+
+    R = image[:, :, 0]
+    G = image[:, :, 1]
+    B = image[:, :, 2]
     dRG, dRB, dGB = R - G, R - B, G - B
     aux = np.arccos(0.5 * (dRG + dRB) / ((dRG) ** 2 + dRB * dGB) ** 0.5)
     aux[np.isnan(aux)] = 0.0
@@ -418,8 +429,8 @@ def rgb2hsi(imagen):
     H1[G < B] = 0
     H2[G >= B] = 0
     H = H1 + H2
-    I = (R + G + B) / 3.0
-    S = 1 - np.min(imagen, axis=2) / I
-    S[np.isnan(S)] = 0.0
-    S[S < 0] = 0.0
-    return np.stack([H, S, I], axis=2)
+    Inten = (R + G + B) / 3.0
+    Sat = 1 - np.min(image, axis=2) / Inten
+    Sat[np.isnan(Sat)] = 0.0
+    Sat[Sat < 0] = 0.0
+    return np.stack([H, Sat, Inten], axis=2)

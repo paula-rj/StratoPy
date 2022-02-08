@@ -1,88 +1,36 @@
-import math
-
 import numpy as np
 
 
-def geo2grid(lat, lon, nc):
-
-    # Apply scale and offset
-    xscale, xoffset = nc["x"].scale_factor, nc["x"].add_offset
-    yscale, yoffset = nc["y"].scale_factor, nc["y"].add_offset
-
-    x, y = latlon2xy(lat, lon)
-    col = (x - xoffset) / xscale
-    lin = (y - yoffset) / yscale
-
-    return int(lin), int(col)
-
-
-def latlon2xy(lat, lon):
-    # goes_imagery_projection:semi_major_axis
-    req = 6378137  # meters
-    #  goes_imagery_projection:inverse_flattening
-    # invf = 298.257222096
-    # goes_imagery_projection:semi_minor_axis
-    rpol = 6356752.31414  # meters
-    e = 0.0818191910435
-    # goes_imagery_projection:perspective_point_height
-    # + goes_imagery_projection:semi_major_axis
-
-    H = 42164160  # meters
-    # goes_imagery_projection: longitude_of_projection_origin
-    lambda0 = -1.308996939
-
-    # Convert to radians
-    latRad = lat * (math.pi / 180)
-    lonRad = lon * (math.pi / 180)
-
-    # (1) geocentric latitude
-    Phi_c = math.atan(((rpol ** 2) / (req ** 2)) * math.tan(latRad))
-    # (2) geocentric distance to the point on the ellipsoid
-    rc = rpol / (
-        math.sqrt(1 - ((e ** 2) * (math.cos(Phi_c) * math.cos(Phi_c))))
-    )
-    # (3) sx
-    sx = H - (rc * math.cos(Phi_c) * math.cos(lonRad - lambda0))
-    # (4) sy
-    sy = -rc * math.cos(Phi_c) * math.sin(lonRad - lambda0)
-    # (5)
-    sz = rc * math.sin(Phi_c)
-
-    # x,y
-    x = math.asin((-sy) / math.sqrt((sx * sx) + (sy * sy) + (sz * sz)))
-    y = math.atan(sz / sx)
-
-    return x, y
-
-
-def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):
+def scan2sat(x, y, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     """
-    Transforma coordenadas de scaneo geostacionarias x,y
-    en coordenadas cartesianas con origen en el satelite sx,sy,sz
-    En base a 5.2.8.1 de PUG3
+    Transforms x,y geostationary scan coordinates into
+    cartesian coordinates with origin on the satellite.
+    Based PUG3, version 5.2.8.1.
+
     Parameters
     ----------
     x : float, float arr numpy.ma.core.MaskedArray
-       coordenada horizontal, en radianes
+       horizontal coordinate, in radians
     y : float, float arr numpy.ma.core.MaskedArray
-       coordenada vertical, en radianes. Paralelo al eje terrestre
+       vertical coordinate, in radians. Paralelo al eje terrestre
         longitud
     lon0 : float
-        longitud del satélite y origen del sistema de coordenadas planas
+        satellite's longitude, origin of plane coordinate system
     Re: float
-        radio ecuatorial, en m
+        equatorial radius, in m
     Rp: float
-        radio polar, en m
+        polar radius, in m
     h: float
-        altura del satélite respecto de la superficie, en m
+        satellite's height, in m
+
     Returns
     -------
     sx : float, float arr
-        coordenada hacia el centro de la tierra
+        coordinate pointing to the center of the Earth
     sy : float, float arr
-        coordenada horizontal
+        horizontal coordinate
     sz : float, float arr
-        coordenada vertical
+        vertical coordinate
     """
 
     if (
@@ -99,7 +47,9 @@ def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):
         np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2
     )
     b = -2 * H * np.cos(x) * np.cos(y)
-    c = H ** 2 - Re ** 2
+    first = H ** 2
+    secon = Re ** 2
+    c = float(first) - float(secon)
 
     aux = b ** 2 - 4 * a * c
 
@@ -119,35 +69,37 @@ def scan2sat(x, y, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0):
 
 
 def sat2latlon(
-    sx, sy, sz, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=3600000.0
+    sx, sy, sz, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
 ):
     """
-    Transforma coordenadas cartesianas con origen
-    en el satelite sx,sy,sz
-    en coordenadas de latitud/longitud
-    En base a 5.2.8.1 de PUG3
+    Transforms cartesian coordinates with origin
+    in the satellite sx,sy,sz into
+    latitude/longitude coordinates.
+    Based on PUG3 5.1.2.8.1
+
     Parameters
     ----------
     sx : float, float arr
-        coordenada hacia el centro de la tierra
+        coordinate pointing to the Earth's center
     sy : float, float arr
-        coordenada horizontal
+        horizontal coordinate
     sz : float, float arr
-        coordenada vertical
+        vertical coordinate
     lon0 : float
-        longitud del satélite y origen del sistema de coordenadas planas
+        satellite's longitude, origin of plane coordinate system
     Re: float
-        radio ecuatorial, en m
+        equatorial radius, in m
     Rp: float
-        radio polar, en m
+        polar radius, in m
     h: float
-        altura del satélite respecto de la superficie, en m
+        satellite's height, in m
+
     Returns
     -------
     lat : float, float arr
-        latitud
+        latitude
     lon : float, float arr
-        longitud
+        longitude
     """
     H = Re + h  # radio orbital del satelite
     gr2rad = np.pi / 180
@@ -161,32 +113,34 @@ def sat2latlon(
 
 
 def latlon2scan(
-    lat, lon, lon0=-75.0, Re=6378000.0, Rp=6356000.0, h=36000000.0
+    lat, lon, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
 ):
     """
-    Transforma coordenadas de latitud/longitud
-    a x/y en proyeccion geoestacionaria
-    En base a 5.2.8.2 de PUG3
+    Transforms latitud/longitud coordinates
+    into x/y geoestationary projection.
+    Based on PUG3 5.1.2.8.2
+
     Parameters
     ----------
     lat: float, float arr
-        latitud
+        latitude
     lon: float, float arr
-        longitud
-    lon0: float, float arr
-        longitud del satélite y origen del sistema de coordenadas planas
-    Re: float,
-        radio ecuatorial, en m
+        longitude
+    lon0 : float
+        satellite's longitude, origin of plane coordinate system
+    Re: float
+        equatorial radius, in m
     Rp: float
-        radio polar, en m
+        polar radius, in m
     h: float
-        altura del satélite respecto de la superficie, en m
+        satellite's height, in m
+
     Returns
     -------
     x : float, float arr
-       coordenada horizontal, en radianes
+       horizontal coordinate, in radianes.
     y : float, float arr
-       coordenada vertical, en radianes. Paralelo al eje terrestre
+       vertical coordinate, in radianes. Paralell to Earth's axis.
     """
 
     H = Re + h  # radio orbital del satelite
@@ -206,69 +160,71 @@ def latlon2scan(
     x = np.arcsin(-sy / s_norm)
     y = np.arctan(sz / sx)
 
-    return y, x
+    return x, y  # ojo aca estaban al reves y,x
 
 
-def colfil2scan(col, fil, x0, y0, scale):
+def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
     """
-    Transforma filas/columnas de la imagen a x/y en proyeccion geoestacionaria
-    En base a 5.2.8.2 de PUG3
+    Transforms columns/rows of the image into
+    x/y en geostationary projection.
+    Based on PUG3 5.1.2.8.2
+
     Parameters
     ----------
     col : int, int arr
-        columna
-    fil : int, int arr
-        fila
+        column
+    row : int, int arr
+        row
     x0 : float
-        posición del x[0] en radianes
+        position of x[0] in radians
     y0 : float
-        coordenada horizontal del primer punto, en radianes.
-        Paralelo al eje terrestre
+        horizontal coordinate of the first spot, in radians.
+        Paralell to Earth's axis
     scale : float
-        tamaño del pixel en radianes
+        pixel size in radians
     Returns
     -------
     x : float, float arr
-       coordenada horizontal, en radianes.
+       horizontal coordinate, in radianes.
     y : float, float arr
-       coordenada vertical, en radianes. Paralelo al eje terrestre
+       vertical coordinate, in radianes. Paralell to Earth's axis.
     """
     x = col * scale + x0
-    y = -fil * scale + y0
+    y = -row * scale + y0
     return x, y
 
 
-def scan2colfil(x, y, x0, y0, scale, tipo=1):
+def scan2colfil(x_y, x0=-0.151844, y0=0.151844, scale=5.6e-05, tipo=1):
     """
-    Converts x/y coordinates into row, column coordinartes, 
+    Converts x/y coordinates (scan projection) into (row,column) coordinartes,
     a geostationary projection. Based on PUG3, version 5.2.8.2
-     
+
     Parameters
     ----------
-    x : float, float arr
-       coordenada vertical, en radianes
-    x : float
-       coordenada vertical del primer punto en radianes
+    x_y : float tuple, float arr
+       tuple containig, in radians,
+       (horizontal coordinate x, vertical coordinate y)
     x0 : float
-        posición del x[0] en radianes
+        position of x[0] in radianes
     y0 : float
-        coordenada horizontal del primer punto, en radianes.
-        Paralelo al eje terrestre
+        horizontal coordinate of the first spot, in radians.
+        Paralell to Earth's axis
     scale : float
-        tamaño del pixel en radianes
+        pixel size, in radians
     tipo : TYPE, optional
-        tipo de salida. The default is 0 para float, 1 para int.
-        
+        output type, 0 for float, 1 for int.
+        Default: 1
+
     Returns
     -------
-    col : columna
-    fil : fila
+    col : number of column
+    row : number of row
     """
-    col = (x - x0) / scale
-    fil = -(y - y0) / scale
+    col = (x_y[0] - x0) / scale  # x
+    row = -(x_y[1] - y0) / scale  # y
     if tipo == 0:
-        return col, fil
+        return col, row
     elif tipo == 1:
-        return round(col), round(fil)
+        return round(col), round(row)
     else:
         raise TypeError("Type must be 0 (float) or 1 (int)")
