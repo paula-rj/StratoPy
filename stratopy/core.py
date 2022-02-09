@@ -47,9 +47,7 @@ def scan2sat(x, y, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
         np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2
     )
     b = -2 * H * np.cos(x) * np.cos(y)
-    first = H ** 2
-    secon = Re ** 2
-    c = float(first) - float(secon)
+    c = H ** 2 - Re ** 2
 
     aux = b ** 2 - 4 * a * c
 
