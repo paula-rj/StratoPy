@@ -1,17 +1,9 @@
 import io
 import os
 import pathlib
-
-import attr
-
-from diskcache import Cache
-from diskcache.core import ENOVAL
-
-import pickle
-
-import pytest
-
 from unittest import mock
+
+from diskcache.core import ENOVAL
 
 from stratopy import IO
 from stratopy.cloudsat import CloudSatFrame
@@ -35,15 +27,6 @@ CLOUDSAT_SERVER_DIR = (
     "2B-CLDCLASS.P1_R05/2019/003/"
     "2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
 )
-
-
-def mock_retrbinary(buffer):
-    with open(PATH_CLOUDSAT, "rb") as mocked_file:
-        buffer.write(mocked_file.read())
-
-
-def mock_open(self, server_dirname, mode="rb"):
-    return open(PATH_GOES, "rb")
 
 
 def test_cache_cloudsat():
@@ -79,6 +62,6 @@ def test_cache_cloudsat():
 #       buffer.write(binary_stream.read())
 
 #    with mock.patch("buffer_file.getvalue", return_value=buffer.read()):
-#        result = IO.fetch_cloudsat(CLOUDSAT_SERVER_DIR, user=None, passwd=None)
+#        result = IO.fetch_cloudsat(CLOUDSAT_SERVER_DIR, user=None, passwd=None
 
 #    assert isinstance(result, CloudSatFrame)
