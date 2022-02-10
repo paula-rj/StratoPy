@@ -82,15 +82,29 @@ def test_cache_goes():
     )
 
 
-# def test_fetch_cloudsat_patched():
-# In memory buffer to store binary
-#    buffer = io.BytesIO()
+@mock.patch("stratopy.IO.FTP")
+@mock.patch("diskcache.Cache.set")
+@mock.patch("io.BytesIO")
+def test_fetch_cloudsat_patched(mock_buffer, mock_cache, mock_ftp_constrctor):
+    mock_ftp = mock_ftp_constrctor.return_value
 
-# open file and store
-#   with open(PATH_CLOUDSAT, "rb") as binary_stream:
-#       buffer.write(binary_stream.read())
+    # open cloudsat file and store binary
+    with open(PATH_CLOUDSAT, "rb") as binary_stream:
+        cls_binary = binary_stream.read()
 
-#    with mock.patch("buffer_file.getvalue", return_value=buffer.read()):
-#        result = IO.fetch_cloudsat(CLOUDSAT_SERVER_DIR, user=None, passwd=None
+    # Mock memory buffered binary stream from server
+    mock_buffer.return_value.getvalue.return_value = cls_binary
 
-#    assert isinstance(result, CloudSatFrame)
+    # Call function with mocked connection and cache
+    cloudsat_frame = IO.fetch_cloudsat(
+        CLOUDSAT_SERVER_DIR, user=None, passwd=None
+    )
+
+    mock_ftp.connect.assert_called_with(host="ftp.cloudsat.cira.colostate.edu")
+    mock_ftp.login.assert_called_with(None, None)
+    mock_cache.assert_called()
+
+    assert isinstance(
+        cloudsat_frame,
+        CloudSatFrame,
+    )
