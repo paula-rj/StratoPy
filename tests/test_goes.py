@@ -105,3 +105,12 @@ def test_RGB_default():
 
     assert isinstance(rgb, np.ndarray)
     np.testing.assert_equal(rgb_mask, goes.mask(rgb))
+
+
+def test_rgb2hsi():
+    dat = goes.read_nc(FILE_PATH)
+    rgb = dat.RGB
+    hsi = goes.rgb2hsi(rgb)
+
+    assert isinstance(hsi, np.ndarray)
+    np.testing.assert_equal(hsi, goes.rgb2hsi(rgb))

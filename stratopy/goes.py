@@ -162,16 +162,14 @@ class Goes:
             )
 
             c0, r0 = core.scan2colfil(
-                pto_sup_izq[1],
-                pto_sup_izq[0],
+                pto_sup_izq,
                 offset[0],
                 offset[1],
                 scale_factor,
                 1,
             )
             c1, r1 = core.scan2colfil(
-                pto_inf_der[1],
-                pto_inf_der[0],
+                pto_inf_der,
                 offset[0],
                 offset[1],
                 scale_factor,
@@ -182,10 +180,11 @@ class Goes:
 
         return trim_coordinates
 
-    def trim(self, for_RGB=True):
+    def trim(self):
         """
-        This function trims a GOES CMI image according to the width, height
-        max west longitude and upper latitude specified on the parameters.
+        Trims a GOES CMI image according to coordinate:
+        lower latitude, upper latitude, eastern longitude, western longitude
+        specified on the parameters.
         Default parameters are set to return a South America image.
         Parameters
         ----------
@@ -203,7 +202,7 @@ class Goes:
             trim_img[ch_id] = image[r0:r1, c0:c1]
 
             # Rescale channels with psize = 1000 [m]
-            if for_RGB and ch_id == "M3C03":
+            if ch_id == "M3C03":
                 x = range(trim_img[ch_id][:].shape[1])
                 y = range(trim_img[ch_id][:].shape[0])
                 f = interpolate.interp2d(x, y, trim_img[ch_id], kind="cubic")
@@ -291,7 +290,7 @@ class Goes:
 def solar7(trim_coord_ch7, ch7, ch13):
     """
     This function does a zenith angle correction to channel 7.
-    This correction is needed for daylight images. It is used
+    This correction is needed for day time images. It is used
     in RGB method of Goes class.
     Parameters
     ----------
@@ -402,3 +401,36 @@ def mask(rgb):
     img_mask[super_filter, 2] = 0.0
 
     return img_mask[:, :, [0, 1, 2]]
+
+
+def rgb2hsi(image):
+    """Converts a RGB image to a HSI image.
+
+    Parameters:
+    -----------
+
+    image: ``numpy.array``
+        Numpy Array object containig a RGB image.
+
+    Returns:
+    -------
+    HSI: ``numpy.array``
+        Image in HSI color system.
+    """
+
+    R = image[:, :, 0]
+    G = image[:, :, 1]
+    B = image[:, :, 2]
+    dRG, dRB, dGB = R - G, R - B, G - B
+    aux = np.arccos(0.5 * (dRG + dRB) / ((dRG) ** 2 + dRB * dGB) ** 0.5)
+    aux[np.isnan(aux)] = 0.0
+    H1 = np.copy(aux)
+    H2 = 2 * np.pi - aux
+    H1[G < B] = 0
+    H2[G >= B] = 0
+    H = H1 + H2
+    Inten = (R + G + B) / 3.0
+    Sat = 1 - np.min(image, axis=2) / Inten
+    Sat[np.isnan(Sat)] = 0.0
+    Sat[Sat < 0] = 0.0
+    return np.stack([H, Sat, Inten], axis=2)
