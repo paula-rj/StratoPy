@@ -2,9 +2,16 @@ import io
 import os
 import pathlib
 
+import attr
+
 from diskcache import Cache
+from diskcache.core import ENOVAL
+
+import pickle
 
 import pytest
+
+from unittest import mock
 
 from stratopy import IO
 from stratopy.cloudsat import CloudSatFrame
@@ -30,35 +37,48 @@ CLOUDSAT_SERVER_DIR = (
 )
 
 
-@pytest.fixture
-def memory_buffer():
-    def make(file_path):
-        # In memory buffer to store binary
-        buffer = io.BytesIO()
-
-        # open file and store
-        with open(file_path, "rb") as binary_stream:
-            buffer.write(binary_stream.read())
-
-        return buffer.getvalue()
-
-    return make
+def mock_retrbinary(buffer):
+    with open(PATH_CLOUDSAT, "rb") as mocked_file:
+        buffer.write(mocked_file.read())
 
 
-def test_cache_cloudsat(memory_buffer):
-    # Generates cache id
-    file_name = os.path.split(PATH_CLOUDSAT)[-1]
-    id_ = file_name.split("_")[0]
+def mock_open(self, server_dirname, mode="rb"):
+    return open(PATH_GOES, "rb")
 
-    # Brings binary from file
-    binary = memory_buffer(PATH_CLOUDSAT)
 
-    # Initialize cache and store binary
-    cache = Cache(DEFAULT_CACHE_PATH)  # HAY QUE MOCKEAR ESTO
-    cache.set(id_, binary, tag="stratopy-cloudsat")
+def test_cache_cloudsat():
+    # In memory buffer to store binary
+    buffer = io.BytesIO()
 
-    # Try to fetch file with wrong username and password
+    # open file and store
+    with open(PATH_CLOUDSAT, "rb") as binary_stream:
+        buffer.write(binary_stream.read())
+
+    with mock.patch(
+        "diskcache.Cache.get", return_value=buffer.getvalue()
+    ) as cache_get:
+        cls_frame = IO.fetch_cloudsat(
+            CLOUDSAT_SERVER_DIR, user=None, passwd=None
+        )
+        cache_get.assert_called_with(
+            "2019003151948", default=ENOVAL, retry=True
+        )
+
     assert isinstance(
-        IO.fetch_cloudsat(CLOUDSAT_SERVER_DIR, user=None, passwd=None),
+        cls_frame,
         CloudSatFrame,
     )
+
+
+# def test_fetch_cloudsat_patched():
+# In memory buffer to store binary
+#    buffer = io.BytesIO()
+
+# open file and store
+#   with open(PATH_CLOUDSAT, "rb") as binary_stream:
+#       buffer.write(binary_stream.read())
+
+#    with mock.patch("buffer_file.getvalue", return_value=buffer.read()):
+#        result = IO.fetch_cloudsat(CLOUDSAT_SERVER_DIR, user=None, passwd=None)
+
+#    assert isinstance(result, CloudSatFrame)
