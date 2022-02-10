@@ -1,6 +1,8 @@
 Installation
 ============
 
+.. _installation-label:
+
 Installing with pip
 -------------------
 
