@@ -1,3 +1,5 @@
+r"""Module containing all GOES satellite related classes and methods."""
+
 import datetime
 import os
 

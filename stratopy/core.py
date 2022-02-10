@@ -1,3 +1,5 @@
+r"""Contains methods to perform transformation operations on loaded images."""
+
 import numpy as np
 
 
