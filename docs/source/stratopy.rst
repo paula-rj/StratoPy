@@ -4,14 +4,6 @@ Stratopy Documentation
 
 **Stratopy** consists of five main modules. It's available modules and documentation are listed below.
 
-.. toctree::
-
-   stratopy.rst
-
-
-Module documentation
---------------------
-
 ____________________________
 ``stratopy.cloudsat`` module
 ____________________________

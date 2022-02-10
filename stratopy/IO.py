@@ -1,3 +1,6 @@
+r"""Input/Output related methods. Methods to retrieve satellite images
+from different servers via ftp connection."""
+
 import io
 import os
 import pathlib

@@ -4,11 +4,18 @@
 # =============================================================================
 # META
 # =============================================================================
+r"""A Python package designed to easily manipulate CloudSat and GOES-R
+and generate labeled images containing cloud types.
 
-NAME = "stratopy"
+It consists in five modules:
 
-DOC = __doc__
-
+- stratopy.cloudsat module
+- stratopy.core module
+- stratopy.goes module
+- stratopy.IO module
+- stratopy.merger module
+ """
+__name__ = "stratopy"
 __version__ = "0.0.1"
 
 

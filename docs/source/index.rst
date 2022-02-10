@@ -8,8 +8,8 @@ StratoPy
 
 Python package designed to easily manipulate CloudSat and GOES-R and generate labeled images containing cloud types. 
 
-About StratoPy
---------------
+About
+-----
 
 This package is intended for aiding machine learning data scientist in classifying cloud imagery data into different cloud types.
 The main objective of Stratopy is to merge different sattelite image information into a simple data frame called `StratoFrame` which
@@ -21,8 +21,10 @@ Requirements:
 You need python 3.9+ to install Stratopy. For more information about installation, please refer to :ref:`installation-label`.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 5
    :caption: Contents:
 
-   installation.rst
-   stratopy.rst
+   self
+   installation
+   stratopy
+   tutorial.ipynb
