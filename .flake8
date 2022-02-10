@@ -1,2 +1,2 @@
 [flake8]
-ignore = BLK100, W503
+ignore = BLK100, E203, W503

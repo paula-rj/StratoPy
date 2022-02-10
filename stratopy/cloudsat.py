@@ -58,7 +58,7 @@ def read_hdf(path, layer="CloudLayerType"):
         cld_layertype = file_path.select(layer)[:]
         layers_df = {"read_time": hdf_time, "Longitude": lon, "Latitude": lat}
         for i, v in enumerate(np.transpose(cld_layertype)):
-            layers_df[f"capa_{i}"] = v
+            layers_df[f"layer_{i}"] = v
         cld_df = CloudSatFrame(layers_df)
         vs.end()
 
