@@ -3,7 +3,7 @@ import numpy.ma as ma
 
 from stratopy import core
 
-arr = np.array(35786023.0, -0.0, 0.0)
+arr = np.array([35786023.0, -0.0, 0.0])
 masked_sat = arr.view(ma.MaskedArray)
 
 
