@@ -25,6 +25,4 @@ You need python 3.9+ to install Stratopy. For more information about installatio
    :caption: Contents:
 
    installation.rst
-   modules.rst
-
-
+   stratopy.rst
