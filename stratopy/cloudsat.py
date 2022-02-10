@@ -1,3 +1,5 @@
+r"""Module containing all CloudSat related classes and methods."""
+
 import os
 import pathlib
 
