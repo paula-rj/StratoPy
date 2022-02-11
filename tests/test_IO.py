@@ -85,8 +85,8 @@ def test_cache_goes():
 @mock.patch("stratopy.IO.FTP")
 @mock.patch("diskcache.Cache.set")
 @mock.patch("io.BytesIO")
-def test_fetch_cloudsat_patched(mock_buffer, mock_cache, mock_ftp_constrctor):
-    mock_ftp = mock_ftp_constrctor.return_value
+def test_fetch_cloudsat_patched(mock_buffer, mock_cache, mock_ftp_constructor):
+    mock_ftp = mock_ftp_constructor.return_value
 
     # open cloudsat file and store binary
     with open(PATH_CLOUDSAT, "rb") as binary_stream:
@@ -100,6 +100,7 @@ def test_fetch_cloudsat_patched(mock_buffer, mock_cache, mock_ftp_constrctor):
         CLOUDSAT_SERVER_DIR, user=None, passwd=None
     )
 
+    # Check if mocked instances were called
     mock_ftp.connect.assert_called_with(host="ftp.cloudsat.cira.colostate.edu")
     mock_ftp.login.assert_called_with(None, None)
     mock_cache.assert_called()
@@ -108,3 +109,19 @@ def test_fetch_cloudsat_patched(mock_buffer, mock_cache, mock_ftp_constrctor):
         cloudsat_frame,
         CloudSatFrame,
     )
+
+
+@mock.patch("s3fs.S3FileSystem")
+@mock.patch("diskcache.Cache.set")
+def test_fetch_goes_patched(mock_cache, mock_s3):
+    # Mock open method of s3 module
+    mock_s3.return_value.open.return_value = open(PATH_GOES, "rb")
+
+    # Call function with mocked connection and cache
+    goes_frame = IO.fetch_goes(GOES_SERVER_DIR)
+
+    # Check if mocked instances were called
+    mock_s3.return_value.open.assert_called_with(GOES_SERVER_DIR, "rb")
+    mock_cache.assert_called()
+
+    assert isinstance(goes_frame, Goes)
