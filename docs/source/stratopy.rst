@@ -1,8 +1,9 @@
-Stratopy
-========
+Stratopy Documentation
+======================
 
-Documentation
--------------
+
+**Stratopy** consists of five main modules. It's available modules and documentation are listed below.
+
 ____________________________
 ``stratopy.cloudsat`` module
 ____________________________

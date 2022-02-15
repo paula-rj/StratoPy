@@ -105,7 +105,10 @@ def fetch_goes(
     cache = Cache(path)
 
     # Transform dirname into cache id
-    id_ = os.path.split(dirname)[-1].split("_")[0]
+    id_ = os.path.split(dirname)[-1].split("_")[3][1:]
+
+    # Save filename
+    filename = os.path.split(dirname)[-1]
 
     # Search in local cache
     cache.expire()
@@ -124,7 +127,7 @@ def fetch_goes(
         cache.set(id_, result, tag=tag)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        fname = os.path.join(tmpdirname, id_)
+        fname = os.path.join(tmpdirname, filename)
 
         with open(fname, "wb") as fp:
             fp.write(result)

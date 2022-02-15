@@ -1,3 +1,6 @@
+r"""Contains the principal Data Frame class which allows for merging
+satellite images."""
+
 import attr
 
 from netCDF4 import Dataset
