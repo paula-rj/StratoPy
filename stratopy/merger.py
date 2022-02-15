@@ -181,7 +181,7 @@ class StratoFrame:
                 axis=1,
             )
         if no_clouds is False:
-            cloudsat_obj = cloudsat_obj[cloudsat_obj.capa_0 != 0]
+            cloudsat_obj = cloudsat_obj[cloudsat_obj.layer_0 != 0]
 
         cloudsat_obj["col_row"] = cloudsat_obj.apply(
             lambda x: core.scan2colfil(
