@@ -3,7 +3,7 @@ r"""Contains methods to perform transformation operations on loaded images."""
 import numpy as np
 
 
-def scan2sat(x, y, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
+def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     """
     Transforms x,y geostationary scan coordinates into
     cartesian coordinates with origin on the satellite.
@@ -12,27 +12,25 @@ def scan2sat(x, y, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     Parameters
     ----------
     x : float, float arr numpy.ma.core.MaskedArray
-       horizontal coordinate, in radians
+        Horizontal coordinate, in radians.
     y : float, float arr numpy.ma.core.MaskedArray
-       vertical coordinate, in radians. Paralelo al eje terrestre
+        Vertical coordinate, in radians. Parallel to earth's axis.
         longitud
-    lon0 : float
-        satellite's longitude, origin of plane coordinate system
     Re: float
-        equatorial radius, in m
+        Equatorial radius, in m.
     Rp: float
-        polar radius, in m
+        Polar radius, in m.
     h: float
-        satellite's height, in m
+        Satellite's height, in m.
 
     Returns
     -------
     sx : float, float arr
-        coordinate pointing to the center of the Earth
+        Coordinate pointing to the center of the Earth.
     sy : float, float arr
-        horizontal coordinate
+        Horizontal coordinate.
     sz : float, float arr
-        vertical coordinate
+        Vertical coordinate.
     """
 
     if (
@@ -41,17 +39,16 @@ def scan2sat(x, y, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     ):
         x = np.ma.MaskedArray(x)
         y = np.ma.MaskedArray(y)
-        # print ("cambia el tipo")
     mask = x.mask
 
-    H = Re + h  # radio orbital del satelite
+    H = Re + h  # satellite orbital radius
     a = np.sin(x) ** 2 + np.cos(x) ** 2 * (
         np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2
     )
     b = -2 * H * np.cos(x) * np.cos(y)
-    c = H ** 2 - Re ** 2
+    c = H**2 - Re**2
 
-    aux = b ** 2 - 4 * a * c
+    aux = b**2 - 4 * a * c
 
     rs = np.zeros(aux.shape)
 
@@ -80,32 +77,32 @@ def sat2latlon(
     Parameters
     ----------
     sx : float, float arr
-        coordinate pointing to the Earth's center
+        Coordinate pointing to the Earth's center.
     sy : float, float arr
-        horizontal coordinate
+        Horizontal coordinate.
     sz : float, float arr
-        vertical coordinate
+        Vertical coordinate.
     lon0 : float
-        satellite's longitude, origin of plane coordinate system
+        Satellite's longitude, origin of plane coordinate system.
     Re: float
-        equatorial radius, in m
+        Equatorial radius, in m.
     Rp: float
-        polar radius, in m
+        Polar radius, in m.
     h: float
-        satellite's height, in m
+        Satellite's height, in m.
 
     Returns
     -------
     lat : float, float arr
-        latitude
+        Latitude coordinates.
     lon : float, float arr
-        longitude
+        Longitude coordinates.
     """
-    H = Re + h  # radio orbital del satelite
+    H = Re + h
     gr2rad = np.pi / 180
 
     lat = (
-        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy ** 2))
+        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy**2))
         / gr2rad
     )
     lon = lon0 - np.arctan(sy / (H - sx)) / gr2rad
@@ -123,28 +120,28 @@ def latlon2scan(
     Parameters
     ----------
     lat: float, float arr
-        latitude
+        Latitude.
     lon: float, float arr
-        longitude
+        Longitude.
     lon0 : float
-        satellite's longitude, origin of plane coordinate system
+        Satellite's longitude, origin of plane coordinate system.
     Re: float
-        equatorial radius, in m
+        Equatorial radius, in m.
     Rp: float
-        polar radius, in m
+        Polar radius, in m.
     h: float
-        satellite's height, in m
+        Satellite's height, in m.
 
     Returns
     -------
     x : float, float arr
-       horizontal coordinate, in radianes.
+       Horizontal coordinate, in radianes.
     y : float, float arr
-       vertical coordinate, in radianes. Paralell to Earth's axis.
+       Vertical coordinate, in radianes. Paralell to Earth's axis.
     """
 
-    H = Re + h  # radio orbital del satelite
-    e = (1 - (Rp / Re) ** 2) ** 0.5  # 0.0818191910435 # excentricidad
+    H = Re + h
+    e = (1 - (Rp / Re) ** 2) ** 0.5  # excentricity
     gr2rad = np.pi / 180
 
     latc = np.arctan((Rp / Re) ** 2 * np.tan(lat * gr2rad))
@@ -155,12 +152,12 @@ def latlon2scan(
     sy = -rc * np.cos(latc) * np.sin((lon - lon0) * gr2rad)
     sz = rc * np.sin(latc)
 
-    s_norm = np.sqrt(sx ** 2 + sy ** 2 + sz ** 2)
+    s_norm = np.sqrt(sx**2 + sy**2 + sz**2)
 
     x = np.arcsin(-sy / s_norm)
     y = np.arctan(sz / sx)
 
-    return x, y  # ojo aca estaban al reves y,x
+    return x, y
 
 
 def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
@@ -172,22 +169,22 @@ def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
     Parameters
     ----------
     col : int, int arr
-        column
+        Selected column.
     row : int, int arr
-        row
+        Selected row.
     x0 : float
-        position of x[0] in radians
+        Position of the first coordinate x[0] in radians.
     y0 : float
-        horizontal coordinate of the first spot, in radians.
+        Horizontal coordinate of the first spot, in radians.
         Paralell to Earth's axis
     scale : float
-        pixel size in radians
+        Pixel size in radians.
     Returns
     -------
     x : float, float arr
-       horizontal coordinate, in radianes.
+        Horizontal coordinate, in radianes.
     y : float, float arr
-       vertical coordinate, in radianes. Paralell to Earth's axis.
+        Vertical coordinate, in radianes. Paralell to Earth's axis.
     """
     x = col * scale + x0
     y = -row * scale + y0
@@ -196,29 +193,31 @@ def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
 
 def scan2colfil(x_y, x0=-0.151844, y0=0.151844, scale=5.6e-05, tipo=1):
     """
-    Converts x/y coordinates (scan projection) into (row,column) coordinartes,
+    Converts x/y coordinates (scan projection) into (row,column) coordinates,
     a geostationary projection. Based on PUG3, version 5.2.8.2
 
     Parameters
     ----------
     x_y : float tuple, float arr
-       tuple containig, in radians,
-       (horizontal coordinate x, vertical coordinate y)
+       Tuple containig, in radians,
+       (horizontal coordinate x, vertical coordinate y).
     x0 : float
-        position of x[0] in radianes
+        Position of the first x cooridnate x[0] in radians.
     y0 : float
-        horizontal coordinate of the first spot, in radians.
-        Paralell to Earth's axis
+        Horizontal coordinate of the first spot, in radians.
+        Paralell to Earth's axis.
     scale : float
-        pixel size, in radians
+        Pixel size, in radians.
     tipo : TYPE, optional
-        output type, 0 for float, 1 for int.
+        Output type, 0 for float, 1 for int.
         Default: 1
 
     Returns
     -------
-    col : number of column
-    row : number of row
+    col :
+        column number coordinate.
+    row :
+        Row number coordinate.
     """
     col = (x_y[0] - x0) / scale  # x
     row = -(x_y[1] - y0) / scale  # y
