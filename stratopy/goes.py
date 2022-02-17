@@ -21,16 +21,17 @@ PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_nc(file_path):
-    """
-    Reads netCDF files through the netCDF4 library.
+    """Reads netCDF files through the netCDF4 library.
+
     Parameters
     ----------
-    file_path: ``str tuple``
+    file_path : ``str tuple``
         Contains a file path of one or all three paths of
         channels 3, 7 and 13 of the CMIPF GOES-16 product.
+
     Returns
     -------
-        result: ``netCDF4.Dataset``
+    ``netCDF4.Dataset``
         File variables.
     """
 
@@ -196,8 +197,10 @@ class Goes:
         lower latitude, upper latitude, eastern longitude, western longitude
         specified on the parameters.
         Default parameters are set to return a South America image.
+
         Parameters
         ----------
+        None
 
         Returns
         -------
@@ -302,6 +305,7 @@ def solar7(trim_coord_ch7, ch7, ch13):
     This function does a zenith angle correction to channel 7.
     This correction is needed for day time images. It is used
     in RGB method of Goes class.
+
     Parameters
     ----------
     trim_coord_ch7: ``tuple``
@@ -314,6 +318,7 @@ def solar7(trim_coord_ch7, ch7, ch13):
         Trimmed image of channel 7.
     ch13: ``numpy.array``
         Trimed image of channel 13.
+
     Returns
     -------
     ``numpy.array``
@@ -342,15 +347,16 @@ def mask(rgb):
     the interpretation of the product Day Microphysics
     (https://weather.msfc.nasa.gov/sport/training/quickGuides/
     rgb/QuickGuide_DtMicroRGB_NASA_SPoRT.pdf)
-    Parameters:
-    -----------
 
+    Parameters
+    ----------
     rgb: numpy array
-    Numpy Array object containig the Day Microphysics RGB product
-    Returns:
+        Object containig the Day Microphysics RGB product.
+
+    Returns
     -------
     img_mask: numpy array
-    Masked RGB
+        Masked RGB.
     """
 
     img_mask = np.zeros(rgb.shape)
@@ -416,13 +422,12 @@ def mask(rgb):
 def rgb2hsi(image):
     """Converts a RGB image to a HSI image.
 
-    Parameters:
-    -----------
-
+    Parameters
+    ----------
     image: ``numpy.array``
         Numpy Array object containig a RGB image.
 
-    Returns:
+    Returns
     -------
     HSI: ``numpy.array``
         Image in HSI color system.

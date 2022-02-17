@@ -13,8 +13,16 @@ from . import core
 
 @attr.s(frozen=True, repr=False)
 class StratoFrame:
-    """Creates a StratoFrame, a kind of Pandas Dataframe
-    in which co-located data from GOES16 and Cloudsat is fusioned are merged"""
+    """Creates a StratoFrame.
+
+    A StratoFrame is a kind of Pandas Dataframe
+    in which co-located data from GOES16 and Cloudsat is fusioned are merged.
+
+    Returns
+    -------
+    StratoFrame
+        DataFrame with GOES and Cloudsat data fusioned and merged.
+    """
 
     goes = attr.ib()
     cs = attr.ib()
@@ -77,14 +85,22 @@ class StratoFrame:
 
 
 def gen_vect(col_row, band_dict):
-    """For a given (col,row) coordinate, generates a matrix of size 3x3x16
-    where the central pixel is the one located in (col, row) coordinate
+    """For a given (col,row) coordinate, generates a matrix of size 3x3xN
+    where the central pixel is the one located in (col, fil) coordinate.
+    N should be 1 if the goes object contains one band CMI,
+    N should be 3 if the goes object contains three band CMI,
+    N should be 16 if goes object is a multi-band CMI.
 
-    Parameters:
+    Parameters
     ----------
-    col_row: tuple
-
-    band_dict: dict
+    col_row : tuple
+        Column and row coordinates given as (col, row).
+    band_dict : dict
+        Dictionary where bands are defined.
+    Returns
+    -------
+    array-like
+        Band vector.
     """
     key_list = list(band_dict.keys())
     brows, bcols = band_dict.get(key_list[0]).shape
@@ -112,31 +128,32 @@ def merge(
 
     """Merges data from Cloudsat with co-located data from GOES-16.
 
-    Parameters:
-    -----------
-
+    Parameters
+    ----------
     cloudsat_file: str, path
-    Total ClouSat file path
+        Total ClouSat file path.
 
     goes_file: str, path
-    Total GOES file path
+        Total GOES file path.
 
     all_layers: bool
-    If True, the final dataframe should include
-    all layers of the CLDCLASS product.
-    Default: False
+        If True, the final dataframe should include
+        all layers of the CLDCLASS product.
+        Default: False
 
     no_clouds: bool
-    If Ture, the final dataframe should include
-    coordinates where no clouds were detected by CloudSat.
-    Default: False
+        If Ture, the final dataframe should include
+        coordinates where no clouds were detected by CloudSat.
+        Default: False
 
     norm: bool
-    If True, normalizes all GOES channels [0,1].
-    Default:True
+        If True, normalizes all GOES channels [0,1].
+        Default:True
 
-    Returns:
-        stratoframe: cloudsat object
+    Returns
+    -------
+    Cloudsat Object
+        DataFrame containing merged data.
     """
 
     # GOES
