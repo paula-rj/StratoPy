@@ -1,4 +1,4 @@
-r"""Module containing all CloudSat related classes and methods."""
+r"""Module containing all CloudSat satellite related classes and methods."""
 
 import os
 import pathlib
@@ -28,7 +28,7 @@ def read_hdf(path, layer="CloudLayerType"):
     Parameters
     ----------
     file_path: ``str``
-        String containing path to file.
+        String containing local path to file.
     layer: ``str``, optional (default="CloudLayerType")
         Select any layer of the hdf file.
 
@@ -68,6 +68,23 @@ def read_hdf(path, layer="CloudLayerType"):
 
 
 def attach_vdata(vs, varname):
+    """Needed to obtain data from hd4 file.
+
+    Operation that allows to extract the data from
+    the hd4 format file that CloudSat is saved in.
+
+    Parameters
+    ----------
+    vs : pyhdf.VS.VS
+        Data from CloudSat image in hdf4 format.
+    varname : string
+        Name of the variable that wants to be loaded.
+
+    Returns
+    -------
+    array-like
+        Data of selected variable obtained from hdf4 Cloudsat file.
+    """
     vdata = vs.attach(varname)
     data = vdata[:]
     vdata.detach()
@@ -81,8 +98,8 @@ class CloudSatFrame:
 
     Attributes
     ----------
-    _data: ``attr.ib``
-        sattelite image data.
+    data: attr.ib
+        satellite image data.
     """
 
     _data = attr.ib(
@@ -128,17 +145,32 @@ class CloudSatFrame:
         return "".join(parts)
 
     def cut(self, area=None):
-        """
+        """Cut a specified area of an image.
+
+        Cuts a specified area of an image given in as a
+        list of four elements, which correspond to the
+        latitud and longitud limits of the crop operation.
+
         Parameters
         ----------
+        area : `list` of four elements, optional
+            The list should be [lat_0, lat_1, lon_0, lon_1] where:
+                - lat_0, latitude of minimal position
+                - lat_1, latitude of maximal position
+                - lon_0, longitude of minimal position
+                - lon_1, longitude of maximal position
 
-        area: ``list``, optional (default: cut will be south hemisphere)
-            [lat_0, lat_1, lon_0, lon_1] where:
-                lat_0, latitude of minimal position
-                lat_1, latitude of maximal position
-                lon_0, longitude of minimal position
-                lon_1, longitude of maximal position
+            by default cut will be south hemisphere.
 
+        Returns
+        -------
+        cloudsat.CloudSatFrame
+            Data frame cropped in the specified latitud and longitud interval.
+
+        Raises
+        ------
+        ValueError
+            If the area list does not contain 4 elements.
         """
         if not area:
             return CloudSatFrame(
@@ -163,21 +195,26 @@ class CloudSatFrame:
         else:
             raise ValueError("area must have length four")
 
-    def convert_coordinates(self):
-        """
+    def convert_coordinates(
+        self,
+        projection="+proj=geos +h=35786023.0 +lon_0=-75.0 \
+            +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x",
+    ):
+        """Converts the coordinates of the CloudSatFrame.
+
         Parameters
         ----------
+        projection : string, optional
+            The reprojection that the user desires, \
+        by default the geostationary projection for GOES-R \
+        ( "+proj=geos +h=35786023.0 +lon_0=-75.0 +x_0=0 +y_0=0 \
+        +ellps=GRS80 +units=m +no_defs +sweep=x" )
 
-        ndf: ``pandas.DataFrame``, optional (default=None)
-        projection: ``str``, optional (default=geostationary, GOES-R)
-            The reprojection that the user desires.
-
+        Returns
+        -------
+        cloudsat.CloudSatFrame
+            Returns reprojected CloudSatFrame.
         """
-
-        projection = (
-            "+proj=geos +h=35786023.0 +lon_0=-75.0 "
-            "+x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x"
-        )
 
         geo_df = gpd.GeoDataFrame(
             self._data.values,

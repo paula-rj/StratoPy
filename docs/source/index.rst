@@ -12,7 +12,7 @@ About
 -----
 
 This package is intended for aiding machine learning data scientist in classifying cloud imagery data into different cloud types.
-The main objective of Stratopy is to merge different sattelite image information into a simple data frame called `StratoFrame` which
+The main objective of Stratopy is to merge different satellite image information into a simple data frame called `StratoFrame` which
 can be used as input for neural network training with `Torch`.   
 
 Requirements:
