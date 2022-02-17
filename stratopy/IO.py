@@ -30,21 +30,25 @@ def fetch_cloudsat(
     """Fetch files of a certain date from cloudsat ftp server and
     stores in a local cache.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    dirname : `str`
+        Path to cloudsat image.
+    user : `str`
+        Username for cloudsat ftp connection.
+    passwd : `str`
+        Password for cloudsat ftp connection.
+    host : `str`, optional
+        Name of the url where the file is hosted.
+    tag : `str`, optional
+        Tag to be added to the cached file.
+    path : `str`, optional
+        Path where to save the cached file.
 
-    dirname : `str`, path to cloudsat image.
-    user : `str`, username for cloudsat ftp connection.
-    passwd : `str`, password for cloudsat ftp connection.
-    host : `str`, name of the url where the file is hosted.
-    tag : `str`, tag to be added to the cached file.
-    path : `str`, path where to save the cached file.
-
-    Returns:
-    --------
-
-    df : `stratopy.cloudsat.CloudSatFrame`,
-    dataframe containing the image data.
+    Returns
+    -------
+    df : `stratopy.cloudsat.CloudSatFrame`
+        Dataframe containing the image data.
     """
     cache = Cache(path)
 
@@ -91,16 +95,19 @@ def fetch_goes(
     """Fetch files of a certain date from GOES server and
     stores in a local cache.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
+    dirname : `str`
+        Name of the cached file.
+    tag : `str`
+        Tag to append to name of cached file.
+    path : `str`
+        Location where to save the cached file.
 
-    dirname : `str`, name of the cached file.
-    tag : `str`, tag to append to name of cached file.
-    path : `str`, location where to save the cached file.
-
-    Returns:
-    --------
-    goes_obj : `netCDF4.Dataset`, goes image data.
+    Returns
+    -------
+    goes_obj : `netCDF4.Dataset`
+        GOES image data.
     """
     cache = Cache(path)
 
@@ -138,7 +145,24 @@ def fetch_goes(
 
 
 def fetch(cloudsat_id, goes_id, cloudsat_kw=None, goes_kw=None):
-    """[Summary]"""
+    """Runs both fetches for CloudSat and GOES data and merges them.
+
+    Parameters
+    ----------
+    cloudsat_id : str
+        Path to cloudsat image.
+    goes_id : str
+        Path to GOES image.
+    cloudsat_kw : str, optional
+        Label to append to Cloudsat cached file, by default None
+    goes_kw : str, optional
+        Label to append to Cloudsat cached file, by default None
+
+    Returns
+    -------
+    merger.StratoFrame
+        Resulting merged DataFrame from both inputs.
+    """
     # Anon connection.
     goes_kw = {} if goes_kw is None else goes_kw
     goes_data = fetch_goes(goes_id, **goes_kw)
