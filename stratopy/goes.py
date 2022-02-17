@@ -62,6 +62,14 @@ def read_nc(file_path):
         channel = paths.split("-")[3].split("_")[0]
         data[channel] = Dataset(paths, "r").variables
 
+    # opcion para archivos 16 bandas
+    #  band_dict = {}
+    #     for i in range(1, 17):
+    #         if i < 10:
+    #             band = "CMI_C0" + str(i)
+    #         else:
+    #             band = "CMI_C" + str(i)
+
     return Goes(data)
 
 
