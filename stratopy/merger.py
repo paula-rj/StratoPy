@@ -105,11 +105,11 @@ def gen_vect(col_row, goes_obj):
     band_dict = goes_obj._data
     key_list = list(band_dict.keys())
     brows, bcols = band_dict.get(key_list[0])["CMI"][:].data.shape
-    
+
     if col_row[0] > bcols or col_row[1] > brows:
         raise ValueError("Input column or row larger than image size")
     band_vec = np.zeros((3, 3, len(band_dict)))
-    
+
     # cut
     for count, band in enumerate(band_dict.values()):
         band_vec[:, :, count] = band[
