@@ -84,7 +84,7 @@ class StratoFrame:
         return True
 
 
-def gen_vect(col_row, band_dict):
+def gen_vect(col_row, goes_obj):
     """For a given (col,row) coordinate, generates a matrix of size 3x3xN
     where the central pixel is the one located in (col, fil) coordinate.
     N should be 1 if the goes object contains one band CMI,
@@ -102,19 +102,21 @@ def gen_vect(col_row, band_dict):
     array-like
         Band vector.
     """
+    band_dict = goes_obj._data
     key_list = list(band_dict.keys())
-    brows, bcols = band_dict.get(key_list[0]).shape
+    brows, bcols = band_dict.get(key_list[0])["CMI"][:].data.shape
+    
     if col_row[0] > bcols or col_row[1] > brows:
         raise ValueError("Input column or row larger than image size")
     band_vec = np.zeros((3, 3, len(band_dict)))
-    # recorte
-    i = 0
-    for band in band_dict.values():
-        band_vec[:, :, i] = band[
+    
+    # cut
+    for count, band in enumerate(band_dict.values()):
+        band_vec[:, :, count] = band[
             col_row[1] - 1 : col_row[1] + 2,
             col_row[0] - 1 : col_row[0] + 2,
         ].copy()
-        i += 1
+
     return np.array(band_vec)
 
 

@@ -26,13 +26,16 @@ def read_nc(file_path):
     Parameters
     ----------
     file_path : ``str tuple``
-        Contains a file path of one or all three paths of
+        Contains a file path of one or all three paths to
         channels 3, 7 and 13 of the CMIPF GOES-16 product.
+        Can also contain a single path to  all 16 channels
+        of MCMIPF GOES-16 product.
 
     Returns
     -------
-    ``netCDF4.Dataset``
-        File variables.
+    ``goes.Goes``
+        Object with all netCDF.Dataset variables along
+        with GOES16 Day Microphysics.
     """
 
     if len(file_path) == 3:
@@ -51,6 +54,25 @@ def read_nc(file_path):
         elif not eq_product:
             raise ValueError("Files must be from the same product.")
 
+    elif len(file_path) == 1 and "MCMIPF" in file_path[0]:
+        # In the case of multiband file
+        raw_data = Dataset(file_path[0]).variables
+        data = dict()
+
+        # Needed attributes
+        attributes = {"goes_imager_projection", "t", "y", "x"}
+
+        # Keep only CMI bands and needed attributes
+        for key in raw_data:
+            if "CMI" in key:
+                channel = key.split("_")[1]
+                data[f"M3{channel}"] = {
+                    item if item != key else key.split("_")[0]: raw_data[item]
+                    for item in attributes.union({key})
+                }
+
+        return Goes(data)
+
     elif len(file_path) != 1 and len(file_path) != 3:
 
         raise ValueError(
@@ -62,21 +84,13 @@ def read_nc(file_path):
         channel = paths.split("-")[3].split("_")[0]
         data[channel] = Dataset(paths, "r").variables
 
-    # opcion para archivos 16 bandas
-    #  band_dict = {}
-    #     for i in range(1, 17):
-    #         if i < 10:
-    #             band = "CMI_C0" + str(i)
-    #         else:
-    #             band = "CMI_C" + str(i)
-
     return Goes(data)
 
 
 @attr.s(frozen=True, repr=False)
 class Goes:
 
-    """Generates an object containing de Day Microphysics state
+    """Generates an object containing the Day Microphysics state
     according to GOES-16 manual.
 
     Parameters
@@ -104,11 +118,13 @@ class Goes:
         bands = [int(band.split("C")[1]) for band in self._data]
         if len(bands) == 1:
             return f"GOES Object -- {_img_date}, CH={bands[0]}"
-        else:
+        elif len(bands) == 3:
             return (
                 f"GOES Object -- {_img_date}, "
                 f"CH={bands[0]}, {bands[1]} and {bands[2]}"
             )
+        else:
+            return ()
 
     def _repr_html_(self):
         _img_date = self._img_date.strftime("%d/%m/%y-%H:%M")
@@ -215,7 +231,7 @@ class Goes:
             trim_img[ch_id] = image[r0:r1, c0:c1]
 
             # Rescale channels with psize = 1000 [m]
-            if ch_id == "M3C03":
+            if ch_id == "M3C03" and len(self._data.keys()) != 16:
                 x = range(trim_img[ch_id][:].shape[1])
                 y = range(trim_img[ch_id][:].shape[0])
                 f = interpolate.interp2d(x, y, trim_img[ch_id], kind="cubic")
