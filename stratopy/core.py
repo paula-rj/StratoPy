@@ -46,9 +46,9 @@ def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
         np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2
     )
     b = -2 * H * np.cos(x) * np.cos(y)
-    c = H**2 - Re**2
+    c = H ** 2 - Re ** 2
 
-    aux = b**2 - 4 * a * c
+    aux = b ** 2 - 4 * a * c
 
     rs = np.zeros(aux.shape)
 
@@ -102,7 +102,7 @@ def sat2latlon(
     gr2rad = np.pi / 180
 
     lat = (
-        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy**2))
+        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy ** 2))
         / gr2rad
     )
     lon = lon0 - np.arctan(sy / (H - sx)) / gr2rad
@@ -152,7 +152,7 @@ def latlon2scan(
     sy = -rc * np.cos(latc) * np.sin((lon - lon0) * gr2rad)
     sz = rc * np.sin(latc)
 
-    s_norm = np.sqrt(sx**2 + sy**2 + sz**2)
+    s_norm = np.sqrt(sx ** 2 + sy ** 2 + sz ** 2)
 
     x = np.arcsin(-sy / s_norm)
     y = np.arctan(sz / sx)
