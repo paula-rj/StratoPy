@@ -5,9 +5,9 @@ from unittest import mock
 
 from diskcache.core import ENOVAL
 
-from stratopy import IO, merger
-from stratopy.cloudsat import CloudSatFrame, read_hdf
-from stratopy.goes import Goes, read_nc
+from stratopy import IO
+from stratopy.cloudsat import CloudSatFrame
+from stratopy.goes import Goes
 
 DEFAULT_CACHE_PATH = pathlib.Path(
     os.path.expanduser(os.path.join("~", "stratopy_cache"))
@@ -127,8 +127,8 @@ def test_fetch_goes_patched(mock_cache, mock_s3):
     assert isinstance(goes_frame, Goes)
 
 
-#@mock.patch("stratopy.IO.fetch_goes")
-#@mock.patch("stratopy.IO.fetch_cloudsat")
+# @mock.patch("IO.fetch_goes")
+# @mock.patch("IO.fetch_cloudsat")
 # def test_fetch(mock_cloudsat, mock_goes):
 #     # Mock calls to fetch with goes and cloudsat objects
 #     mock_goes.return_value = read_nc((PATH_GOES,))

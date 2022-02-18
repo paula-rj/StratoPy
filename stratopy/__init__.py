@@ -12,7 +12,7 @@ It consists in five modules:
 - stratopy.cloudsat module
 - stratopy.core module
 - stratopy.goes module
-- stratopy.IO module
+- stratopy.io module
 - stratopy.merger module
  """
 __name__ = "stratopy"
