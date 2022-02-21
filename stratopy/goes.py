@@ -91,7 +91,8 @@ def read_nc(file_path):
 class Goes:
 
     """Generates an object containing the Day Microphysics state
-    according to GOES-16 manual.
+    according to GOES-16 manual, along with all with all
+    netCDF.Dataset variables of original data.
 
     Parameters
     ----------
@@ -108,7 +109,6 @@ class Goes:
 
     _data = attr.ib(validator=attr.validators.instance_of(dict))
     coordinates = attr.ib(default=(-40.0, 10.0, -37.0, -80.0))
-
     _trim_coord = attr.ib(init=False)
     RGB = attr.ib(init=False)
     _img_date = attr.ib(init=False)
@@ -123,6 +123,11 @@ class Goes:
                 f"GOES Object -- {_img_date}, "
                 f"CH={bands[0]}, {bands[1]} and {bands[2]}"
             )
+        elif len(bands) == 16:
+            return (
+                f"GOES Object -- {_img_date}, "
+                f"CH={bands[0]} to CH={bands[-1]}"
+            )
         else:
             return ()
 
@@ -132,6 +137,11 @@ class Goes:
         footer = "<b>-- Goes Object</b>"
         if len(bands) == 1:
             return f"<div>{_img_date}, , CH={bands[0]} {footer}</div>"
+        elif len(bands) == 16:
+            return (
+                f"<div>{_img_date}, , "
+                f"CH={bands[0]} to CH={bands[-1]} {footer}</div>"
+            )
         else:
             return (
                 f"<div>{_img_date}, , "

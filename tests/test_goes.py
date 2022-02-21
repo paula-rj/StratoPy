@@ -1,3 +1,5 @@
+from unittest import mock
+
 import numpy as np
 
 import pytest
@@ -34,6 +36,12 @@ FAKE_PRODUCT = (
     "c20190021811221.nc"
 )
 
+FAKE_16_BAND = (
+    "data/GOES16/"
+    "OR_ABI-L2-MCMIPF-M3_G16_s20190341600322_e20190341611089_"
+    "c20190341611183.nc"
+)
+
 
 def test_read_nc():
     assert isinstance(goes.read_nc((PATH_CHANNEL_7,)), goes.Goes)
@@ -53,6 +61,32 @@ def test_read_nc_product():
 def test_read_nc_len():
     with pytest.raises(ValueError):
         goes.read_nc((PATH_CHANNEL_3, PATH_CHANNEL_7))
+
+
+@mock.patch("stratopy.goes.Dataset")
+@mock.patch("stratopy.goes.Goes.trim")
+@mock.patch("stratopy.core.scan2colfil", return_value=(1, 1))
+def test_read_nc_16(mock_core, mock_trim, mock_file):
+    # Create false netCDF4.Dataset object
+    empty_dataset = {
+        f"CMI_C0{str(i)}" if i < 10 else f"CMI_C{str(i)}": mock.MagicMock()
+        for i in range(1, 17)
+    }
+    empty_dataset.update(
+        {
+            "goes_imager_projection": mock.MagicMock(),
+            "t": mock.MagicMock(),
+            "y": mock.MagicMock(),
+            "x": mock.MagicMock(),
+        }
+    )
+
+    # Configure return value to false Dataset
+    mock_file.return_value.variables = empty_dataset
+    mock_trim.return_value = mock.MagicMock()
+    mock_trim.return_value.__len__ = mock.MagicMock(return_value=1)
+
+    assert isinstance(goes.read_nc((FAKE_16_BAND,)), goes.Goes)
 
 
 def test_repr():
