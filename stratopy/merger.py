@@ -84,7 +84,7 @@ class StratoFrame:
         return True
 
 
-def gen_vect(col_row, goes_obj):
+def gen_vect(col_row, band_dict):
     """For a given (col,row) coordinate, generates a matrix of size 3x3xN
     where the central pixel is the one located in (col, fil) coordinate.
     N should be 1 if the goes object contains one band CMI,
@@ -102,9 +102,8 @@ def gen_vect(col_row, goes_obj):
     array-like
         Band vector.
     """
-    band_dict = goes_obj._data
     key_list = list(band_dict.keys())
-    brows, bcols = band_dict.get(key_list[0])["CMI"][:].data.shape
+    brows, bcols = band_dict.get(key_list[0]).shape
 
     if col_row[0] > bcols or col_row[1] > brows:
         raise ValueError("Input column or row larger than image size")
@@ -132,11 +131,11 @@ def merge(
 
     Parameters
     ----------
-    cloudsat_file: str, path
-        Total ClouSat file path.
+    cloudsat_obj: ``cloudsat.CloudSatFrame``
+        Stratopy Cloudsat object.
 
-    goes_file: str, path
-        Total GOES file path.
+    goes_obj: ``goes.Goes``
+        Stratopy Goes object.
 
     all_layers: bool
         If True, the final dataframe should include
@@ -166,10 +165,9 @@ def merge(
     # semieje_men = 6356752.31414
     # p_size = 2004.0  # 1.1 km is cloudsat pixel size
     # offset = np.array([-0.151844,  0.151844], dtype='float32')
-
     band_dict = {}
-    for key in goes_obj.keys():
-        img = goes_obj.get(key)
+    for key, band in goes_obj._data.items():
+        img = np.array(band["CMI"][:].data)
         # Normalize data
         if norm:
             mini = np.amin(img[img != 65535.0])  # min
