@@ -5,9 +5,11 @@ from unittest import mock
 
 from diskcache.core import ENOVAL
 
+from pandas import DataFrame
+
 from stratopy import IO
-from stratopy.cloudsat import CloudSatFrame
-from stratopy.goes import Goes
+from stratopy.cloudsat import CloudSatFrame, read_hdf
+from stratopy.goes import Goes, read_nc
 
 DEFAULT_CACHE_PATH = pathlib.Path(
     os.path.expanduser(os.path.join("~", "stratopy_cache"))
@@ -127,18 +129,18 @@ def test_fetch_goes_patched(mock_cache, mock_s3):
     assert isinstance(goes_frame, Goes)
 
 
-# @mock.patch("IO.fetch_goes")
-# @mock.patch("IO.fetch_cloudsat")
-# def test_fetch(mock_cloudsat, mock_goes):
-#     # Mock calls to fetch with goes and cloudsat objects
-#     mock_goes.return_value = read_nc((PATH_GOES,))
-#     mock_cloudsat.return_value = read_hdf(PATH_CLOUDSAT)
+@mock.patch("stratopy.IO.fetch_goes")
+@mock.patch("stratopy.IO.fetch_cloudsat")
+def test_fetch(mock_cloudsat, mock_goes):
+    # Mock calls to fetch with goes and cloudsat objects
+    mock_goes.return_value = read_nc((PATH_GOES,))
+    mock_cloudsat.return_value = read_hdf(PATH_CLOUDSAT)
 
-#     # Call function with mocked clients
-#     stratoframe = IO.fetch(CLOUDSAT_SERVER_DIR, GOES_SERVER_DIR)
+    # Call function with mocked clients
+    stratoframe = IO.fetch(CLOUDSAT_SERVER_DIR, GOES_SERVER_DIR)
 
-#     # Assert calls to individual fetchs
-#     mock_goes.assert_called_with(GOES_SERVER_DIR)
-#     mock_cloudsat.assert_called_with(CLOUDSAT_SERVER_DIR)
+    # Assert calls to individual fetchs
+    mock_goes.assert_called_with(GOES_SERVER_DIR)
+    mock_cloudsat.assert_called_with(CLOUDSAT_SERVER_DIR)
 
-#     assert isinstance(stratoframe, merger.StratoFrame)
+    assert isinstance(stratoframe, DataFrame)
