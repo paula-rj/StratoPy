@@ -227,3 +227,120 @@ def scan2colfil(x_y, x0=-0.151844, y0=0.151844, scale=5.6e-05, tipo=1):
         return round(col), round(row)
     else:
         raise TypeError("Type must be 0 (float) or 1 (int)")
+
+
+def gen_vect(col_row, band_dict):
+    """For a given (col,row) coordinate, generates a matrix of size 3x3xN
+    where the central pixel is the one located in (col, fil) coordinate.
+    N should be 1 if the goes object contains one band CMI,
+    N should be 3 if the goes object contains three band CMI,
+    N should be 16 if goes object is a multi-band CMI.
+
+    Parameters
+    ----------
+    col_row : tuple
+        Column and row coordinates given as (col, row).
+    band_dict : dict
+        Dictionary where bands are defined.
+    Returns
+    -------
+    array-like
+        Band vector.
+    """
+    key_list = list(band_dict.keys())
+    brows, bcols = band_dict.get(key_list[0]).shape
+
+    if col_row[0] > bcols or col_row[1] > brows:
+        raise ValueError("Input column or row larger than image size")
+    band_vec = np.zeros((3, 3, len(band_dict)))
+
+    # cut
+    for count, band in enumerate(band_dict.values()):
+        band_vec[:, :, count] = band[
+            col_row[1] - 1 : col_row[1] + 2,
+            col_row[0] - 1 : col_row[0] + 2,
+        ].copy()
+
+    return np.array(band_vec)
+
+
+def merge(
+    cloudsat_obj,
+    goes_obj,
+    all_layers=False,
+    no_clouds=False,
+    norm=True,
+):
+
+    """Merges data from Cloudsat with co-located data from GOES-16.
+
+    Parameters
+    ----------
+    cloudsat_obj: ``cloudsat.CloudSatFrame``
+        Stratopy Cloudsat object.
+
+    goes_obj: ``goes.Goes``
+        Stratopy Goes object.
+
+    all_layers: bool
+        If True, the final dataframe should include
+        all layers of the CLDCLASS product.
+        Default: False
+
+    no_clouds: bool
+        If Ture, the final dataframe should include
+        coordinates where no clouds were detected by CloudSat.
+        Default: False
+
+    norm: bool
+        If True, normalizes all GOES channels [0,1].
+        Default:True
+
+    Returns
+    -------
+    Cloudsat Object
+        DataFrame containing merged data.
+    """
+
+    band_dict = {}
+    for key, band in goes_obj._data.items():
+        img = np.array(band["CMI"][:].data)
+        # Normalize data
+        if norm:
+            mini = np.amin(img[img != 65535.0])  # min
+            dif = np.amax(img[img != 65535.0]) - mini  # max - min
+            img = (img - mini) / dif
+        band_dict.update({key: img})
+
+    # Cloudsat
+    if all_layers is False:
+        cloudsat_obj = cloudsat_obj.drop(
+            [
+                "layer_1",
+                "layer_2",
+                "layer_3",
+                "layer_4",
+                "layer_5",
+                "layer_6",
+                "layer_7",
+                "layer_8",
+                "layer_9",
+            ],
+            axis=1,
+        )
+    if no_clouds is False:
+        cloudsat_obj = cloudsat_obj[cloudsat_obj.layer_0 != 0]
+
+    cloudsat_obj["col_row"] = cloudsat_obj.apply(
+        lambda x: scan2colfil(
+            latlon2scan(x.Latitude, x.Longitude),
+        ),
+        axis=1,
+    )
+
+    # Merge
+    cloudsat_obj["goes_vec"] = cloudsat_obj.apply(
+        lambda x: gen_vect(x.col_row, band_dict), axis=1
+    )
+
+    return cloudsat_obj

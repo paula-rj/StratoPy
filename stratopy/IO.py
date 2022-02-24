@@ -9,7 +9,7 @@ from diskcache.core import ENOVAL
 
 import s3fs
 
-from . import merger
+from . import core
 from .cloudsat import read_hdf
 from .goes import read_nc
 
@@ -172,4 +172,4 @@ def fetch(cloudsat_id, goes_id, cloudsat_kw=None, goes_kw=None):
     cloudsat_kw = {} if cloudsat_kw is None else cloudsat_kw
     cloudsat_data = fetch_cloudsat(cloudsat_id, **cloudsat_kw)
 
-    return merger.merge(cloudsat_data, goes_data)
+    return core.merge(cloudsat_data, goes_data)
