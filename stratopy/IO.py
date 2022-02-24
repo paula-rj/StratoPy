@@ -172,4 +172,4 @@ def fetch(cloudsat_id, goes_id, cloudsat_kw=None, goes_kw=None):
     cloudsat_kw = {} if cloudsat_kw is None else cloudsat_kw
     cloudsat_data = fetch_cloudsat(cloudsat_id, **cloudsat_kw)
 
-    return merger.StratoFrame(goes_data, cloudsat_data)
+    return merger.merge(cloudsat_data, goes_data)
