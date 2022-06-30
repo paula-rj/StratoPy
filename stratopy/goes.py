@@ -20,7 +20,7 @@ import core
 PATH = os.path.abspath(os.path.dirname(__file__))
 
 
-def read_nc(file_path):
+def read_nc(file_path, **kwargs):
     """Reads netCDF files through the netCDF4 library.
 
     Parameters
@@ -84,7 +84,7 @@ def read_nc(file_path):
         channel = paths.split("-")[3].split("_")[0]
         data[channel] = Dataset(paths, "r").variables
 
-    return Goes(data)
+    return Goes(data, **kwargs)
 
 
 @attr.s(frozen=False, repr=False)
