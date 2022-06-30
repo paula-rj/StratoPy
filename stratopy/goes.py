@@ -15,7 +15,7 @@ from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
 
-from . import core
+import core
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -87,7 +87,7 @@ def read_nc(file_path):
     return Goes(data)
 
 
-@attr.s(frozen=True, repr=False)
+@attr.s(frozen=False, repr=False)
 class Goes:
 
     """Generates an object containing the Day Microphysics state
