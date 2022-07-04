@@ -87,7 +87,7 @@ def read_nc(file_path, **kwargs):
     return Goes(data, **kwargs)
 
 
-@attr.s(frozen=True, repr=False)
+@attr.s(frozen=False, repr=False)
 class Goes:
 
     """Generates an object containing the Day Microphysics state
