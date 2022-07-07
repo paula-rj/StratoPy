@@ -4,6 +4,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.9%2B-blue">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg">
+  <img alt="GitHub" src="https://img.shields.io/github/license/paula-rj/StratoPy?style=plastic">
+  [<img src="https://img.shields.io/github/license/paula-rj/StratoPy?style=plastic">](https://github.com/paula-rj/StratoPy)
 </p>
 Python library designed to easily manipulate CloudSat and GOES-R and generate labeled images containing cloud types.
 
