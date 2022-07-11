@@ -4,7 +4,7 @@
 
 ![Python: 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![CI via GitHub Actions](https://github.com/paula-rj/StratoPy/workflows/CI/badge.svg)](https://github.com/paula-rj/StratoPy/actions?query=workflow%3ACI)
+[![CI via GitHub Actions](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/stratopy/badge/?version=latest)](https://stratopy.readthedocs.io/en/latest/?badge=latest)
 [![https://github.com/leliel12/diseno_sci_sfw](https://img.shields.io/badge/DiSoftCompCi-FAMAF-ffda00)](https://github.com/leliel12/diseno_sci_sfw) 
 
