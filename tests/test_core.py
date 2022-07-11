@@ -32,3 +32,6 @@ def test_scan2colfil():
     assert isinstance(col_fl, float)
     assert isinstance(row_fl, float)
     np.testing.assert_equal((2712, 2712), core.scan2colfil((0.0, 0.0)))
+
+def test_merge():
+    return None
