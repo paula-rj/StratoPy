@@ -3,7 +3,7 @@
 </p>
 
 ![Python: 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
-![PyPi](https://img.shields.io/pypi/v/StratoPy?color=blue&style=plastic)
+![PyPi](https://img.shields.io/pypi/v/StratoPy?color=blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![CI via GitHub Actions](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/stratopy/badge/?version=latest)](https://stratopy.readthedocs.io/en/latest/?badge=latest)
