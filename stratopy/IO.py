@@ -1,3 +1,5 @@
+r"""Module containing magement function."""
+
 import io
 import os
 import pathlib
@@ -27,7 +29,9 @@ def fetch_cloudsat(
     tag="stratopy-cloudsat",
     path=DEFAULT_CACHE_PATH,
 ):
-    """Fetch files of a certain date from cloudsat ftp server and
+    """Get cloudsat files.
+
+    Fetch files of a certain date from cloudsat ftp server and
     stores in a local cache.
 
     Parameters
@@ -92,7 +96,9 @@ def fetch_goes(
     tag="stratopy-goes",
     path=DEFAULT_CACHE_PATH,
 ):
-    """Fetch files of a certain date from GOES server and
+    """Get GOES files.
+
+    Fetch files of a certain date from GOES server and
     stores in a local cache.
 
     Parameters
@@ -145,7 +151,7 @@ def fetch_goes(
 
 
 def fetch(cloudsat_id, goes_id, cloudsat_kw=None, goes_kw=None):
-    """Runs both fetches for CloudSat and GOES data and merges them.
+    """Run both fetches for CloudSat and GOES data and merges them.
 
     Parameters
     ----------
