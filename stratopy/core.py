@@ -141,7 +141,6 @@ def latlon2scan(
        Horizontal coordinate, in radianes.
     y : float, float arr
        Vertical coordinate, in radianes. Paralell to Earth's axis.
-
     """
     H = Re + h
     e = (1 - (Rp / Re) ** 2) ** 0.5  # excentricity
@@ -160,7 +159,7 @@ def latlon2scan(
     x = np.arcsin(-sy / s_norm)
     y = np.arctan(sz / sx)
 
-    return x, y, sz
+    return x, y
 
 
 def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
