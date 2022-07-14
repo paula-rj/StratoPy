@@ -21,7 +21,7 @@ PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def read_nc(file_path, **kwargs):
-    """Reads netCDF files through the netCDF4 library.
+    """Read netCDF files through the netCDF4 library.
 
     Parameters
     ----------
@@ -37,7 +37,6 @@ def read_nc(file_path, **kwargs):
         Object with all netCDF.Dataset variables along
         with GOES16 Day Microphysics.
     """
-
     if len(file_path) == 3:
         # Check for date and product consistency
         files_date = [
@@ -89,8 +88,9 @@ def read_nc(file_path, **kwargs):
 
 @attr.s(frozen=True, repr=False)
 class Goes:
+    """Treat the GOES files.
 
-    """Generates an object containing the Day Microphysics state
+    Generates an object containing the Day Microphysics state
     according to GOES-16 manual, along with all with all
     netCDF.Dataset variables of original data.
 
@@ -114,6 +114,7 @@ class Goes:
     _img_date = attr.ib(init=False)
 
     def __repr__(self):
+        """repr(x) <=> x.__repr__()."""
         _img_date = self._img_date.strftime("%d/%m/%y-%H:%M")
         bands = [int(band.split("C")[1]) for band in self._data]
         if len(bands) == 1:
@@ -218,7 +219,8 @@ class Goes:
         return trim_coordinates
 
     def trim(self):
-        """
+        """Drop the GOES image.
+
         Trims a GOES CMI image according to coordinate:
         lower latitude, upper latitude, eastern longitude, western longitude
         specified on the parameters.
@@ -253,7 +255,8 @@ class Goes:
 
     @RGB.default
     def _RGB_default(self, masked=False):
-        """
+        """Make RGB image.
+
         This function creates an RGB image that represents the day microphysics
         according to the GOES webpage manual.
 
@@ -327,7 +330,8 @@ class Goes:
 
 
 def solar7(trim_coord_ch7, ch7, ch13):
-    """
+    """Correct the channel 7.
+
     This function does a zenith angle correction to channel 7.
     This correction is needed for day time images. It is used
     in RGB method of Goes class.
@@ -369,7 +373,9 @@ def solar7(trim_coord_ch7, ch7, ch13):
 
 
 def mask(rgb):
-    """This function returns a labeled-by-color image according to
+    """Correct the RGB.
+
+    This function returns a labeled-by-color image according to
     the interpretation of the product Day Microphysics
     (https://weather.msfc.nasa.gov/sport/training/quickGuides/
     rgb/QuickGuide_DtMicroRGB_NASA_SPoRT.pdf)
@@ -384,7 +390,6 @@ def mask(rgb):
     img_mask: numpy array
         Masked RGB.
     """
-
     img_mask = np.zeros(rgb.shape)
 
     # Large drops, Low clouds-> pink/magenta
@@ -446,7 +451,7 @@ def mask(rgb):
 
 
 def rgb2hsi(image):
-    """Converts a RGB image to a HSI image.
+    """Convert a RGB image to a HSI image.
 
     Parameters
     ----------
@@ -458,7 +463,6 @@ def rgb2hsi(image):
     HSI: ``numpy.array``
         Image in HSI color system.
     """
-
     R = image[:, :, 0]
     G = image[:, :, 1]
     B = image[:, :, 2]
