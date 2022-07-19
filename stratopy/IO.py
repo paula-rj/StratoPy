@@ -86,11 +86,6 @@ def fetch_cloudsat(
     return df
 
 
-# Esta función es fácilmente extendible a descargar por fecha aprox.
-# Simplemente es guardar en una lista los archivos de la carpeta(con s3fs.ls)
-# luego buscar el que más se acerca al horario deseado dentro de cierto margen.
-# Se podría implementar en caso de poder hacer lo mismo con cloudstat
-# (el problema ahí es el número de órbita).
 def fetch_goes(
     dirname,
     tag="stratopy-goes",
