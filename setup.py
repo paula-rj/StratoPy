@@ -20,7 +20,7 @@ REQUIREMENTS = [
 
 setup(
     name="StratoPy",
-    version="0.1.0",
+    version="0.1.1",
     description=(
         "Python library designed to easily manipulate CloudSat "
         "and GOES-R data and generate labeled images containing cloud types."

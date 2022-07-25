@@ -7,7 +7,7 @@ from stratopy import cloudsat
 
 PATH = (
     "data/CloudSat/"
-    "2019003151948_67564_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
+    "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
 )
 
 HDF_FILE = cloudsat.read_hdf(PATH)

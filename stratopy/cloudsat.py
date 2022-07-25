@@ -22,8 +22,7 @@ DEFAULT_CACHE_PATH = pathlib.Path(
 
 
 def read_hdf(path, layer="CloudLayerType"):
-    """
-    Function for reading CloudSat data files, with extension ".hdf".
+    """Read CloudSat data files, with extension ".hdf".
 
     Parameters
     ----------
@@ -93,7 +92,9 @@ def attach_vdata(vs, varname):
 
 @attr.s(frozen=True, repr=False)
 class CloudSatFrame:
-    """DataFrame used for manipulating Cloudsat and GOES data
+    """Make the CloudSatFrame.
+
+    DataFrame used for manipulating Cloudsat and GOES data
     throughout this package.
 
     Attributes
@@ -108,12 +109,15 @@ class CloudSatFrame:
     )
 
     def __getitem__(self, slice):
+        """x[y] <==> x.__getitem__(y)."""
         return self._data.__getitem__(slice)
 
     def __dir__(self):
+        """dir(cdf) <==> cdf.__dir__()."""
         return super().__dir__() + dir(self._data)
 
     def __getattr__(self, a):
+        """getattr(x, y) <==> x.__getattr__(y)."""
         return getattr(self._data, a)
 
     def __repr__(self):
@@ -200,7 +204,7 @@ class CloudSatFrame:
         projection="+proj=geos +h=35786023.0 +lon_0=-75.0 \
             +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs +sweep=x",
     ):
-        """Converts the coordinates of the CloudSatFrame.
+        """Convert the coordinates of the CloudSatFrame.
 
         Parameters
         ----------
@@ -215,7 +219,6 @@ class CloudSatFrame:
         cloudsat.CloudSatFrame
             Returns reprojected CloudSatFrame.
         """
-
         geo_df = gpd.GeoDataFrame(
             self._data.values,
             columns=self._data.columns,

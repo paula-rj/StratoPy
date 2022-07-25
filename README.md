@@ -1,16 +1,19 @@
 <p align="center">
 <img src="https://github.com/paula-rj/StratoPy/blob/main/res/logo.jpg?raw=true" alt="logo" height="200"/>
 </p>
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.9%2B-blue">
-  <img src="https://img.shields.io/badge/License-MIT-blue.svg">
-  <img alt="GitHub" src="https://img.shields.io/github/license/paula-rj/StratoPy?style=plastic">
-  [<img src="https://img.shields.io/github/license/paula-rj/StratoPy?style=plastic">](https://github.com/paula-rj/StratoPy)
-  
-</p>
+
+![Python: 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
+![PyPi](https://img.shields.io/pypi/v/StratoPy?color=blue)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![CI via GitHub Actions](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml)
+[![Documentation Status](https://readthedocs.org/projects/stratopy/badge/?version=latest)](https://stratopy.readthedocs.io/en/latest/?badge=latest)
+[![https://github.com/leliel12/diseno_sci_sfw](https://img.shields.io/badge/DiSoftCompCi-FAMAF-ffda00)](https://github.com/leliel12/diseno_sci_sfw) 
+
+
 Python library designed to easily manipulate CloudSat and GOES-R and generate labeled images containing cloud types.
 
 ## Motivation:
+
 Remote sensors aboard artificial satellites generate a lot of information every day. This information acquires spatial value when it can be transformed into something understandable to humans, such as the classification of satellite images. In this case, we focus on the classification of clouds in satellite images since knowing the type of cloud we can know its main characteristics and thus contribute to improve climate models and weather predictions. 
 We use images from the ABI radiometer on board the GOES-16 geostationary satellite and develop two methods to classify the clouds observed in them:
 1- We implement the Day Microphysics algorithm (\citar geocast ) which approximately shows each cloud type in a different color. 
@@ -45,6 +48,7 @@ Via git
 and then restart sesion. After that, you can work as usuall. This is due to a conflict between `Numpy` and `Pyorbital` that afects only `Colab Notebooks`.
 
 ## Quick information and references:
+
 CloudSat is an artificial satellite, with a sun-synchronous orbit which has a revisit period of 16 days. Its  most important instrument is the Cloud Profiling Radar (CPR), which returns verftical profiles of clouds in particular. The satellite was launched in 2006 and since 2011 its battery suffers a failure. Given that the radar needs energy to work, only daytime products are usefull since that year on. In `Stratopy`, we developed a pipeline that includes the 2B-CLDCLASS product, a product of level 2 of processing that contains the type of cloud that the radar found along the satellite's track around the Earth.
 The following web pages are usefull references:
 
@@ -58,3 +62,13 @@ GOES-16 is an artificial satellite launched in 2016. It contains the Advances Ba
 - [GOES-R Official Webpage](https://www.goes-r.gov/)
 - [GOES-R in NOAA Satelite information system](https://www.noaasis.noaa.gov/GOES/goes_overview.html)
 - [GOES-R image viewer](https://www.star.nesdis.noaa.gov/GOES/index.php)
+
+## Authors
+
+- Paula Romero <[paula.romero@mi.unc.edu.ar](paula.romero@mi.unc.edu.at)> ([IATE-OAC-CONICET][], [FaMAF-UNC][]).
+- Julián Villa <[jvilla@iafe.uba.ar](jvilla@iafe.uba.ar)> ([IAFE-UBA-CONICET][]).
+
+
+  [IATE-OAC-CONICET]: http://iate.oac.uncor.edu/
+  [FaMAF-UNC]: https://www.famaf.unc.edu.ar/
+  [IAFE-UBA-CONICET]: http://www.iafe.uba.ar/

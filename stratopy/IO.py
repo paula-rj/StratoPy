@@ -1,3 +1,5 @@
+r"""Module containing magement function."""
+
 import io
 import os
 import pathlib
@@ -27,7 +29,9 @@ def fetch_cloudsat(
     tag="stratopy-cloudsat",
     path=DEFAULT_CACHE_PATH,
 ):
-    """Fetch files of a certain date from cloudsat ftp server and
+    """Get cloudsat files.
+
+    Fetch files of a certain date from cloudsat ftp server and
     stores in a local cache.
 
     Parameters
@@ -82,17 +86,14 @@ def fetch_cloudsat(
     return df
 
 
-# Esta función es fácilmente extendible a descargar por fecha aprox.
-# Simplemente es guardar en una lista los archivos de la carpeta(con s3fs.ls)
-# luego buscar el que más se acerca al horario deseado dentro de cierto margen.
-# Se podría implementar en caso de poder hacer lo mismo con cloudstat
-# (el problema ahí es el número de órbita).
 def fetch_goes(
     dirname,
     tag="stratopy-goes",
     path=DEFAULT_CACHE_PATH,
 ):
-    """Fetch files of a certain date from GOES server and
+    """Get GOES files.
+
+    Fetch files of a certain date from GOES server and
     stores in a local cache.
 
     Parameters
@@ -145,7 +146,7 @@ def fetch_goes(
 
 
 def fetch(cloudsat_id, goes_id, cloudsat_kw=None, goes_kw=None):
-    """Runs both fetches for CloudSat and GOES data and merges them.
+    """Run both fetches for CloudSat and GOES data and merges them.
 
     Parameters
     ----------

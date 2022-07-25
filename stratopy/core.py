@@ -4,10 +4,11 @@ import numpy as np
 
 
 def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
-    """
-    Transforms x,y geostationary scan coordinates into
-    cartesian coordinates with origin on the satellite.
-    Based PUG3, version 5.2.8.1.
+    """Convert scan to satellite coordinates.
+
+    Transform x,y geostationary scan coordinates into
+    cartesian coordinates with origin on the satellite. Based
+    PUG3, version 5.2.8.1.
 
     Parameters
     ----------
@@ -32,7 +33,6 @@ def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     sz : float, float arr
         Vertical coordinate.
     """
-
     if (
         str(type(x))[8:-2] != "numpy.ma.core.MaskedArray"
         or str(type(y))[8:-2] != "numpy.ma.core.MaskedArray"
@@ -68,7 +68,8 @@ def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
 def sat2latlon(
     sx, sy, sz, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
 ):
-    """
+    """Convert satellite to geographic coordinates.
+
     Transforms cartesian coordinates with origin
     in the satellite sx,sy,sz into
     latitude/longitude coordinates.
@@ -97,6 +98,7 @@ def sat2latlon(
         Latitude coordinates.
     lon : float, float arr
         Longitude coordinates.
+
     """
     H = Re + h
     gr2rad = np.pi / 180
@@ -112,8 +114,9 @@ def sat2latlon(
 def latlon2scan(
     lat, lon, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
 ):
-    """
-    Transforms latitud/longitud coordinates
+    """Convert geographical to scan coordinates.
+
+    Transform latitud/longitud coordinates
     into x/y geoestationary projection.
     Based on PUG3 5.1.2.8.2
 
@@ -139,7 +142,6 @@ def latlon2scan(
     y : float, float arr
        Vertical coordinate, in radianes. Paralell to Earth's axis.
     """
-
     H = Re + h
     e = (1 - (Rp / Re) ** 2) ** 0.5  # excentricity
     gr2rad = np.pi / 180
@@ -161,7 +163,8 @@ def latlon2scan(
 
 
 def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
-    """
+    """Reproject into radians.
+
     Transforms columns/rows of the image into
     x/y en geostationary projection.
     Based on PUG3 5.1.2.8.2
@@ -179,6 +182,7 @@ def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
         Paralell to Earth's axis
     scale : float
         Pixel size in radians.
+
     Returns
     -------
     x : float, float arr
@@ -192,7 +196,8 @@ def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
 
 
 def scan2colfil(x_y, x0=-0.151844, y0=0.151844, scale=5.6e-05, tipo=1):
-    """
+    """Get the coordinate possition.
+
     Converts x/y coordinates (scan projection) into (row,column) coordinates,
     a geostationary projection. Based on PUG3, version 5.2.8.2
 
@@ -230,7 +235,9 @@ def scan2colfil(x_y, x0=-0.151844, y0=0.151844, scale=5.6e-05, tipo=1):
 
 
 def gen_vect(col_row, band_dict):
-    """For a given (col,row) coordinate, generates a matrix of size 3x3xN
+    """Generate 3D vector.
+
+    For a given (col,row) coordinate, generates a matrix of size 3x3xN
     where the central pixel is the one located in (col, fil) coordinate.
     N should be 1 if the goes object contains one band CMI,
     N should be 3 if the goes object contains three band CMI,
@@ -242,6 +249,7 @@ def gen_vect(col_row, band_dict):
         Column and row coordinates given as (col, row).
     band_dict : dict
         Dictionary where bands are defined.
+
     Returns
     -------
     array-like
@@ -271,8 +279,7 @@ def merge(
     no_clouds=False,
     norm=True,
 ):
-
-    """Merges data from Cloudsat with co-located data from GOES-16.
+    """Merge data from Cloudsat with co-located data from GOES-16.
 
     Parameters
     ----------
@@ -301,7 +308,6 @@ def merge(
     Cloudsat Object
         DataFrame containing merged data.
     """
-
     band_dict = {}
     for key, band in goes_obj._data.items():
         img = np.array(band["CMI"][:].data)
