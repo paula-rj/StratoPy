@@ -3,6 +3,12 @@ import numpy.ma as ma
 
 from stratopy import core
 
+PATH = (
+    "data/CloudSat/"
+    "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf" 
+)
+
+
 arr = np.array([35786023.0, -0.0, 0.0])
 masked_sat = arr.view(ma.MaskedArray)
 
