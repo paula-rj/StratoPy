@@ -10,7 +10,7 @@
 [![https://github.com/leliel12/diseno_sci_sfw](https://img.shields.io/badge/DiSoftCompCi-FAMAF-ffda00)](https://github.com/leliel12/diseno_sci_sfw) 
 
 
-Python library designed to easily manipulate CloudSat and GOES-R and generate labeled images containing cloud types.
+Python package designed to easily manipulate and colocalize CloudSat and GOES-R imagery, and generate labeled images containing cloud types.
 
 ## Motivation:
 
