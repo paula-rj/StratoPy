@@ -206,6 +206,9 @@ class CloudSatFrame:
     ):
         """Convert the coordinates of the CloudSatFrame.
 
+        Convert the coordinates of the CloudSatFrame in accordance
+        to the defined projection.
+
         Parameters
         ----------
         projection : string, optional
