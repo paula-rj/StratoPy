@@ -3,7 +3,7 @@ About us
 
 This software was developed as part of the post-graduate course "Diseño de software para computación científica" (Software design for scientific computing), given at the Faculty of Mathematics, Astronomy, Physics, and Computation (FaMAF) of the National University of Córdoba (UNC), Córdoba, Argentina.
 
-**Developers**
+::bold::`Developers`
 
 * Paula Romero :sup:`1, 2` (paula.romero@mi.unc.edu.ar). 
 * Julián Villa :sup:`3` (jvilla@iafe.uba.ar).
