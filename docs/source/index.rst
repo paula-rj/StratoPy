@@ -21,10 +21,11 @@ Requirements:
 You need python 3.9+ to install Stratopy. For more information about installation, please refer to :ref:`installation-label`.
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 6
    :caption: Contents:
 
    self
    installation
    stratopy
    tutorial.ipynb
+   Aboutus
