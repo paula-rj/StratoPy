@@ -15,6 +15,6 @@ This software was developed as part of the post-graduate course "Diseño de soft
 2. *Facultad de Matemática, Astronomía, Física y Computación (FaMAF), Universidad Nacional de Córdoba (UNC).*
 3. *Instituto de Astronomía y Física del Espacio (IAFE), Universidad de Buenos Aires (UBA), Consejo Nacional de Investigaciones Científicas (CONICET).*
 4. *Consejo Nacional de Investigaciones Científicas (CONICET).*
-5. *Centro Atómico Bariloche (CAB), Comisión Nacional de Energía Atómica (CNEA). *
+5. *Centro Atómico Bariloche (CAB), Comisión Nacional de Energía Atómica (CNEA).*
 6. *Programa de pos-graduación en Ingeniería Ambiental (PPGEA)*
 7. *Universidade Federal do Espirito Santo (UFES)*
