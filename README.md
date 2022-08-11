@@ -67,8 +67,12 @@ GOES-16 is an artificial satellite launched in 2016. It contains the Advances Ba
 
 - Paula Romero <[paula.romero@mi.unc.edu.ar](paula.romero@mi.unc.edu.at)> ([IATE-OAC-CONICET][], [FaMAF-UNC][]).
 - Julián Villa <[jvilla@iafe.uba.ar](jvilla@iafe.uba.ar)> ([IAFE-UBA-CONICET][]).
-
+- José Robledo <[jorobledo@unc.edu.ar](jorobledo@unc.edu.ar)> ([CONICET][],[CAB-CNEA][])
+- Georgynio Rosales <[ragy3008@gmail.com](ragy3008@gmail.com)> ([PPGEA, UFES][])
 
   [IATE-OAC-CONICET]: http://iate.oac.uncor.edu/
   [FaMAF-UNC]: https://www.famaf.unc.edu.ar/
   [IAFE-UBA-CONICET]: http://www.iafe.uba.ar/
+  [CONICET]: https://www.conicet.gov.ar/
+  [CAB-CNEA]: https://www.argentina.gob.ar/cnea/cab
+  [PPGEA, UFES]: https://engenhariaambiental.ufes.br/pt-br/pos-graduacao/PPGEA

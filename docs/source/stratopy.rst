@@ -41,10 +41,10 @@ ______________________
    :show-inheritance:
  
 __________________________
-``stratopy.merger`` module
+``stratopy.merge`` module
 __________________________
 
-.. automodule:: stratopy.merger
+.. automodule:: stratopy.merge
    :members:
    :undoc-members:
    :show-inheritance:
