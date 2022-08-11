@@ -115,19 +115,21 @@ def test_repr_html_():
     pdf_2 = goes.read_nc(FILE_PATH)
 
     def pdf_repr(pdf):
-        img_date = pdf._img_date.strftime("%d/%m/%y-%H:%M")
+        _img_date = pdf._img_date.strftime("%d/%m/%y-%H:%M")
         bands = [int(band.split("C")[1]) for band in pdf._data.keys()]
         footer = "<b>-- Goes Object</b>"
+        footer = "<b>Goes Object --</b>"
         if len(bands) == 1:
-            return f"<div>{img_date}, , CH={bands[0]} {footer}</div>"
+            return f"<div>{footer} {_img_date}, CH={bands[0]}</div>"
         else:
             return (
-                f"<div>{img_date}, , "
-                f"CH={bands[0]}, {bands[1]} and {bands[2]} {footer}</div>"
+                f"<div>{footer} {_img_date}, "
+                f"CH={bands[0]}, {bands[1]} and {bands[2]}</div>"
             )
 
     expected_1 = pdf_repr(pdf)
     expected_2 = pdf_repr(pdf_2)
+
     assert pdf._repr_html_() == expected_1
     assert pdf_2._repr_html_() == expected_2
 
