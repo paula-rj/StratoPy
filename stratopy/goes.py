@@ -135,18 +135,18 @@ class Goes:
     def _repr_html_(self):
         _img_date = self._img_date.strftime("%d/%m/%y-%H:%M")
         bands = [int(band.split("C")[1]) for band in self._data]
-        footer = "<b>-- Goes Object</b>"
+        footer = "<b>Goes Object --</b>"
         if len(bands) == 1:
-            return f"<div>{_img_date}, , CH={bands[0]} {footer}</div>"
+            return f"<div>{footer} {_img_date}, CH={bands[0]}</div>"
         elif len(bands) == 16:
             return (
-                f"<div>{_img_date}, , "
-                f"CH={bands[0]} to CH={bands[-1]} {footer}</div>"
+                f"<div>{footer} {_img_date}, "
+                f"CH={bands[0]} to CH={bands[-1]}</div>"
             )
         else:
             return (
-                f"<div>{_img_date}, , "
-                f"CH={bands[0]}, {bands[1]} and {bands[2]} {footer}</div>"
+                f"<div>{footer} {_img_date}, "
+                f"CH={bands[0]}, {bands[1]} and {bands[2]}</div>"
             )
 
     @_img_date.default
