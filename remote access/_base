@@ -1,0 +1,36 @@
+from abc import ABC, abstractmethod
+from http.client import NotConnected
+
+class Conector(ABC):
+    
+    @abstractmethod #se pueden descargar sus archivos
+    def connect(self):
+        if self.is_connected == True:
+            pass
+        else:
+            raise ConnectionError("Not connected")
+
+
+
+    def fetch(self, product_name, datetime):
+        raise NotImplementedError("Not implemented")
+
+
+class Goes(Conector):
+
+  def fetch(self):
+    #descarga los archivos desde donde goes los tiene almacenados
+    return None
+
+  def open(self):
+    #abre los archivos como tienen que abrirse los archivos netcdf
+    return None
+
+class Cloudsat(Satellite):
+  def fetch(self):
+    #descarga los archivos desde donde cs los tiene almacenados
+    return None
+
+  def open(self):
+    #abre los archivos como tienen que abrirse los archivos hdf
+    return None
