@@ -22,7 +22,7 @@ sys.path.insert(0, str(STRATOPY_PATH))
 # -- Project information -----------------------------------------------------
 
 project = "StratoPy"
-copyright = "2021, Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa"
+copy_right = "2021, Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa"
 author = "Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa"
 
 # The full version, including alpha/beta/rc tags

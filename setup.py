@@ -7,15 +7,12 @@ with open("README.md", "r") as fp:
 REQUIREMENTS = [
     "numpy",
     "pandas",
-    "attrs",
-    "matplotlib",
-    "geopandas",
-    "pyhdf",
-    "pyorbital",
-    "pyspectral",
     "netCDF4",
     "diskcache",
     "s3fs",
+    "python-dateutil",
+    "xarray"
+
 ]
 
 setup(
