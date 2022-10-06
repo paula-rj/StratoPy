@@ -1,8 +1,15 @@
+import os
+
 from setuptools import setup
+
+os.environ["__STRATOPY_IN_SETUP__"] = "True"
+import stratopy
+
 
 with open("README.md", "r") as fp:
     LONG_DESCRIPTION = fp.read()
 
+DESCRIPTION = LONG_DESCRIPTION.splitlines()[0].strip()
 
 REQUIREMENTS = [
     "numpy",
@@ -20,11 +27,8 @@ REQUIREMENTS = [
 
 setup(
     name="StratoPy",
-    version="0.1.1",
-    description=(
-        "Python library designed to easily manipulate CloudSat "
-        "and GOES-R data and generate labeled images containing cloud types."
-    ),
+    version=stratopy.__version__,
+    description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     install_requires=REQUIREMENTS,

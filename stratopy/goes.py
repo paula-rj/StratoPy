@@ -15,7 +15,7 @@ from pyspectral.near_infrared_reflectance import Calculator
 
 from scipy import interpolate
 
-from . import core
+from . import core, datasets
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 

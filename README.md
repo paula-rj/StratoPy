@@ -1,3 +1,5 @@
+Python package designed to easily manipulate and colocalize CloudSat and GOES-R imagery, and generate labeled images containing cloud types.
+
 <p align="center">
 <img src="https://github.com/paula-rj/StratoPy/blob/main/res/logo.jpg?raw=true" alt="logo" height="200"/>
 </p>
@@ -7,23 +9,21 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![CI via GitHub Actions](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jotavecorta/StratoPy/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/stratopy/badge/?version=latest)](https://stratopy.readthedocs.io/en/latest/?badge=latest)
-[![https://github.com/leliel12/diseno_sci_sfw](https://img.shields.io/badge/DiSoftCompCi-FAMAF-ffda00)](https://github.com/leliel12/diseno_sci_sfw) 
+[![https://github.com/leliel12/diseno_sci_sfw](https://img.shields.io/badge/DiSoftCompCi-FAMAF-ffda00)](https://github.com/leliel12/diseno_sci_sfw)
 
-
-Python package designed to easily manipulate and colocalize CloudSat and GOES-R imagery, and generate labeled images containing cloud types.
 
 ## Motivation:
 
-Remote sensors aboard artificial satellites generate a lot of information every day. This information acquires spatial value when it can be transformed into something understandable to humans, such as the classification of satellite images. In this case, we focus on the classification of clouds in satellite images since knowing the type of cloud we can know its main characteristics and thus contribute to improve climate models and weather predictions. 
+Remote sensors aboard artificial satellites generate a lot of information every day. This information acquires spatial value when it can be transformed into something understandable to humans, such as the classification of satellite images. In this case, we focus on the classification of clouds in satellite images since knowing the type of cloud we can know its main characteristics and thus contribute to improve climate models and weather predictions.
 We use images from the ABI radiometer on board the GOES-16 geostationary satellite and develop two methods to classify the clouds observed in them:
-1- We implement the Day Microphysics algorithm (\citar geocast ) which approximately shows each cloud type in a different color. 
-2- We developed methods that allow to co-locate data from the CloudSat heliosynchronous satellite with GOES-16 images, being able to obtain a Pandas DataFrame-like object with two columns, one is the pixels of the GOES images and the other gives a label to those pixels (provided by CloudSat) about the type of cloud that exists in those pixels. 
+1- We implement the Day Microphysics algorithm (\citar geocast ) which approximately shows each cloud type in a different color.
+2- We developed methods that allow to co-locate data from the CloudSat heliosynchronous satellite with GOES-16 images, being able to obtain a Pandas DataFrame-like object with two columns, one is the pixels of the GOES images and the other gives a label to those pixels (provided by CloudSat) about the type of cloud that exists in those pixels.
 
-As for the second method (co-location of GOES and CloudSat), although there is literature on the subject we did not find any released code showing the procedure. Perhaps it could be done with other software that are usually paid. That is why we developed Stratopy, so that in a free and simple way it can be used and generate a data structure ready to be used for example as input in supervised machine learning algorithms. 
+As for the second method (co-location of GOES and CloudSat), although there is literature on the subject we did not find any released code showing the procedure. Perhaps it could be done with other software that are usually paid. That is why we developed Stratopy, so that in a free and simple way it can be used and generate a data structure ready to be used for example as input in supervised machine learning algorithms.
 
 ## Requirements:
 
-You need Python 3.9+ to run Stratopy. The following libraries will be installed: 
+You need Python 3.9+ to run Stratopy. The following libraries will be installed:
 - [pyhdf](https://pypi.org/project/pyhdf/)
 - [numpy](https://numpy.org/)
 - [scipy](https://www.scipy.org/)

@@ -19,14 +19,19 @@ It consists in five modules:
 """
 
 __name__ = "stratopy"
-__version__ = "0.0.1"
+__version__ = "0.2dev"
 
 
 # =============================================================================
 # IMPORTS
 # =============================================================================
 
-from .cloudsat import *  # noqa
-from .core import *  # noqa
-from .goes import *  # noqa
-from .IO import *  # noqa
+import os
+
+if os.getenv("__STRATOPY_IN_SETUP__") != "True":
+    from .cloudsat import *  # noqa
+    from .core import *  # noqa
+    from .goes import *  # noqa
+    from .IO import *  # noqa
+
+del os
