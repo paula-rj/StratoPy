@@ -1,7 +1,7 @@
 import abc
 from abc import ABC
 
-from dateutil.parser import parse
+from dateutil import parser 
 
 import xarray as xr
 
@@ -47,9 +47,7 @@ class ConnectorABC(ABC):
 
     def parse_date(self, date):
         "arma la fecha como corresponde"
-        dt_date = parse(date)
-        day_of_year = dt_date.timetuple().tm_yday
-        return day_of_year
+        return parser.parse(date)
 
     def fetch(self, date):
         pdate = self.parse_date(date)  # recorta el nombre
@@ -104,10 +102,14 @@ class Goes16(NetCDFmixin, S3mixin, ConnectorABC):
 
     @classmethod
     def get_endpoint(self):
-        return None
+        return "noaa-goes16/"
 
     def _makequery(self, endpoint, date):
-        day_year = ConnectorABC.parse_date(date)
-        directory_date = parse(date).strftime("%Y/%m/%d")
-        full_url = endpoint + directory_date + self.type_product + day_year
+        dt_obj = self.parse_date(date)
+        day_of_year = str(dt_obj.timetuple().tm_yday)
+        year = str(dt_obj.timetuple().tm_year)
+        hour_utc = str(dt_obj.timetuple().tm_hour)
+        min_utc = str(dt_obj.timetuple().tm_min)
+        directory_date = dt_obj.strftime("%Y/%m/%d")
+        full_url = endpoint + directory_date + self.type_product + year + day_of_year + hour_utc + min_utc + ''
         return full_url
