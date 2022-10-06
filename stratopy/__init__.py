@@ -29,9 +29,6 @@ __version__ = "0.2dev"
 import os
 
 if os.getenv("__STRATOPY_IN_SETUP__") != "True":
-    from .cloudsat import *  # noqa
-    from .core import *  # noqa
-    from .goes import *  # noqa
-    from .IO import *  # noqa
+    from .remote_access import GOES16
 
 del os

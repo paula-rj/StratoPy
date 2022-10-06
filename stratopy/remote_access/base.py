@@ -1,13 +1,12 @@
 import abc
 from abc import ABC
 
-from dateutil import parser 
+from dateutil import parser
 
 import xarray as xr
 
 
 class ConnectorABC(ABC):
-    @classmethod
     @abc.abstractmethod
     def get_endpoint(self):
         """Sirve para sacar en donde esta alojado el archivo.
@@ -55,13 +54,13 @@ class ConnectorABC(ABC):
         query = self._makequery(
             endpoint, pdate
         )  # arma la url completa para descargar
-        result = self._download(query)  # descarga, es el archivo en si
-        presult = self._parse_result(result)  # convierte a xarray
+        fp = self._download(query)  # descarga, es el archivo en si
+        presult = self._parse_result(fp)  # convierte a xarray
         return presult
 
 
 class NetCDFmixin:
-    def _parse_result(self, result):
+    def _parse_result(self, fp):
         """Convierte netcdf en xarray comun
         Parameters:
         result: es el archivo netcdf descargado
@@ -69,47 +68,97 @@ class NetCDFmixin:
         Returns
         xarr: archivo leido y pasado a xarray"""
 
-        xarr = xr.open_dataset(result)
+        xarr = xr.open_dataset(fp)
         return xarr
+
+
+import io
+import s3fs
+
+class NothingHereError(FileNotFoundError):
+    pass
 
 
 class S3mixin:
     def _download(self, query):
-        return query
 
         # Starts connection with AWS S3 bucket
-        # s3 = s3fs.S3FileSystem(anon=True)
+        s3 = s3fs.S3FileSystem(anon=True)
+
+        # list all available files
+        avail = s3.glob(query)
+        if not avail:
+            raise NothingHereError(query)
+
+        filepath = avail[0]
 
         # Open in-memory binary and write it
-        # buffer_file = io.BytesIO()
-        # with s3.open(query, "rb") as f:
-        #    buffer_file.write(f.read())
-        # result = buffer_file.getvalue()
-        #
-        # return result
+        with s3.open(filepath, "rb") as fp:
+            result = fp.read()
+
+        return io.BytesIO(result)
 
 
-class Goes16(NetCDFmixin, S3mixin, ConnectorABC):
-    def __init__(self, type_product):
+# =============================================================================
+# goes.py
+# =============================================================================
+
+
+def _default_product_parser(ptype, mode, chanel, dtime):
+    # OR_ABI-L2-CMIPF-M3C03_G16_s20190021800
+    pdate = dtime.strftime("%Y%j%H%M")
+    parsed = f"OR_{ptype}-M{mode}C{chanel:02d}_G16_s{pdate}*"
+    return parsed
+
+
+def _whithout_chanel(ptype, mode, chanel, dtime):
+    # OR_ABI-L2-CMIPF-M3C_G16_s20190021800
+    pdate = dtime.strftime("%Y%j%H%M")
+    parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
+    return parsed
+
+
+class GOES16(NetCDFmixin, S3mixin, ConnectorABC):
+
+    _PRODUCT_TYPES_PARSERS = {
+        "L1b-RadF": None,
+        "ABI-L2-CMIPF": None,
+        "ABI-L2-MCMIPF": _whithout_chanel,
+        "ABI-L2-ACHTF": _whithout_chanel,
+    }
+
+    PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
+
+    _MODES = (1, 2, 3)
+
+    def __init__(self, product_type, mode=3):
         # NOTA: POR ahora solo trabajamos con el sensor ABI
         # y con imagenes full disk, por eso son todos F
-        self.type_product = type_product
-        types_product = ["L1b-RadF", "CMIPF", "MCMIPF", "ACHTF"]
-        if type_product not in types_product:
+
+        if product_type not in self.PRODUCT_TYPES:
             raise ValueError(
-                "Invalid product type. Expected one of: %s" % types_product
+                "Invalid product type. "
+                f"Expected one of: {self.PRODUCT_TYPES}. "
+                f"Found {product_type!r}"
             )
+        if mode not in self._MODES:
+            raise ValueError()
 
-    @classmethod
+        self.mode = mode
+        self.product_type = product_type
+        self._ptype_parser = (
+            self._PRODUCT_TYPES_PARSERS[product_type]
+            or _default_product_parser
+        )
+
     def get_endpoint(self):
-        return "noaa-goes16/"
+        return "/".join(["noaa-goes16", self.product_type])
 
-    def _makequery(self, endpoint, date):
-        dt_obj = self.parse_date(date)
-        day_of_year = str(dt_obj.timetuple().tm_yday)
-        year = str(dt_obj.timetuple().tm_year)
-        hour_utc = str(dt_obj.timetuple().tm_hour)
-        min_utc = str(dt_obj.timetuple().tm_min)
-        directory_date = dt_obj.strftime("%Y/%m/%d")
-        full_url = endpoint + directory_date + self.type_product + year + day_of_year + hour_utc + min_utc + ''
-        return full_url
+    def _makequery(self, endpoint, dt):
+
+        date_dir = dt.strftime("%Y/%j/%H")
+        file_glob = self._ptype_parser(self.product_type, self.mode, 3, dt)
+        query = "/".join([endpoint, date_dir, file_glob])
+
+        # noaa-goes16/ABI-L2-CMIPF/2019/002/18/OR_ABI-L2-CMIPF-M3C03_G16_s20190021800
+        return query
