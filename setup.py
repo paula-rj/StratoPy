@@ -14,15 +14,12 @@ DESCRIPTION = LONG_DESCRIPTION.splitlines()[0].strip()
 REQUIREMENTS = [
     "numpy",
     "pandas",
-    "attrs",
-    "matplotlib",
-    "geopandas",
-    "pyhdf",
-    "pyorbital",
-    "pyspectral",
     "netCDF4",
     "diskcache",
     "s3fs",
+    "python-dateutil",
+    "xarray"
+
 ]
 
 setup(
