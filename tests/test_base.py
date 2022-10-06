@@ -1,6 +1,16 @@
 import datetime
 
+import pytest
+
+import xarray
+
 from stratopy.remote_access import base
+
+PATH_CHANNEL_13 = (
+    "data/GOES16/"
+    "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_"
+    "c20190040611220.nc"
+)
 
 
 def test_ConnectorABC():
@@ -31,3 +41,11 @@ def test_ConnectorABC():
     "_download", "_parse_result" 
     ]
     assert result == expected
+    
+    def test_NetCDFmixin():
+        a = base.NetCDFmixin()
+        a_to_xarr = a._parse_result(PATH_CHANNEL_13)
+        assert isinstance(a_to_xarr, xarray.core.dataset.Dataset)
+
+def test_GOES16():
+    

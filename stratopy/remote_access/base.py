@@ -3,7 +3,7 @@ from abc import ABC
 
 from dateutil.parser import parse
 
-import xarray
+import xarray as xr
 
 
 class ConnectorABC(ABC):
@@ -47,7 +47,9 @@ class ConnectorABC(ABC):
 
     def parse_date(self, date):
         "arma la fecha como corresponde"
-        return parse(date)
+        dt_date = parse(date)
+        day_of_year = dt_date.timetuple().tm_yday
+        return day_of_year
 
     def fetch(self, date):
         pdate = self.parse_date(date)  # recorta el nombre
@@ -69,14 +71,14 @@ class NetCDFmixin:
         Returns
         xarr: archivo leido y pasado a xarray"""
 
-        xarr = xarray.open_dataset(result, engine={"netcdf4"})
+        xarr = xr.open_dataset(result)
         return xarr
 
 
 class S3mixin:
     def _download(self, query):
-        print(query)
-        return None
+        return query
+
         # Starts connection with AWS S3 bucket
         # s3 = s3fs.S3FileSystem(anon=True)
 
@@ -90,10 +92,22 @@ class S3mixin:
 
 
 class Goes16(NetCDFmixin, S3mixin, ConnectorABC):
+    def __init__(self, type_product):
+        # NOTA: POR ahora solo trabajamos con el sensor ABI
+        # y con imagenes full disk, por eso son todos F
+        self.type_product = type_product
+        types_product = ["L1b-RadF", "CMIPF", "MCMIPF", "ACHTF"]
+        if type_product not in types_product:
+            raise ValueError(
+                "Invalid product type. Expected one of: %s" % types_product
+            )
+
     @classmethod
     def get_endpoint(self):
         return None
 
     def _makequery(self, endpoint, date):
-        print(endpoint, date)
-        return None
+        day_year = ConnectorABC.parse_date(date)
+        directory_date = parse(date).strftime("%Y/%m/%d")
+        full_url = endpoint + directory_date + self.type_product + day_year
+        return full_url
