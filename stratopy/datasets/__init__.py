@@ -1,6 +1,7 @@
+import functools
 import os
 import pathlib
-import functools
+
 
 import pandas as pd
 
