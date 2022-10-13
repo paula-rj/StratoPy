@@ -1,4 +1,7 @@
-import base
+
+import xarray as xa
+
+from . import base
 
 
 def _default_product_parser(ptype, mode, chanel, dtime):
@@ -15,7 +18,7 @@ def _whithout_chanel(ptype, mode, chanel, dtime):
     return parsed
 
 
-class GOES16(base.NetCDFmixin, base.S3mixin, base.ConnectorABC):
+class GOES16(base.NetCDFMixin, base.S3Mixin, base.ConnectorABC):
 
     _PRODUCT_TYPES_PARSERS = {
         "L1b-RadF": None,
@@ -57,3 +60,7 @@ class GOES16(base.NetCDFmixin, base.S3mixin, base.ConnectorABC):
         file_glob = self._ptype_parser(self.product_type, self.mode, 3, dt)
         query = "/".join([endpoint, date_dir, file_glob])
         return query
+
+    def _parse_result(self, result):
+        xarr = xa.open_dataset(result)
+        return xarr
