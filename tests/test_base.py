@@ -6,6 +6,8 @@ from stratopy.remote_access import base
 
 import xarray
 
+import pytest
+
 PATH_CHANNEL_13 = (
     "data/GOES16/"
     "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_"
@@ -50,16 +52,40 @@ def test_NetCDFmixin():
 
 
 def test_NothingHereError():
-    false_query = "s3://noaa-goes16/ABI-L2-CMIPF/2022/176/18/OR_ABI-L2-CMIPF-M3C03_G16_s20221761800*"
 
-    class TestNHError(TestCase, base.NothingHereError, base.S3mixin):
+    class TestNothingHere(base.ConnectorABC, base.S3mixin):
+        def get_endpoint(cls):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            self.endpoint=endpoint
+            self.endpoint=pdate
+            return None
+
+        def _download(self, query):
+            self.query = query
+            return None
+
+        def _parse_result(self, response):
+            self.response = response
+            return None
+
         def test_avail(self):
             self.s3obj = base.S3mixin()
-            with self.assertRaises(TypeError) as ctx:
-                self.s3obj._download(false_query)
+            return None 
+        
+    conn = TestNothingHere()
+
+    with mock.patch("s3fs.S3FileSystem.glob", return_value=[]) as mglob:
+        with pytest.raises(base.NothingHereError):
+            conn.fetch("27 jul 1981")
+    mglob.assert_called_once_with("1981-07-27T00:00:00")
+
 
 
 def test_S3mixin():
+
+    m = mock.MagicMock(url_to_mock, body=the_file)
 
     # with requests_mock.mock() as m:
     # current_folder = os.path.dirname(os.path.abspath(__file__))
