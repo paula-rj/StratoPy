@@ -1,4 +1,4 @@
-from stratopy.remote_access import base
+import base
 
 
 def _default_product_parser(ptype, mode, chanel, dtime):
@@ -9,7 +9,7 @@ def _default_product_parser(ptype, mode, chanel, dtime):
 
 
 def _whithout_chanel(ptype, mode, chanel, dtime):
-    # OR_ABI-L2-CMIPF-M3C_G16_s20190021800
+    # OR_ABI-L2-MCMIPF-M3_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
     parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
@@ -26,9 +26,9 @@ class GOES16(base.NetCDFmixin, base.S3mixin, base.ConnectorABC):
 
     PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
 
-    _MODES = (1, 2, 3)
+    _MODES = (1, 2, 3, 4, 5, 6)
 
-    def __init__(self, product_type, mode=3):
+    def __init__(self, product_type, mode=6):
         # NOTA: POR ahora solo trabajamos con el sensor ABI
         # y con imagenes full disk, por eso son todos F
 
@@ -49,7 +49,7 @@ class GOES16(base.NetCDFmixin, base.S3mixin, base.ConnectorABC):
         )
 
     def get_endpoint(self):
-        return "/".join(["noaa-goes16", self.product_type])
+        return "/".join(["s3:/", "noaa-goes16", self.product_type])
 
     def _makequery(self, endpoint, dt):
 

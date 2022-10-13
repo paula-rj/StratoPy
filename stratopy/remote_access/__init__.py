@@ -8,4 +8,4 @@
 """"""
 
 
-from .base import GOES16
+from .goes import GOES16

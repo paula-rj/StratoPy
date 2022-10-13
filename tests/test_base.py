@@ -1,5 +1,7 @@
 import datetime
 
+from unittest import mock, TestCase
+
 from stratopy.remote_access import base
 
 import xarray
@@ -30,7 +32,7 @@ def test_ConnectorABC():
             return response
 
     conn = FakeConnector()
-    result = conn.fetch("june 25th 2022")
+    result = conn.fetch("june 25th 2022 18:00")
 
     expected = [
         "_makequery",
@@ -40,11 +42,31 @@ def test_ConnectorABC():
     ]
     assert result == expected
 
-    def test_NetCDFmixin():
-        a = base.NetCDFmixin()
-        a_to_xarr = a._parse_result(PATH_CHANNEL_13)
-        assert isinstance(a_to_xarr, xarray.core.dataset.Dataset)
+
+def test_NetCDFmixin():
+    a = base.NetCDFmixin()
+    a_to_xarr = a._parse_result(PATH_CHANNEL_13)
+    assert isinstance(a_to_xarr, xarray.core.dataset.Dataset)
 
 
-def test_GOES16():
+def test_NothingHereError():
+    false_query = "s3://noaa-goes16/ABI-L2-CMIPF/2022/176/18/OR_ABI-L2-CMIPF-M3C03_G16_s20221761800*"
+
+    class TestNHError(TestCase, base.NothingHereError, base.S3mixin):
+        def test_avail(self):
+            self.s3obj = base.S3mixin()
+            with self.assertRaises(TypeError) as ctx:
+                self.s3obj._download(false_query)
+
+
+def test_S3mixin():
+
+    # with requests_mock.mock() as m:
+    # current_folder = os.path.dirname(os.path.abspath(__file__))
+    # path = os.path.join(
+    #    current_folder, filename
+    # )
+    # with open(path, "rb") as the_file:
+    #    m.get(url_to_mock, body=the_file)
+
     return None
