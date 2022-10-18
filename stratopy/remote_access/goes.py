@@ -1,24 +1,23 @@
-
 import xarray as xa
 
-from . import base
+from stratopy.remote_access import base
 
 
-def _default_product_parser(ptype, mode, chanel, dtime):
+def _default_product_parser(ptype, mode, channel, dtime):
     # OR_ABI-L2-CMIPF-M3C03_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_{ptype}-M{mode}C{chanel:02d}_G16_s{pdate}*"
+    parsed = f"OR_{ptype}-M{mode}C{channel:02d}_G16_s{pdate}*"
     return parsed
 
 
-def _whithout_chanel(ptype, mode, chanel, dtime):
+def _whithout_chanel(ptype, mode, dtime):
     # OR_ABI-L2-MCMIPF-M3_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
     parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
 
 
-class GOES16(base.NetCDFMixin, base.S3Mixin, base.ConnectorABC):
+class GOES16(base.NetCDFmixin, base.S3mixin, base.ConnectorABC):
 
     _PRODUCT_TYPES_PARSERS = {
         "L1b-RadF": None,

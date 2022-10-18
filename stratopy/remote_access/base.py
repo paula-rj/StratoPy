@@ -6,7 +6,7 @@ from dateutil import parser
 
 import s3fs
 
-import xarray as xa
+import xarray as xr
 
 
 class ConnectorABC(ABC):
@@ -70,28 +70,48 @@ class ConnectorABC(ABC):
         return presult
 
 
-class S3Mixin:
-    def _download(self, query):
-        """ "Downloads a file from AWS.
+class NetCDFmixin:
+    def _parse_result(self, fp):
+        """Converts netCDF file into Xarray object.
+        
+        Parameters:
+        -----------
+        result: es el archivo netcdf descargado
 
+        Returns
+        -------
+        xarr: archivo leido y pasado a xarray
+        """
+
+        xarr = xr.open_dataset(fp, engine='h5netcdf')
+        return xarr
+
+
+class NothingHereError(FileNotFoundError):
+    """Error raised is the file is not found in the server.
+    Only one file, or nothing, can be downloaded. 
+    POR QUEEE
+    """
+    pass
+
+
+class S3mixin:
+    def _download(self, query):
+        """"Downloads a file from AWS.
+        
         Parameters
         ----------
         query: str or path
             The full query needed to download the file.
-
-        Raises
-        ------
-        FileNotFoundError:
-            ZZZ
-
         """
+
         # Starts connection with AWS S3 bucket
         s3 = s3fs.S3FileSystem(anon=True)
 
         # list all available files
         avail = s3.glob(query)
         if not avail:
-            raise FileNotFoundError(query)
+            raise NothingHereError(query)
 
         filepath = avail[0]
 

@@ -2,11 +2,12 @@ import datetime
 
 from unittest import mock, TestCase
 
+import pytest
+
 from stratopy.remote_access import base
 
 import xarray
 
-import pytest
 
 PATH_CHANNEL_13 = (
     "data/GOES16/"
