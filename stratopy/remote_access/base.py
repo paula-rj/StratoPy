@@ -70,23 +70,6 @@ class ConnectorABC(ABC):
         return presult
 
 
-class NetCDFmixin:
-    def _parse_result(self, fp):
-        """Converts netCDF file into Xarray object.
-        
-        Parameters:
-        -----------
-        result: es el archivo netcdf descargado
-
-        Returns
-        -------
-        xarr: archivo leido y pasado a xarray
-        """
-
-        xarr = xr.open_dataset(fp, engine='h5netcdf')
-        return xarr
-
-
 class NothingHereError(FileNotFoundError):
     """Error raised is the file is not found in the server.
     Only one file, or nothing, can be downloaded. 

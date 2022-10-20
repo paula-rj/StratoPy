@@ -15,17 +15,24 @@ PATH_CHANNEL_13 = (
 
 a_date = dateutil.parser.parse("june 25th 2022 18:00 UTC") 
 names_ok = {"L1b-RadF": 'OR_L1b-RadF-M6C13_G16_s20221761800*',
-    "ABI-L2-CMIPF" :'OR_ABI-L2-CMIPF-M6C13_G16_s20221761800*'
-
+    "ABI-L2-CMIPF" :'OR_ABI-L2-CMIPF-M6C13_G16_s20221761800*',
+    "ABI-L2-MCMIPF": 'OR_ABI-L2-MCMIPF-M6_G16_s20221761800*',
+    "ABI-L2-ACHTF": 'OR_ABI-L2-ACHTF-M6_G16_s20221761800*'
     }
 
-def test_default_product_parser():
+def test_get_endpoint():
     #deberia ser mas extensivo este test capaz
-    channel = 13
-    mode = 6
-    dtime = a_date
-    names_ok = {"L1b-RadF": 
+    for ptype in goes.GOES16._PRODUCT_TYPES_PARSERS.keys():
+        goes_obj = goes.GOES16(ptype)
+        assert goes_obj.get_endpoint() == f"s3://noaa-goes16/{ptype}"
 
-    }
-    for ptype in goes.GOES16._PRODUCT_TYPES_PARSERS.keys(), names_ok.keys():
-        assert goes._default_product_parser(ptype, mode, channel, dtime)
+@mock.patch("io.BytesIO")
+def test_fetch_goes():
+    with mock.patch("s3fs.S3FileSystem.glob", return_value=[la query]) as mglob:
+        
+        goes_obj = goes.GOES16("L1b-RadF")
+        goes_file = goes_obj.fetch("june 25th 2022 18")
+        mglob.assert_called_with()
+
+  
+    

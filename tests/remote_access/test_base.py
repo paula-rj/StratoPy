@@ -44,26 +44,6 @@ def test_ConnectorABC():
     ]
     assert result == expected
 
-@pytest.mark.skip
-def test_NetCDFmixin():
-    class TestNetCDF(base.NetCDFMixin, base.ConnectorABC):
-        def get_endpoint(cls):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return None
-
-        def _download(self, query):
-            return None
-
-        def test_avail(self):
-            return None
-
-
-    a = base.NetCDFMixin()
-    a_to_xarr = a._parse_result(PATH_CHANNEL_13)
-    assert isinstance(a_to_xarr, xarray.core.dataset.Dataset)
-
 
 def test_S3mixin_FileNotFoundError():
     class TestFileNotFoundError(base.S3Mixin, base.ConnectorABC):
@@ -77,7 +57,7 @@ def test_S3mixin_FileNotFoundError():
             return None
 
 
-    conn = TestNothingHere()
+    conn = TestFileNotFoundError()
 
     with mock.patch("s3fs.S3FileSystem.glob", return_value=[]) as mglob:
         with pytest.raises(FileNotFoundError):

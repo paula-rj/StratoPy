@@ -11,13 +11,13 @@ def _default_product_parser(ptype, mode, channel, dtime):
 
 
 def _whithout_chanel(ptype, mode, dtime):
-    # OR_ABI-L2-MCMIPF-M3_G16_s20190021800
+    # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
     parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
 
 
-class GOES16(base.NetCDFmixin, base.S3mixin, base.ConnectorABC):
+class GOES16(base.S3mixin, base.ConnectorABC):
 
     _PRODUCT_TYPES_PARSERS = {
         "L1b-RadF": None,
@@ -63,3 +63,8 @@ class GOES16(base.NetCDFmixin, base.S3mixin, base.ConnectorABC):
     def _parse_result(self, result):
         xarr = xa.open_dataset(result)
         return xarr
+
+
+
+
+
