@@ -8,9 +8,8 @@ from stratopy.remote_access import goes
 
 
 PATH_CHANNEL_13 = (
-    "data/GOES16/"
-    "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_"
-    "c20190040611220.nc"
+    "s3://noaa-goes16/L1b-RadF"
+    "OR_L1b-RadF-M6C13_G16_s20221761800*"
 )
 
 a_date = dateutil.parser.parse("june 25th 2022 18:00 UTC") 
@@ -26,13 +25,12 @@ def test_get_endpoint():
         goes_obj = goes.GOES16(ptype)
         assert goes_obj.get_endpoint() == f"s3://noaa-goes16/{ptype}"
 
-@mock.patch("io.BytesIO")
+@mock.patch("s3fs.S3FileSystem.glob")
 def test_fetch_goes():
-    with mock.patch("s3fs.S3FileSystem.glob", return_value=[la query]) as mglob:
-        
+    with mock.patch("io.BytesIO") as mock_io: #, return_value=[la query]
         goes_obj = goes.GOES16("L1b-RadF")
         goes_file = goes_obj.fetch("june 25th 2022 18")
-        mglob.assert_called_with()
+        mock_io.assert_called_with(PATH_CHANNEL_13)
 
   
     
