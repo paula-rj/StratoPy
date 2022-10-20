@@ -9,13 +9,6 @@ from stratopy.remote_access import base
 import xarray
 
 
-PATH_CHANNEL_13 = (
-    "data/GOES16/"
-    "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_"
-    "c20190040611220.nc"
-)
-
-
 def test_ConnectorABC():
     class FakeConnector(base.ConnectorABC):
         @classmethod
@@ -56,11 +49,9 @@ def test_S3mixin_FileNotFoundError():
         def _parse_result(self, response):
             return None
 
-
     conn = TestFileNotFoundError()
 
     with mock.patch("s3fs.S3FileSystem.glob", return_value=[]) as mglob:
         with pytest.raises(FileNotFoundError):
             conn.fetch("27 jul 1981")
     mglob.assert_called_once_with("1981-07-27T00:00:00")
-

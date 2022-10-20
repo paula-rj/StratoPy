@@ -1,36 +1,39 @@
-import datetime
+from unittest import mock
 
-from unittest import mock, TestCase
 
-import dateutil
+import pytest
 
 from stratopy.remote_access import goes
 
+import xarray as xa
 
-PATH_CHANNEL_13 = (
-    "s3://noaa-goes16/L1b-RadF"
-    "OR_L1b-RadF-M6C13_G16_s20221761800*"
-)
 
-a_date = dateutil.parser.parse("june 25th 2022 18:00 UTC") 
-names_ok = {"L1b-RadF": 'OR_L1b-RadF-M6C13_G16_s20221761800*',
-    "ABI-L2-CMIPF" :'OR_ABI-L2-CMIPF-M6C13_G16_s20221761800*',
-    "ABI-L2-MCMIPF": 'OR_ABI-L2-MCMIPF-M6_G16_s20221761800*',
-    "ABI-L2-ACHTF": 'OR_ABI-L2-ACHTF-M6_G16_s20221761800*'
-    }
+@pytest.mark.parametrize("ptype", goes.GOES16._PRODUCT_TYPES_PARSERS)
+def test_GOES_get_endpoint(ptype):
+    goes_obj = goes.GOES16(ptype)
+    assert goes_obj.get_endpoint() == f"s3://noaa-goes16/{ptype}"
 
-def test_get_endpoint():
-    #deberia ser mas extensivo este test capaz
-    for ptype in goes.GOES16._PRODUCT_TYPES_PARSERS.keys():
-        goes_obj = goes.GOES16(ptype)
-        assert goes_obj.get_endpoint() == f"s3://noaa-goes16/{ptype}"
 
-@mock.patch("s3fs.S3FileSystem.glob")
-def test_fetch_goes():
-    with mock.patch("io.BytesIO") as mock_io: #, return_value=[la query]
-        goes_obj = goes.GOES16("L1b-RadF")
-        goes_file = goes_obj.fetch("june 25th 2022 18")
-        mock_io.assert_called_with(PATH_CHANNEL_13)
+@mock.patch("s3fs.S3FileSystem.glob", return_value=["fake/path/test"])
+def test_GOES16_fetch(mglob, data_bytes, dataset):
 
-  
-    
+    buff = data_bytes(
+        "GOES16",
+        "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",
+    )
+
+    with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
+        result = goes.GOES16("L1b-RadF").fetch("25/jun/2010")
+
+    mglob.assert_called_once_with(
+        "s3://noaa-goes16/L1b-RadF/2010/176/00/"
+        "OR_L1b-RadF-M6C03_G16_s20101760000*"
+    )
+
+    expected = dataset(
+        "GOES16",
+        "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",
+        "h5netcdf",
+    )
+    mopen.assert_called_once_with("fake/path/test", "rb")
+    xa.testing.assert_allclose(result, expected)

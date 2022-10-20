@@ -72,16 +72,17 @@ class ConnectorABC(ABC):
 
 class NothingHereError(FileNotFoundError):
     """Error raised is the file is not found in the server.
-    Only one file, or nothing, can be downloaded. 
+    Only one file, or nothing, can be downloaded.
     POR QUEEE
     """
+
     pass
 
 
-class S3mixin:
+class S3Mixin:
     def _download(self, query):
-        """"Downloads a file from AWS.
-        
+        """ "Downloads a file from AWS.
+
         Parameters
         ----------
         query: str or path

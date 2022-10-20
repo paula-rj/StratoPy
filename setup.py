@@ -19,8 +19,8 @@ REQUIREMENTS = [
     "diskcache",
     "s3fs",
     "python-dateutil",
-    "xarray"
-
+    "xarray",
+    "h5netcdf",
 ]
 
 setup(

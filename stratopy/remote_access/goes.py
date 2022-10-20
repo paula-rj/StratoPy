@@ -1,6 +1,8 @@
+import netCDF4
+
 import xarray as xa
 
-from stratopy.remote_access import base
+from . import base
 
 
 def _default_product_parser(ptype, mode, channel, dtime):
@@ -17,7 +19,7 @@ def _whithout_chanel(ptype, mode, dtime):
     return parsed
 
 
-class GOES16(base.S3mixin, base.ConnectorABC):
+class GOES16(base.S3Mixin, base.ConnectorABC):
 
     _PRODUCT_TYPES_PARSERS = {
         "L1b-RadF": None,
@@ -54,17 +56,11 @@ class GOES16(base.S3mixin, base.ConnectorABC):
         return "/".join(["s3:/", "noaa-goes16", self.product_type])
 
     def _makequery(self, endpoint, dt):
-
         date_dir = dt.strftime("%Y/%j/%H")
         file_glob = self._ptype_parser(self.product_type, self.mode, 3, dt)
         query = "/".join([endpoint, date_dir, file_glob])
         return query
 
     def _parse_result(self, result):
-        xarr = xa.open_dataset(result)
+        xarr = xa.open_dataset(result, engine="h5netcdf")
         return xarr
-
-
-
-
-
