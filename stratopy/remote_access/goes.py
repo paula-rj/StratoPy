@@ -1,5 +1,3 @@
-import netCDF4
-
 import xarray as xa
 
 from . import base

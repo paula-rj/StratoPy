@@ -1,12 +1,8 @@
-import datetime
-
-from unittest import mock, TestCase
+from unittest import mock
 
 import pytest
 
 from stratopy.remote_access import base
-
-import xarray
 
 
 def test_ConnectorABC():

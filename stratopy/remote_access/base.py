@@ -6,8 +6,6 @@ from dateutil import parser
 
 import s3fs
 
-import xarray as xr
-
 
 class ConnectorABC(ABC):
     @abc.abstractmethod
