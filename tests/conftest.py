@@ -14,7 +14,7 @@ def data_path():
     def _make_path(sat, fname):
         return DATA / sat / fname
 
-    return _make_path 
+    return _make_path
 
 
 @pytest.fixture(scope="session")

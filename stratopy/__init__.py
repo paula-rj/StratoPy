@@ -28,7 +28,7 @@ __version__ = "0.2dev"
 
 import os
 
-if os.getenv("__STRATOPY_IN_SETUP__") != "True":
-    from .remote_access import GOES16
+if os.getenv("__STRATOPY_IN_SETUP__") != "True":  # noqa
+    from .remote_access import goes  # noqa
 
 del os

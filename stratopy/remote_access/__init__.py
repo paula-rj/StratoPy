@@ -8,4 +8,4 @@
 """"""
 
 
-from .goes import GOES16
+from .goes import GOES16 # noqa

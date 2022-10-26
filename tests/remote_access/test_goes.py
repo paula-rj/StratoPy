@@ -1,4 +1,3 @@
-from pdb import set_trace
 from unittest import mock
 
 import pytest
@@ -19,7 +18,8 @@ def test_GOES16_fetch(mglob, data_bytes, dataset):
 
     buff = data_bytes(
         "GOES16",
-        "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",
+        "OR_ABI-L2-CMIPF-M3C03_G16_\
+        s20190040600363_e20190040611130_c20190040611199.nc",
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
@@ -32,11 +32,11 @@ def test_GOES16_fetch(mglob, data_bytes, dataset):
 
     expected = dataset(
         "GOES16",
-        "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",
+        "OR_ABI-L2-CMIPF-M3C03_G16_\
+        s20190040600363_e20190040611130_c20190040611199.nc",
         "h5netcdf",
     )
     mopen.assert_called_once_with("fake/path/test", "rb")
     xa.testing.assert_allclose(result, expected)
-    
+
     assert buff.isclosed()
-    import ipdb;ipdb set_trace
