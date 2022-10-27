@@ -71,7 +71,7 @@ class ConnectorABC(ABC):
 class NothingHereError(FileNotFoundError):
     """Error raised is the file is not found in the server.
     Only one file, or nothing, can be downloaded.
-    POR QUEEE
+
     """
 
     pass
@@ -90,7 +90,7 @@ class S3Mixin:
         # Starts connection with AWS S3 bucket
         s3 = s3fs.S3FileSystem(anon=True)
 
-        # list all available files
+        # Lists all available files
         avail = s3.glob(query)
         if not avail:
             raise NothingHereError(query)
@@ -102,3 +102,8 @@ class S3Mixin:
             result = fp.read()
 
         return io.BytesIO(result)
+
+
+class SFTPMixin():
+    def _download(self):
+        ...
