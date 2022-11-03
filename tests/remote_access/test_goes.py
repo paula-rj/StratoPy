@@ -18,22 +18,19 @@ def test_GOES16_fetch(mglob, data_bytes, dataset):
 
     buff = data_bytes(
         "GOES16",
-        "OR_ABI-L2-CMIPF-M3C03_G16_\
-        s20190040600363_e20190040611130_c20190040611199.nc",
+        "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",  # noqa
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
         result = goes.GOES16("L1b-RadF").fetch("25/jun/2010")
 
     mglob.assert_called_once_with(
-        "s3://noaa-goes16/L1b-RadF/2010/176/00/"
-        "OR_L1b-RadF-M6C03_G16_s20101760000*"
+        "s3://noaa-goes16/L1b-RadF/2010/176/00/OR_L1b-RadF-M6C03_G16_s20101760000*"  # noqa
     )
 
     expected = dataset(
         "GOES16",
-        "OR_ABI-L2-CMIPF-M3C03_G16_\
-        s20190040600363_e20190040611130_c20190040611199.nc",
+        "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",  # noqa
         "h5netcdf",
     )
     mopen.assert_called_once_with("fake/path/test", "rb")

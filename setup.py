@@ -2,9 +2,8 @@ import os
 
 from setuptools import setup
 
-import stratopy
-
 os.environ["__STRATOPY_IN_SETUP__"] = "True"
+import stratopy
 
 
 with open("README.md", "r") as fp:
