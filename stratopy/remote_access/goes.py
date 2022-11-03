@@ -81,7 +81,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
 
     _MODES = (1, 2, 3, 4, 5, 6)
 
-    def __init__(self, product_type, channel=2, mode=6):
+    def __init__(self, product_type, channel=3, mode=6):
         # NOTA: POR ahora solo trabajamos con el sensor ABI
         # y con imagenes full disk, por eso son todos F
 

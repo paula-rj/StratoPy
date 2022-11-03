@@ -2,8 +2,8 @@ import os
 
 from setuptools import setup
 
-os.environ["__STRATOPY_IN_SETUP__"] = "True"
-import stratopy
+os.environ["__STRATOPY_IN_SETUP__"] = "True"  # noqa
+import stratopy  # noqa
 
 
 with open("README.md", "r") as fp:

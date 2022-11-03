@@ -36,4 +36,4 @@ def test_GOES16_fetch(mglob, data_bytes, dataset):
     mopen.assert_called_once_with("fake/path/test", "rb")
     xa.testing.assert_allclose(result, expected)
 
-    assert buff.isclosed()
+    assert buff.closed
