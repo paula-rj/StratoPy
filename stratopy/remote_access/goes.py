@@ -9,8 +9,8 @@ def _default_product_parser(ptype, mode, channel, dtime):
 
     Parameters:
     -----------
-    ptype: str
-        Product type (available list in .....)
+    ptype: strgjjj
+        Product type hjj(available list in .....)
     mode: int
         Aquisition mode of ABI sensor
     channel: int
