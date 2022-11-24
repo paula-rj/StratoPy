@@ -73,3 +73,62 @@ def test_ConnectorABC_get_endpoint_not_implementhed():
 
     with pytest.raises(NotImplementedError):
         Fake1Connector().fetch("27 jul 1981")
+
+def test_ConnectorABC_makequery_not_implementhed():
+
+    class Fake2Connector(base.ConnectorABC):
+
+        def get_endpoint(self):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return super()._makequery(endpoint, pdate)
+
+        def _download(self, query):
+            return None
+
+        def _parse_result(self, response):
+            return None
+
+    with pytest.raises(NotImplementedError):
+        Fake2Connector().fetch("27 jul 1981")
+        
+        
+def test_ConnectorABC_download_not_implementhed():
+
+    class Fake3Connector(base.ConnectorABC):
+
+        def get_endpoint(self):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return None
+
+        def _download(self, query):
+            return super()._download(query)
+
+        def _parse_result(self, response):
+            return None
+
+    with pytest.raises(NotImplementedError):
+        Fake3Connector().fetch("27 jul 1981")        
+
+
+def test_ConnectorABC_parse_result_not_implementhed():
+
+    class Fake4Connector(base.ConnectorABC):
+
+        def get_endpoint(self):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return None
+
+        def _download(self, query):
+            return None
+
+        def _parse_result(self, response):
+            return super()._parse_result(response)
+
+    with pytest.raises(NotImplementedError):
+        Fake4Connector().fetch("27 jul 1981")
