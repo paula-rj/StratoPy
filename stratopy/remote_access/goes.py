@@ -8,7 +8,9 @@ import xarray as xa
 
 from . import base
 
-
+# =============================================================================
+# QUERY PARSERS
+# =============================================================================
 def _with_channel_parser(ptype, mode, channel, dtime):
     """Returns the name of the product as a string,
     if the product has channels (ABI) to chose.
@@ -57,11 +59,15 @@ def _whithout_channel_parser(ptype, mode, channel, dtime):
         Full name of the file
 
     """
-
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
     parsed = f"OR_ABI-{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
+
+
+# =============================================================================
+# CONNECTOR
+# =============================================================================
 
 
 class GOES16(base.S3Mixin, base.ConnectorABC):
@@ -88,7 +94,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     _MODES = (1, 2, 3, 4, 5, 6)
 
     def __init__(self, product_type, channel=3, mode=6):
-        # NOTA: POR ahora solo trabajamos con el sensor ABI
+        # todo: POR ahora solo trabajamos con el sensor ABI
         # y con imagenes full disk, por eso son todos F
 
         if product_type not in self.PRODUCT_TYPES:

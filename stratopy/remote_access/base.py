@@ -4,6 +4,9 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+# =============================================================================
+# IMPORTS
+# =============================================================================
 
 import abc
 import io
@@ -11,6 +14,24 @@ import io
 import dateutil.parser
 
 import s3fs
+
+# =============================================================================
+# EXCEPTIONS
+# =============================================================================
+
+
+class NothingHereError(FileNotFoundError):
+    """Error raised is the file is not found in the server.
+    Only one file, or nothing, can be downloaded.
+
+    """
+
+    pass
+
+
+# =============================================================================
+# BASE CLASS
+# =============================================================================
 
 
 class ConnectorABC(abc.ABC):
@@ -74,13 +95,9 @@ class ConnectorABC(abc.ABC):
         return presult
 
 
-class NothingHereError(FileNotFoundError):
-    """Error raised is the file is not found in the server.
-    Only one file, or nothing, can be downloaded.
-
-    """
-
-    pass
+# =============================================================================
+# S3 Mixin
+# =============================================================================
 
 
 class S3Mixin:
@@ -101,6 +118,7 @@ class S3Mixin:
         if not avail:
             raise NothingHereError(query)
 
+        # TODO: Buscar la fecha mas cercana no la primera
         filepath = avail[0]
 
         # Open in-memory binary and write it
@@ -110,6 +128,11 @@ class S3Mixin:
         return io.BytesIO(result)
 
 
-class SFTPMixin():
-    def _download(self):
+# =============================================================================
+# S3 Mixin
+# =============================================================================
+
+
+class SFTPMixin:
+    def _download(self, query):
         ...
