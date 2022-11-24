@@ -1,0 +1,14 @@
+SouthAmerica:
+  description: Southamerica for GOES16 Full Disc
+  projection:
+    proj: geos
+    lon_0: -75.0
+    a: 6378169.0
+    b: 6356583.8
+    h: 35785831.0
+  shape:
+    height: 2000
+    width: 2000
+  area_extent:
+    lower_left_xy: [-5570248.477339261, -4263473.561036119]
+    upper_right_xy: [-384719.90821206354, 1339786.2707295895]
