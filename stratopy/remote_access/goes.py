@@ -26,7 +26,7 @@ def _default_product_parser(ptype, mode, channel, dtime):
     """
     # OR_ABI-L2-CMIPF-M3C03_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_{ptype}-M{mode}C{channel:02d}_G16_s{pdate}*"
+    parsed = f"OR_ABI-{ptype}-M{mode}C{channel:02d}_G16_s{pdate}*"
     return parsed
 
 
@@ -54,7 +54,7 @@ def _whithout_chanel(ptype, mode, dtime):
 
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
+    parsed = f"OR_ABI-{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
 
 
@@ -72,9 +72,9 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
 
     _PRODUCT_TYPES_PARSERS = {
         "L1b-RadF": None,
-        "ABI-L2-CMIPF": None,
-        "ABI-L2-MCMIPF": _whithout_chanel,
-        "ABI-L2-ACHTF": _whithout_chanel,
+        "L2-CMIPF": None,
+        "L2-MCMIPF": _whithout_chanel,
+        "L2-ACHTF": _whithout_chanel,
     }
 
     PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
