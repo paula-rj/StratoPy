@@ -1,13 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# License: MIT (https://tldrlegal.com/license/mit-license)
+# Copyright (c) 2022, Paula Romero Jure et al.
+# All rights reserved.
+
+
 import abc
 import io
-from abc import ABC
 
-from dateutil import parser
+import dateutil.parser
 
 import s3fs
 
 
-class ConnectorABC(ABC):
+class ConnectorABC(abc.ABC):
     @abc.abstractmethod
     def get_endpoint(self):
         """Meant to return the url of the server where the files are stored.
@@ -55,7 +61,7 @@ class ConnectorABC(ABC):
 
     def parse_date(self, date):
         "arma la fecha como corresponde"
-        return parser.parse(date)
+        return dateutil.parser.parse(date)
 
     def fetch(self, date):
         pdate = self.parse_date(date)  # recorta el nombre
