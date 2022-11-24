@@ -30,7 +30,7 @@ def _default_product_parser(ptype, mode, channel, dtime):
     return parsed
 
 
-def _whithout_chanel(ptype, mode, dtime):
+def _whithout_chanel(ptype, mode, channel, dtime):
     """Returns the name of the product as a string,
     if the product does not have channels (ABI) to choose.
 
