@@ -13,6 +13,23 @@ def test_GOES_get_endpoint(ptype):
     assert goes_obj.get_endpoint() == f"s3://noaa-goes16/{ptype}"
 
 
+def test_wrong_product():
+    with pytest.raises(ValueError):
+        goes.GOES16("holis")
+
+
+def test_wrong_mode():
+    with pytest.raises(ValueError):
+        goes.GOES16("L2-CMIPF", mode=16)
+
+
+@pytest.mark.parametrize("ptype", goes.GOES16._PRODUCT_TYPES_PARSERS)
+def test_repr(ptype):
+    goes_obj = goes.GOES16(ptype)
+    expected = f"GOES16 object. {ptype} "
+    assert repr(goes_obj) == expected
+
+
 # tests with channel
 @mock.patch("s3fs.S3FileSystem.glob", return_value=["fake/path/test"])
 def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
@@ -53,7 +70,7 @@ def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
         result = goes.GOES16("L2-ACHTF").fetch("25/jun/2010")
 
     mglob.assert_called_once_with(
-        "s3://noaa-goes16/L1b-RadF/2010/176/00/OR_ABI-L2-ACHTF-M6_G16_s20101760000*"  # noqa
+        "s3://noaa-goes16/L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M6_G16_s20101760000*"  # noqa
     )
 
     expected = dataset(

@@ -3,7 +3,7 @@ import xarray as xa
 from . import base
 
 
-def _with_chanel_parser(ptype, mode, channel, dtime):
+def _with_channel_parser(ptype, mode, channel, dtime):
     """Returns the name of the product as a string,
     if the product has channels (ABI) to chose.
 
@@ -30,7 +30,7 @@ def _with_chanel_parser(ptype, mode, channel, dtime):
     return parsed
 
 
-def _whithout_chanel_parser(ptype, mode, chanel, dtime):
+def _whithout_channel_parser(ptype, mode, channel, dtime):
     """Returns the name of the product as a string,
     if the product does not have channels (ABI) to choose.
 
@@ -71,10 +71,10 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     """
 
     _PRODUCT_TYPES_PARSERS = {
-        "L1b-RadF": _with_chanel_parser,
-        "L2-CMIPF": _with_chanel_parser,
-        "L2-MCMIPF": _whithout_chanel_parser,
-        "L2-ACHTF": _whithout_chanel_parser,
+        "L1b-RadF": _with_channel_parser,
+        "L2-CMIPF": _with_channel_parser,
+        "L2-MCMIPF": _whithout_channel_parser,
+        "L2-ACHTF": _whithout_channel_parser,
     }
 
     PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
@@ -92,7 +92,11 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
                 f"Found {product_type!r}"
             )
         if mode not in self._MODES:
-            raise ValueError()
+            raise ValueError(
+                "Invalid mode for ABI. "
+                f"Expected one of: {self._MODES}. "
+                f"Found {mode!r}"
+            )
 
         self.mode = mode
         self.product_type = product_type
@@ -114,7 +118,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         file_glob = self._ptype_parser(
             ptype=self.product_type,
             mode=self.mode,
-            chanel=self.channel,
+            channel=self.channel,
             dtime=dt,
         )
         query = "/".join([endpoint, date_dir, file_glob])

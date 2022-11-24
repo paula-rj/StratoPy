@@ -7,11 +7,13 @@ from stratopy.remote_access import base
 
 def test_ConnectorABC():
     class FakeConnector(base.ConnectorABC):
+
         @classmethod
         def get_endpoint(cls):
             return []
 
         def _makequery(self, endpoint, pdate):
+
             endpoint.extend([("_makequery", pdate.isoformat())])
             return endpoint
 
@@ -51,3 +53,20 @@ def test_S3mixin_FileNotFoundError():
         with pytest.raises(FileNotFoundError):
             conn.fetch("27 jul 1981")
     mglob.assert_called_once_with("1981-07-27T00:00:00")
+
+
+def test_get_ep_fail():
+
+    class Fake1Connector(base.ConnectorABC):
+        
+        def _makequery(self, endpoint, pdate):
+            return None
+
+        def _download(self, query):
+            return None
+
+        def _parse_result(self, response):
+            return None
+        
+    with pytest.raises(TypeError):    
+        conn1 = Fake1Connector()
