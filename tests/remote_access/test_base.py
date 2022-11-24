@@ -55,10 +55,13 @@ def test_S3mixin_FileNotFoundError():
     mglob.assert_called_once_with("1981-07-27T00:00:00")
 
 
-def test_get_ep_fail():
+def test_ConnectorABC_get_endpoint_not_implementhed():
 
     class Fake1Connector(base.ConnectorABC):
-        
+
+        def get_endpoint(self):
+            return super().get_endpoint()
+
         def _makequery(self, endpoint, pdate):
             return None
 
@@ -67,6 +70,6 @@ def test_get_ep_fail():
 
         def _parse_result(self, response):
             return None
-        
-    with pytest.raises(TypeError):    
-        conn1 = Fake1Connector()
+
+    with pytest.raises(NotImplementedError):
+        Fake1Connector().fetch("27 jul 1981")
