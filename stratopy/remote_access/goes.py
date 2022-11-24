@@ -34,7 +34,7 @@ def _with_channel_parser(ptype, mode, channel, dtime):
     """
     # OR_ABI-L2-CMIPF-M3C03_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_ABI-{ptype}-M{mode}C{channel:02d}_G16_s{pdate}*"
+    parsed = f"OR_{ptype}-M{mode}C{channel:02d}_G16_s{pdate}*"
     return parsed
 
 
@@ -61,7 +61,7 @@ def _whithout_channel_parser(ptype, mode, channel, dtime):
     """
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_ABI-{ptype}-M{mode}_G16_s{pdate}*"
+    parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
 
 
@@ -83,10 +83,10 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     """
 
     _PRODUCT_TYPES_PARSERS = {
-        "L1b-RadF": _with_channel_parser,
-        "L2-CMIPF": _with_channel_parser,
-        "L2-MCMIPF": _whithout_channel_parser,
-        "L2-ACHTF": _whithout_channel_parser,
+        "ABI-L1b-RadF": _with_channel_parser,
+        "ABI-L2-CMIPF": _with_channel_parser,
+        "ABI-L2-MCMIPF": _whithout_channel_parser,
+        "ABI-L2-ACHTF": _whithout_channel_parser,
     }
 
     PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
@@ -94,7 +94,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     _MODES = (1, 2, 3, 4, 5, 6)
 
     def __init__(self, product_type, channel=3, mode=6):
-        # todo: POR ahora solo trabajamos con el sensor ABI
+        # POR ahora solo trabajamos con el sensor ABI
         # y con imagenes full disk, por eso son todos F
 
         if product_type not in self.PRODUCT_TYPES:
@@ -116,10 +116,10 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         self._ptype_parser = self._PRODUCT_TYPES_PARSERS[product_type]
 
     def __repr__(self):
-        return f"GOES16 object. {self.product_type} "
+        return f"<GOES16 product_type={self.product_type!r}>"
 
     def get_endpoint(self):
-        """ "Gets the URL direction where all the GOES16
+        """Gets the URL direction where all the GOES16
         files are stored. Returns the URL as str.
 
         """
@@ -127,9 +127,12 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
 
     def _makequery(self, endpoint, dt):
         date_dir = dt.strftime("%Y/%j/%H")
+        print("FIJATE ACA EL MODO goes.py:130")
+        mode = 3
+
         file_glob = self._ptype_parser(
             ptype=self.product_type,
-            mode=self.mode,
+            mode=mode,
             channel=self.channel,
             dtime=dt,
         )

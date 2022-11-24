@@ -15,6 +15,8 @@ import dateutil.parser
 
 import s3fs
 
+from ..utils import from_cache, get_default_cache
+
 # =============================================================================
 # EXCEPTIONS
 # =============================================================================
@@ -80,18 +82,41 @@ class ConnectorABC(abc.ABC):
         """
         raise NotImplementedError()
 
+    @property
+    def cache(self):
+        return get_default_cache()
+
+    @property
+    def cache_tag(self):
+        return type(self).__name__
+
     def parse_date(self, date):
         "arma la fecha como corresponde"
         return dateutil.parser.parse(date)
 
-    def fetch(self, date):
-        pdate = self.parse_date(date)  # recorta el nombre
-        endpoint = self.get_endpoint()  # de donde lo baja
-        query = self._makequery(
-            endpoint, pdate
-        )  # arma la url completa para descargar
-        fp = self._download(query)  # descarga, es el archivo en si
-        presult = self._parse_result(fp)  # convierte a xarray
+    def fetch(self, date, force=False):
+        # recorta el nombre
+        pdate = self.parse_date(date)
+
+        # de donde lo baja
+        endpoint = self.get_endpoint()
+
+        # arma la url completa para descargar
+        query = self._makequery(endpoint, pdate)
+
+        # descarga, es el archivo en si
+        fp = from_cache(
+            cache=self.cache,
+            tag=self.cache_tag,
+            cache_expire=None,
+            function=self._download,
+            force=force,
+            query=query,
+        )
+
+        # convierte a xarray
+        presult = self._parse_result(fp)
+
         return presult
 
 
