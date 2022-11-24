@@ -3,7 +3,7 @@ import xarray as xa
 from . import base
 
 
-def _default_product_parser(ptype, mode, channel, dtime):
+def _with_chanel_parser(ptype, mode, channel, dtime):
     """Returns the name of the product as a string,
     if the product has channels (ABI) to chose.
 
@@ -30,7 +30,7 @@ def _default_product_parser(ptype, mode, channel, dtime):
     return parsed
 
 
-def _whithout_chanel(ptype, mode, dtime):
+def _whithout_chanel_parser(ptype, mode, chanel, dtime):
     """Returns the name of the product as a string,
     if the product does not have channels (ABI) to choose.
 
@@ -71,10 +71,10 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     """
 
     _PRODUCT_TYPES_PARSERS = {
-        "L1b-RadF": None,
-        "L2-CMIPF": None,
-        "L2-MCMIPF": _whithout_chanel,
-        "L2-ACHTF": _whithout_chanel,
+        "L1b-RadF": _with_chanel_parser,
+        "L2-CMIPF": _with_chanel_parser,
+        "L2-MCMIPF": _whithout_chanel_parser,
+        "L2-ACHTF": _whithout_chanel_parser,
     }
 
     PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
@@ -97,10 +97,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         self.mode = mode
         self.product_type = product_type
         self.channel = channel
-        self._ptype_parser = (
-            self._PRODUCT_TYPES_PARSERS[product_type]
-            or _default_product_parser
-        )
+        self._ptype_parser = self._PRODUCT_TYPES_PARSERS[product_type]
 
     def __repr__(self):
         return f"GOES16 object. {self.product_type} "
@@ -115,7 +112,10 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     def _makequery(self, endpoint, dt):
         date_dir = dt.strftime("%Y/%j/%H")
         file_glob = self._ptype_parser(
-            self.product_type, self.mode, self.channel, dt
+            ptype=self.product_type,
+            mode=self.mode,
+            chanel=self.channel,
+            dtime=dt,
         )
         query = "/".join([endpoint, date_dir, file_glob])
         return query
