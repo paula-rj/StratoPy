@@ -10,8 +10,8 @@
 
 import functools
 import os
-import pickle
 import pathlib
+import pickle
 
 import diskcache as dcache
 
@@ -30,6 +30,7 @@ DEFAULT_CACHE_DIR = STRATOPY_DEFAULT_DATA_PATH / "_cache_"
 # =============================================================================
 # FUNCTIONS
 # =============================================================================
+
 
 @functools.lru_cache(maxsize=None)
 def get_default_cache():

@@ -11,6 +11,8 @@ from . import base
 # =============================================================================
 # QUERY PARSERS
 # =============================================================================
+
+
 def _with_channel_parser(ptype, mode, dtime, channel):
     """Returns the name of the product as a string,
     if the product has channels (ABI) to chose.
@@ -65,7 +67,7 @@ def _whithout_channel_parser(ptype, mode, dtime, channel=None):
         value to something different than None.
 
     """
-    if channel != None:
+    if channel is not None:
         raise ValueError(
             "This product cant be downloaded as separate channels. "
         )
