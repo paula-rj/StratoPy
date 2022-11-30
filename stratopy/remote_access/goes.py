@@ -4,6 +4,8 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+import dateutil.parser
+
 import xarray as xa
 
 from . import base
@@ -13,14 +15,14 @@ from . import base
 # =============================================================================
 
 
-def _with_channel_parser(ptype, mode, dtime, channel):
+def _with_channel_parser(ptype, dtime, channel, _mode):
     """Returns the name of the product as a string,
     if the product has channels (ABI) to chose.
 
     Parameters:
     -----------
     ptype: str
-        Product type hjj(available list in .....)
+        Product type (available list in .....)
     mode: int
         Aquisition mode of ABI sensor
     channel: int
@@ -36,11 +38,11 @@ def _with_channel_parser(ptype, mode, dtime, channel):
     """
     # OR_ABI-L2-CMIPF-M3C03_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_{ptype}-M{mode}C{channel:02d}_G16_s{pdate}*"
+    parsed = f"OR_{ptype}-M{_mode}C{channel:02d}_G16_s{pdate}*"
     return parsed
 
 
-def _whithout_channel_parser(ptype, mode, dtime, channel=None):
+def _whithout_channel_parser(ptype, dtime, _mode, channel=None):
     """Returns the name of the product as a string,
     if the product does not have channels (ABI) to choose.
 
@@ -73,7 +75,7 @@ def _whithout_channel_parser(ptype, mode, dtime, channel=None):
         )
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
+    parsed = f"OR_{ptype}-M{_mode}_G16_s{pdate}*"
     return parsed
 
 
@@ -105,9 +107,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
 
     PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
 
-    _MODES = (1, 2, 3, 4, 5, 6)
-
-    def __init__(self, product_type, channel=3, mode=6):
+    def __init__(self, product_type, channel=3):
         # POR ahora solo trabajamos con el sensor ABI
         # y con imagenes full disk, por eso son todos F
 
@@ -117,14 +117,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
                 f"Expected one of: {self.PRODUCT_TYPES}. "
                 f"Found {product_type!r}"
             )
-        if mode not in self._MODES:
-            raise ValueError(
-                "Invalid mode for ABI. "
-                f"Expected one of: {self._MODES}. "
-                f"Found {mode!r}"
-            )
 
-        self.mode = mode
         self.product_type = product_type
         self.channel = channel
         self._ptype_parser = self._PRODUCT_TYPES_PARSERS[product_type]
@@ -151,14 +144,18 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
 
         """
         date_dir = dt.strftime("%Y/%j/%H")
-        print("FIJATE ACA EL MODO goes.py:130")
-        mode = 3
+
+        mode_change_date = dateutil.parser.parse("2019 feb 19 15:00 UTC")
+        if dt < mode_change_date:
+            mode = 3  # 15 min
+        else:
+            mode = 6  # 10 min
 
         file_glob = self._ptype_parser(
             ptype=self.product_type,
-            mode=mode,
-            channel=self.channel,
             dtime=dt,
+            channel=self.channel,
+            _mode=mode,
         )
         query = "/".join([endpoint, date_dir, file_glob])
         return query
