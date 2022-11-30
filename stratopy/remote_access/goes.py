@@ -11,7 +11,7 @@ from . import base
 # =============================================================================
 # QUERY PARSERS
 # =============================================================================
-def _with_channel_parser(ptype, mode, channel, dtime):
+def _with_channel_parser(ptype, mode, dtime, channel):
     """Returns the name of the product as a string,
     if the product has channels (ABI) to chose.
 
@@ -38,7 +38,7 @@ def _with_channel_parser(ptype, mode, channel, dtime):
     return parsed
 
 
-def _whithout_channel_parser(ptype, mode, channel, dtime):
+def _whithout_channel_parser(ptype, mode, dtime, channel=None):
     """Returns the name of the product as a string,
     if the product does not have channels (ABI) to choose.
 
@@ -58,7 +58,17 @@ def _whithout_channel_parser(ptype, mode, channel, dtime):
     parsed: str
         Full name of the file
 
+    Raises
+    ------
+    Value error
+        If the user changes the default channel
+        value to something different than None.
+
     """
+    if channel != None:
+        raise ValueError(
+            "This product cant be downloaded as separate channels. "
+        )
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
     parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
@@ -72,12 +82,14 @@ def _whithout_channel_parser(ptype, mode, channel, dtime):
 
 class GOES16(base.S3Mixin, base.ConnectorABC):
     """
+    Object that is created by retrieving products from GOES-16 satellite.
+
     Attributes
     ----------
     product_type: str
         Type of product to be downloaded
     channel: int
-        ABI channel (not always available)
+        ABI channel
     mode: int
         Aquisition mode of the sensor
     """
@@ -121,11 +133,21 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     def get_endpoint(self):
         """Gets the URL direction where all the GOES16
         files are stored. Returns the URL as str.
-
         """
         return "/".join(["s3:/", "noaa-goes16", self.product_type])
 
     def _makequery(self, endpoint, dt):
+        """Builds the whole query needed to download the product from s3.
+
+        Parameters
+        ----------
+        endpoint: str
+            url where GOES-16 products are hosted.
+        date: datetime obj
+            the requested date and time.
+            It should contain year, month, day, hour and minutes.
+
+        """
         date_dir = dt.strftime("%Y/%j/%H")
         print("FIJATE ACA EL MODO goes.py:130")
         mode = 3
@@ -140,5 +162,11 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         return query
 
     def _parse_result(self, result):
+        """Converts the downloaded file into xarray object.
+
+        Parameters:
+        -----------
+        result: the file in Bytes.
+        """
         xarr = xa.open_dataset(result, engine="h5netcdf")
         return xarr

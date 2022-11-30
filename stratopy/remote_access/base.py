@@ -41,6 +41,12 @@ class ConnectorABC(abc.ABC):
     def get_endpoint(self):
         """Meant to return the url of the server where the files are stored.
         For example, AWS, FTP, HTTP.
+
+        Raises
+        ------
+        NotImplementedError
+            If this method is not implemented in a class
+            that herits from ConnectorABC.
         """
         raise NotImplementedError()
 
@@ -49,15 +55,20 @@ class ConnectorABC(abc.ABC):
         """Meant to build the whole query needed
         to download the product.
         This method is unique for each satellite.
-        Assumes that, given this two parameters,
-        it is possible to build the whole string
+        Assumes that given the parameters it is possible to build the query.
 
         Parameters
         ----------
         endpoint: str
-            Le pasa la url de donde esta alojado
+            Url where the products form a satellite are hosted.
         date: datetime obj
-            le pasa la fecha y el tipo
+            requested date and time
+
+        Raises
+        ------
+        NotImplementedError
+            If this method is not implemented in a class
+            that herits from ConnectorABC.
         """
         raise NotImplementedError()
 
@@ -69,16 +80,28 @@ class ConnectorABC(abc.ABC):
         ----------
         query: str
             The query needed to download the product.
+
+        Raises
+        ------
+        NotImplementedError
+            If this method is not implemented in a class
+            that herits from ConnectorABC.
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _parse_result(self, result):
-        """Converts the downloaded file into xarray object.
+        """Meant to convert the downloaded file into xarray object.
 
         Parameters:
         -----------
         result: the file in some format
+
+        Raises
+        ------
+        NotImplementedError
+            If this method is not implemented in a class
+            that herits from ConnectorABC.
         """
         raise NotImplementedError()
 
@@ -91,10 +114,32 @@ class ConnectorABC(abc.ABC):
         return type(self).__name__
 
     def parse_date(self, date):
-        "arma la fecha como corresponde"
+        """Builts the date for which a product will be downloaded.
+
+        Parameters
+        ----------
+        date: str
+            The date in format allowed by python-dateutils
+
+        Returns
+        -------
+            datetime object
+        """
         return dateutil.parser.parse(date)
 
     def fetch(self, date, force=False):
+        """
+        Downloads the requested product and retrieves it as xarray.
+
+        Parameters
+        ----------
+        date: str
+
+        Returns
+        -------
+        result_as_xr: xarray object
+            Product as xarray object.
+        """
         # recorta el nombre
         pdate = self.parse_date(date)
 
@@ -115,9 +160,9 @@ class ConnectorABC(abc.ABC):
         )
 
         # convierte a xarray
-        presult = self._parse_result(fp)
+        result_as_xr = self._parse_result(fp)
 
-        return presult
+        return result_as_xr
 
 
 # =============================================================================
