@@ -20,7 +20,7 @@ REQUIREMENTS = [
     "python-dateutil",
     "xarray",
     "h5netcdf",
-    "diskcache"
+    "diskcache",
 ]
 
 setup(

@@ -13,7 +13,6 @@ from stratopy.remote_access import base
 
 def test_ConnectorABC():
     class FakeConnector(base.ConnectorABC):
-
         @classmethod
         def get_endpoint(cls):
             return []
@@ -62,9 +61,7 @@ def test_S3mixin_FileNotFoundError():
 
 
 def test_ConnectorABC_get_endpoint_not_implementhed():
-
     class Fake1Connector(base.ConnectorABC):
-
         def get_endpoint(self):
             return super().get_endpoint()
 
@@ -82,9 +79,7 @@ def test_ConnectorABC_get_endpoint_not_implementhed():
 
 
 def test_ConnectorABC_makequery_not_implementhed():
-
     class Fake2Connector(base.ConnectorABC):
-
         def get_endpoint(self):
             return None
 
@@ -102,9 +97,7 @@ def test_ConnectorABC_makequery_not_implementhed():
 
 
 def test_ConnectorABC_download_not_implementhed():
-
     class Fake3Connector(base.ConnectorABC):
-
         def get_endpoint(self):
             return None
 
@@ -122,9 +115,7 @@ def test_ConnectorABC_download_not_implementhed():
 
 
 def test_ConnectorABC_parse_result_not_implementhed():
-
     class Fake4Connector(base.ConnectorABC):
-
         def get_endpoint(self):
             return None
 
