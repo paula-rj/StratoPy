@@ -13,6 +13,8 @@ import io
 
 import dateutil.parser
 
+import pytz
+
 import s3fs
 
 from ..utils import from_cache, get_default_cache
@@ -113,7 +115,7 @@ class ConnectorABC(abc.ABC):
     def cache_tag(self):
         return type(self).__name__
 
-    def parse_date(self, date):
+    def parse_date(self, date, time_zone="UTC"):
         """Builts the date for which a product will be downloaded.
 
         Parameters
@@ -125,9 +127,16 @@ class ConnectorABC(abc.ABC):
         -------
             datetime object
         """
-        return dateutil.parser.parse(date)
+        usr_date = dateutil.parser.parse(date)
+        zone = pytz.timezone(time_zone)
+        date_in_zone = zone.localize(usr_date)
+        if time_zone != "UTC":
+            dt_utc = date_in_zone.astimezone(pytz.utc)
+        else:
+            dt_utc = date_in_zone
+        return dt_utc
 
-    def fetch(self, date, force=False):
+    def fetch(self, date, tzone, force=False):
         """
         Downloads the requested product and retrieves it as xarray.
 
@@ -141,7 +150,7 @@ class ConnectorABC(abc.ABC):
             Product as xarray object.
         """
         # recorta el nombre
-        pdate = self.parse_date(date)
+        pdate = self.parse_date(date, tzone)
 
         # de donde lo baja
         endpoint = self.get_endpoint()
@@ -199,7 +208,7 @@ class S3Mixin:
 
 
 # =============================================================================
-# S3 Mixin
+# SFTP Mixin
 # =============================================================================
 
 

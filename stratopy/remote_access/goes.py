@@ -15,7 +15,7 @@ from . import base
 # =============================================================================
 
 
-def _with_channel_parser(ptype, dtime, channel, _mode):
+def _with_channel_parser(ptype, dtime, channel, mode):
     """Returns the name of the product as a string,
     if the product has channels (ABI) to chose.
 
@@ -38,11 +38,11 @@ def _with_channel_parser(ptype, dtime, channel, _mode):
     """
     # OR_ABI-L2-CMIPF-M3C03_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_{ptype}-M{_mode}C{channel:02d}_G16_s{pdate}*"
+    parsed = f"OR_{ptype}-M{mode}C{channel:02d}_G16_s{pdate}*"
     return parsed
 
 
-def _whithout_channel_parser(ptype, dtime, _mode, channel=None):
+def _whithout_channel_parser(ptype, dtime, channel, mode):
     """Returns the name of the product as a string,
     if the product does not have channels (ABI) to choose.
 
@@ -69,13 +69,10 @@ def _whithout_channel_parser(ptype, dtime, _mode, channel=None):
         value to something different than None.
 
     """
-    if channel is not None:
-        raise ValueError(
-            "This product cant be downloaded as separate channels. "
-        )
+
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
-    parsed = f"OR_{ptype}-M{_mode}_G16_s{pdate}*"
+    parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
 
 
@@ -119,8 +116,12 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
             )
 
         self.product_type = product_type
-        self.channel = channel
         self._ptype_parser = self._PRODUCT_TYPES_PARSERS[product_type]
+        self.channel = (
+            int(channel)
+            if self._ptype_parser is _with_channel_parser
+            else None
+        )
 
     def __repr__(self):
         return f"<GOES16 product_type={self.product_type!r}>"
@@ -155,7 +156,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
             ptype=self.product_type,
             dtime=dt,
             channel=self.channel,
-            _mode=mode,
+            mode=mode,
         )
         query = "/".join([endpoint, date_dir, file_glob])
         return query
