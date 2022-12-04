@@ -6,6 +6,8 @@
 
 import dateutil.parser
 
+import pytz
+
 import xarray as xa
 
 from . import base
@@ -146,7 +148,9 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         """
         date_dir = dt.strftime("%Y/%j/%H")
 
-        mode_change_date = dateutil.parser.parse("2019 feb 19 15:00 UTC")
+        mode_change_date = dateutil.parser.parse(
+            "2019 feb 19 15:00 UTC"
+        ).astimezone(pytz.utc)
         if dt < mode_change_date:
             mode = 3  # 15 min
         else:
@@ -162,7 +166,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         return query
 
     def _parse_result(self, result):
-        """Converts the downloaded file into xarray object.
+        """Converts the downloaded netcdf file into xarray object.
 
         Parameters:
         -----------

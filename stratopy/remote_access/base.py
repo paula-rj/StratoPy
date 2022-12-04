@@ -130,10 +130,7 @@ class ConnectorABC(abc.ABC):
         usr_date = dateutil.parser.parse(date)
         zone = pytz.timezone(time_zone)
         date_in_zone = zone.localize(usr_date)
-        if time_zone != "UTC":
-            dt_utc = date_in_zone.astimezone(pytz.utc)
-        else:
-            dt_utc = date_in_zone
+        dt_utc = date_in_zone.astimezone(pytz.utc)
         return dt_utc
 
     def fetch(self, date, tzone, force=False):
