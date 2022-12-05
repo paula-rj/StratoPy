@@ -13,6 +13,8 @@ import io
 
 import dateutil.parser
 
+# import pysftp
+
 import pytz
 
 import s3fs
@@ -210,5 +212,11 @@ class S3Mixin:
 
 
 class SFTPMixin:
-    def _download(self, query):
+    def _download(self, query, **kwargs):
+        # en el kargs se le pueden pasar los datos de coneccion
         ...
+
+    # def connect(hostname='hostname', username='me', password='secret'):
+    #    with pysftp.Connection(hostname, username, password) as sftp:
+    #        with sftp.cd('/allcode'):           # temporarily chdir to allcode
+    #            sftp.get('query')         # get a remote file
