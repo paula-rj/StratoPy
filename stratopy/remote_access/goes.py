@@ -150,7 +150,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
 
         mode_change_date = dateutil.parser.parse(
             "2019 feb 19 15:00 UTC"
-        ).astimezone(pytz.utc)
+        ).astimezone(pytz.UTC)
         if dt < mode_change_date:
             mode = 3  # 15 min
         else:
