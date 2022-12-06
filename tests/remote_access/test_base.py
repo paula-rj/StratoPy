@@ -31,10 +31,10 @@ def test_ConnectorABC():
             return response
 
     conn = FakeConnector()
-    result = conn.fetch("june 25th 2022 18:00")
+    result = conn.fetch("june 25th 2022 18:00", tzone="UTC")
 
     expected = [
-        ("_makequery", "2022-06-25T18:00:00"),
+        ("_makequery", "2022-06-25T18:00:00+00:00"),
         "_download",
         "_parse_result",
     ]
@@ -56,8 +56,8 @@ def test_S3mixin_FileNotFoundError():
 
     with mock.patch("s3fs.S3FileSystem.glob", return_value=[]) as mglob:
         with pytest.raises(FileNotFoundError):
-            conn.fetch("27 jul 1981")
-    mglob.assert_called_once_with("1981-07-27T00:00:00")
+            conn.fetch("27 jul 1981", tzone="UTC")
+    mglob.assert_called_once_with("1981-07-27T00:00:00+00:00")
 
 
 def test_ConnectorABC_get_endpoint_not_implementhed():
@@ -75,7 +75,7 @@ def test_ConnectorABC_get_endpoint_not_implementhed():
             return None
 
     with pytest.raises(NotImplementedError):
-        Fake1Connector().fetch("27 jul 1981")
+        Fake1Connector().fetch("27 jul 1981", tzone="UTC")
 
 
 def test_ConnectorABC_makequery_not_implementhed():
@@ -93,7 +93,7 @@ def test_ConnectorABC_makequery_not_implementhed():
             return None
 
     with pytest.raises(NotImplementedError):
-        Fake2Connector().fetch("27 jul 1981")
+        Fake2Connector().fetch("27 jul 1981", tzone="UTC")
 
 
 def test_ConnectorABC_download_not_implementhed():
@@ -111,7 +111,7 @@ def test_ConnectorABC_download_not_implementhed():
             return None
 
     with pytest.raises(NotImplementedError):
-        Fake3Connector().fetch("27 jul 1981")
+        Fake3Connector().fetch("27 jul 1981", tzone="UTC")
 
 
 def test_ConnectorABC_parse_result_not_implementhed():
@@ -129,4 +129,4 @@ def test_ConnectorABC_parse_result_not_implementhed():
             return super()._parse_result(response)
 
     with pytest.raises(NotImplementedError):
-        Fake4Connector().fetch("27 jul 1981")
+        Fake4Connector().fetch("27 jul 1981", tzone="UTC")

@@ -117,7 +117,7 @@ class ConnectorABC(abc.ABC):
     def cache_tag(self):
         return type(self).__name__
 
-    def parse_date(self, date, time_zone="UTC"):
+    def parse_date(self, date, time_zone):
         """Builts the date for which a product will be downloaded.
 
         Parameters
@@ -135,7 +135,7 @@ class ConnectorABC(abc.ABC):
         dt_utc = date_in_zone.astimezone(pytz.utc)
         return dt_utc
 
-    def fetch(self, date, tzone, force=False):
+    def fetch(self, date, tzone="UTC", force=False):
         """
         Downloads the requested product and retrieves it as xarray.
 
