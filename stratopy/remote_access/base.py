@@ -10,6 +10,7 @@
 
 import abc
 import io
+import os
 
 import dateutil.parser
 
@@ -211,13 +212,39 @@ class S3Mixin:
 # SFTP Mixin
 # =============================================================================
 
+CLOUDSAT_HOST, CLOUDSAT_PORT = ("www.cloudsat.cira.colostate.edu", 22)
+
+DEFAULT_SSH_KEY = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa"))
+
 
 class SFTPMixin:
-    def _download(self, query, **kwargs):
-        # en el kargs se le pueden pasar los datos de coneccion
-        ...
+    def __init__(self, username, *, keyfile=None, keypass=None):
+        if keyfile is None:
+            keyfile = DEFAULT_SSH_KEY
 
-    # def connect(hostname='hostname', username='me', password='secret'):
-    #    with pysftp.Connection(hostname, username, password) as sftp:
-    #        with sftp.cd('/allcode'):           # temporarily chdir to allcode
-    #            sftp.get('query')         # get a remote file
+        if "@" in username:
+            username = username.replace("@", "AT", 1)
+
+        self._client = paramiko.SSHClient()
+
+        policy = paramiko.AutoAddPolicy()
+        self._client.set_missing_host_key_policy(policy)
+
+        pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
+        self._client.connect(
+            CLOUDSAT_HOST, port=CLOUDSAT_PORT, username=username, pkey=pkey
+        )
+
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        self._client.close()
+
+    def _download(self, query):
+        with self._client.open_sftp() as sftp:
+            f = sftp.get(
+                remotepath=query, localpath="home/paula/trycloudsat.hdf"
+            )
+
+        return f

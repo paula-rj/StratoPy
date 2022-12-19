@@ -9,11 +9,16 @@ import xarray as xa
 from . import base
 
 
-class CloudSat(base.ConnectorABC):
+class CloudSat(base.SFTPMixin, base.ConnectorABC):
 
-    _PRODUCT_TYPES = ("2B-CLDCLASS", "2B-CLDCLASS-LIDAR")
+    _PRODUCT_TYPES = (
+        "2B-CLDCLASS.P1_R05",
+        "2B-CLDCLASS.P_R04",
+        "2B-CLDCLASS-LIDAR.P_R04",
+    )
 
-    def __init__(self, product_type):
+    def __init__(self, product_type, username, *, keyfile=None, keypass=None):
+        super().__init__(username=username, keyfile=keyfile, keypass=keypass)
         self.product_type = product_type
 
         if product_type not in self._PRODUCT_TYPES:
@@ -30,7 +35,7 @@ class CloudSat(base.ConnectorABC):
         """Gets the URL direction where all the GOES16
         files are stored. Returns the URL as str.
         """
-        return self.product_type
+        return "/".join(["Data", self.product_type])
 
     def _makequery(self, endpoint, date_time):
         """solo me importa la fecha hasta la hora, o los min a lo sumo
