@@ -37,10 +37,11 @@ class CloudSat(base.ConnectorABC):
         hay que ver el algo de busqueda a hora mas cercana
         los min no sabemos, las pasadas son cada 2 horas aprox
         """
+        date_dir = date_time.strftime("%Y/%j")
         # 2019009155049_67652_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf
         pdate = date_time.strftime("%Y%j%H%M")
         parsed = f"{pdate}*"
-        query = "/".join([endpoint, parsed])
+        query = "/".join([endpoint, date_dir, parsed])
         return query
 
     def _parse_result(self, result):

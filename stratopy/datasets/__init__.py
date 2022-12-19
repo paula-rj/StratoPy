@@ -12,7 +12,7 @@ import pathlib
 import pandas as pd
 
 
-PATH = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
+PATH = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))  # noqa
 
 
 @functools.lru_cache(maxsize=None)

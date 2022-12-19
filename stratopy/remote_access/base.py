@@ -17,6 +17,7 @@ import dateutil.parser
 
 import pytz
 
+import paramiko
 import s3fs
 
 from ..utils import from_cache, get_default_cache

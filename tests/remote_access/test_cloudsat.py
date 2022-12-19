@@ -3,3 +3,7 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
+
+
+def test_CloudSat_fetch():
+    ...
