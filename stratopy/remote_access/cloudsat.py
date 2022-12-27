@@ -10,6 +10,23 @@ from . import base
 
 
 class CloudSat(base.SFTPMixin, base.ConnectorABC):
+    """
+    Object created by retrieving products from CloudSat satellite.
+
+    Attributes
+    ----------
+    product_type: str
+        Type of product to be downloaded. Currently 3 available.
+    username: str
+        username at CloudSat server
+        https://www.cloudsat.cira.colostate.edu/
+    keyfile:
+        Key for
+        Default = None
+    keypass: str
+        Password for you ssh key. You may not have any.
+        Default = None
+    """
 
     _PRODUCT_TYPES = (
         "2B-CLDCLASS.P1_R05",
@@ -32,15 +49,22 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         return f"<CloudSat product_type={self.product_type!r}>"
 
     def get_endpoint(self):
-        """Gets the URL direction where all the GOES16
-        files are stored. Returns the URL as str.
+        """Gets the directory direction where all the CloudSat
+        files are stored in the SFTP. Returns the URL as str.
         """
         return "/".join(["Data", self.product_type])
 
     def _makequery(self, endpoint, date_time):
-        """solo me importa la fecha hasta la hora, o los min a lo sumo
-        hay que ver el algo de busqueda a hora mas cercana
-        los min no sabemos, las pasadas son cada 2 horas aprox
+        """Builds the whole query needed to download the product
+        from Cloudsat server.
+
+        Parameters
+        ----------
+        endpoint: str
+            directory where CloudSAT products are stored.
+        date_time: datetime obj
+            the requested date and time.
+            It should contain year, month, day and hour.
         """
         date_dir = date_time.strftime("%Y/%j")
         # 2019009155049_67652_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf

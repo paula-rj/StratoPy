@@ -14,11 +14,10 @@ import os
 
 import dateutil.parser
 
-# import pysftp
+import paramiko
 
 import pytz
 
-import paramiko
 import s3fs
 
 from ..utils import from_cache, get_default_cache
@@ -182,7 +181,7 @@ class ConnectorABC(abc.ABC):
 
 class S3Mixin:
     def _download(self, query):
-        """ "Downloads a file from AWS.
+        """Downloads a file from AWS.
 
         Parameters
         ----------
@@ -218,6 +217,21 @@ DEFAULT_SSH_KEY = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa"))
 
 
 class SFTPMixin:
+    """Downloads a file from CloudSat SFTP server.
+
+    Parameters
+    ----------
+    username: str
+        username at CloudSat server
+        https://www.cloudsat.cira.colostate.edu/
+    keyfile: str
+        File name for ssh public id.
+        Default = None
+    keypass: str
+        Password for your ssh key. You may not have any.
+        Default = None
+    """
+
     def __init__(self, username, *, keyfile=None, keypass=None):
         if keyfile is None:
             keyfile = DEFAULT_SSH_KEY
@@ -225,12 +239,15 @@ class SFTPMixin:
         if "@" in username:
             username = username.replace("@", "AT", 1)
 
+        # Client object
         self._client = paramiko.SSHClient()
 
+        # Policy obj for automatically adding the hostname and new host key
         policy = paramiko.AutoAddPolicy()
         self._client.set_missing_host_key_policy(policy)
 
         pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
+        # Starts connection with Cloudsat SFTP server
         self._client.connect(
             CLOUDSAT_HOST, port=CLOUDSAT_PORT, username=username, pkey=pkey
         )
