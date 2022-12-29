@@ -10,28 +10,45 @@ import pytest
 from stratopy.remote_access import cloudsat
 
 
-@pytest.mark.parametrize("prod_type", cloudsat.CloudSat._PRODUCT_TYPES)
-def test_CloudSat_get_endpoint(prod_type):
-    cs_obj = cloudsat.CloudSat(
-        product_type=prod_type,
-        username="paula.romero@mi.unc.edu.ar",
-        keypass="2022",
-    )
-    assert cs_obj.get_endpoint() == f"Data/{prod_type}"
-
-
-def test_wrong_product():
-    with pytest.raises(ValueError):
-        cloudsat.CloudSat("holis")
-
-
-@pytest.mark.parametrize("prod_type", cloudsat.CloudSat._PRODUCT_TYPES)
-def test_repr(prod_type):
-    cs_obj = cloudsat.CloudSat(prod_type)
-    expected = f"<GOES16 product_type={prod_type!r}>"
-    assert repr(cs_obj) == expected
+@mock.patch("paramiko.SSHClient.connect", return_value=None)
+def test_CloudSat_conn(mock_conn):
+    for prod_type in cloudsat.CloudSat._PRODUCT_TYPES:
+        cs_obj = cloudsat.CloudSat(
+            product_type=prod_type,
+            username="fakeusr@gmail.edu",
+            keypass="2022",
+        )
+        assert cs_obj.get_endpoint() == f"Data/{prod_type}"
+        expected = f"<CloudSat product_type={prod_type!r}>"
+        assert cs_obj.__repr__() == expected
 
 
 @mock.patch("paramiko.SSHClient.connect", return_value=None)
-def test_CloudSat_fetch():
-    ...
+def test_wrong_product(mock_conn):
+    with pytest.raises(ValueError):
+        cloudsat.CloudSat("holis", "fakeusr@gmail.edu", keypass="2022")
+
+
+@mock.patch("paramiko.SSHClient.connect", return_value=None)
+@mock.patch("paramiko.RSAKey.from_private_key_file")
+def test_CloudSat_obj(mock_conn, mock_keys):
+    cs_obj = cloudsat.CloudSat(
+        "2B-CLDCLASS.P1_R05", "fakeusr@gmail.edu", keypass="1234"
+    )
+    assert cs_obj.__repr__() == "<CloudSat product_type='2B-CLDCLASS.P1_R05'>"
+
+
+@mock.patch("paramiko.SSHClient.connect", return_value=None)
+def test_Cloudsat_fetch(mconn, data_bytes, dataset):
+    buff = data_bytes(
+        "CloudSat",
+        "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",  # noqa
+    )
+
+    with mock.patch(
+        "paramiko.SSHClient.open_sftp", return_value=buff
+    ) as mopen:
+        cs_obj = cloudsat.CloudSat(
+            "2B-CLDCLASS.P1_R05", "fakeusr@gmail.edu", keypass="2022"
+        )
+        result = cs_obj.fetch("25/jun/2010", tzone="UTC")
