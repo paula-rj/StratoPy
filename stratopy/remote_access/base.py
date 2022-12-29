@@ -9,6 +9,7 @@
 # =============================================================================
 
 import abc
+import fnmatch
 import io
 import os
 
@@ -259,9 +260,14 @@ class SFTPMixin:
         self._client.close()
 
     def _download(self, query):
+        qsplit = query.split("/")
+        store_dir = "/".join(qsplit[:4])
         with self._client.open_sftp() as sftp:
-            f = sftp.get(
-                remotepath=query, localpath="home/paula/trycloudsat.hdf"
-            )
+            for filename in sftp.listdir(store_dir):
+                if fnmatch.fnmatch(filename, qsplit[-1]):
+                    f = sftp.get(
+                        remotepath=store_dir + "/" + filename,
+                        localpath="/home/pola/.virtualenvs/stratopy/StratoPy/tests/data/trycloudsat.hdf",
+                    )
 
         return f
