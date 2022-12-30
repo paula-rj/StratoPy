@@ -212,8 +212,6 @@ class S3Mixin:
 # SFTP Mixin
 # =============================================================================
 
-CLOUDSAT_HOST, CLOUDSAT_PORT = ("www.cloudsat.cira.colostate.edu", 22)
-
 DEFAULT_SSH_KEY = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa"))
 
 
@@ -233,7 +231,7 @@ class SFTPMixin:
         Default = None
     """
 
-    def __init__(self, username, *, keyfile=None, keypass=None):
+    def __init__(self, host, port, username, *, keyfile=None, keypass=None):
         if keyfile is None:
             keyfile = DEFAULT_SSH_KEY
 
@@ -249,9 +247,7 @@ class SFTPMixin:
 
         pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
         # Starts connection with Cloudsat SFTP server
-        self._client.connect(
-            CLOUDSAT_HOST, port=CLOUDSAT_PORT, username=username, pkey=pkey
-        )
+        self._client.connect(host, port=port, username=username, pkey=pkey)
 
     def __del__(self):
         self.close()
@@ -262,12 +258,11 @@ class SFTPMixin:
     def _download(self, query):
         qsplit = query.split("/")
         store_dir = "/".join(qsplit[:4])
+        buff = io.BytesIO()
         with self._client.open_sftp() as sftp:
             for filename in sftp.listdir(store_dir):
                 if fnmatch.fnmatch(filename, qsplit[-1]):
-                    f = sftp.get(
-                        remotepath=store_dir + "/" + filename,
-                        localpath="/home/pola/.virtualenvs/stratopy/StratoPy/tests/data/trycloudsat.hdf",
-                    )
-
-        return f
+                    remotepath = f"{store_dir}/{filename}"
+                    sftp.getfo(remotepath=remotepath, fl=buff)
+        buff.seek(0)
+        return buff

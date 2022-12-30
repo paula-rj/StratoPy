@@ -34,8 +34,16 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         "2B-CLDCLASS-LIDAR.P_R04",
     )
 
+    _CLOUDSAT_HOST, _CLOUDSAT_PORT = "www.cloudsat.cira.colostate.edu", 22
+
     def __init__(self, product_type, username, *, keyfile=None, keypass=None):
-        super().__init__(username=username, keyfile=keyfile, keypass=keypass)
+        super().__init__(
+            host=self._CLOUDSAT_HOST,
+            port=self._CLOUDSAT_PORT,
+            username=username,
+            keyfile=keyfile,
+            keypass=keypass,
+        )
         self.product_type = product_type
 
         if product_type not in self._PRODUCT_TYPES:
