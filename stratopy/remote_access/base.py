@@ -12,6 +12,7 @@ import abc
 import fnmatch
 import io
 import os
+from stat import *
 
 import dateutil.parser
 
@@ -239,15 +240,15 @@ class SFTPMixin:
             username = username.replace("@", "AT", 1)
 
         # Client object
-        self._client = paramiko.SSHClient()
+        self._transport = paramiko.Transport(host, port)
 
         # Policy obj for automatically adding the hostname and new host key
         policy = paramiko.AutoAddPolicy()
-        self._client.set_missing_host_key_policy(policy)
+        # self._client.set_missing_host_key_policy(policy)
 
         pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
         # Starts connection with Cloudsat SFTP server
-        self._client.connect(host, port=port, username=username, pkey=pkey)
+        self._transport.connect(username=username, pkey=pkey)
 
     def __del__(self):
         self.close()
@@ -258,11 +259,16 @@ class SFTPMixin:
     def _download(self, query):
         qsplit = query.split("/")
         store_dir = "/".join(qsplit[:4])
-        buff = io.BytesIO()
-        with self._client.open_sftp() as sftp:
-            for filename in sftp.listdir(store_dir):
-                if fnmatch.fnmatch(filename, qsplit[-1]):
-                    remotepath = f"{store_dir}/{filename}"
-                    sftp.getfo(remotepath=remotepath, fl=buff)
-        buff.seek(0)
-        return buff
+
+        with paramiko.SFTPClient.from_transport(self._transport) as sftp:
+            for entry in sftp.listdir_attr(path=store_dir):
+                mode = entry.st_mode
+                if S_ISREG(mode):
+                    f = entry.filename
+                    if fnmatch.fnmatch(f, qsplit[-1]):
+                        with io.BytesIO() as data:
+                            sftp.getfo(f"{store_dir}/{f}", data)
+                            data.seek(0)
+                            result = data.read()
+
+                            return result
