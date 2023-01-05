@@ -245,7 +245,6 @@ class SFTPMixin:
         # Starts connection with Cloudsat SFTP server
         pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
         self._transport.connect(username=username, pkey=pkey)
-        import ipdb; ipdb.set_trace()
 
     def __del__(self):
         self.close()
