@@ -76,9 +76,8 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         """
         date_dir = date_time.strftime("%Y/%j")
         # 2019009155049_67652_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf
-        pdate = date_time.strftime("%Y%j%H%M")
-        parsed = f"{pdate}*"
-        query = "/".join([endpoint, date_dir, parsed])
+        pdate = date_time.strftime("%Y%j%H%M") + "*"
+        query = "/".join([endpoint, date_dir, pdate])
         return query
 
     def _parse_result(self, result):
@@ -86,7 +85,8 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
 
         Parameters:
         -----------
-        result: the file in Bytes.
+        result: Binary file-like object.
         """
+        import ipdb; ipdb.set_trace()
         xarr = xa.open_dataset(result, engine="h5netcdf")
         return xarr

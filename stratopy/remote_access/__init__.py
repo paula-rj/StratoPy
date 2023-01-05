@@ -11,4 +11,5 @@
 """"""
 
 
-from .goes import GOES16 # noqa
+from .goes import GOES16  # noqa
+from .cloudsat import CloudSat  # noqa

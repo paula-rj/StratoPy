@@ -166,7 +166,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         return query
 
     def _parse_result(self, result):
-        """Converts the downloaded netcdf file into xarray object.
+        """Converts the downloaded netcdf file-like into xarray object.
 
         Parameters:
         -----------

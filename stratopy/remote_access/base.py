@@ -242,33 +242,24 @@ class SFTPMixin:
         # Client object
         self._transport = paramiko.Transport(host, port)
 
-        # Policy obj for automatically adding the hostname and new host key
-        policy = paramiko.AutoAddPolicy()
-        # self._client.set_missing_host_key_policy(policy)
-
-        pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
         # Starts connection with Cloudsat SFTP server
+        pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
         self._transport.connect(username=username, pkey=pkey)
+        import ipdb; ipdb.set_trace()
 
     def __del__(self):
         self.close()
 
     def close(self):
-        self._client.close()
+        self._transport.close()
 
     def _download(self, query):
-        qsplit = query.split("/")
-        store_dir = "/".join(qsplit[:4])
-
+        store_dir, pattern = query.rsplit("/", 1)
+        result = io.BytesIO()
         with paramiko.SFTPClient.from_transport(self._transport) as sftp:
             for entry in sftp.listdir_attr(path=store_dir):
-                mode = entry.st_mode
-                if S_ISREG(mode):
-                    f = entry.filename
-                    if fnmatch.fnmatch(f, qsplit[-1]):
-                        with io.BytesIO() as data:
-                            sftp.getfo(f"{store_dir}/{f}", data)
-                            data.seek(0)
-                            result = data.read()
-
-                            return result
+                if fnmatch.fnmatch(entry.filename, pattern):
+                    full_path = "/".join([store_dir, entry.filename])
+                    sftp.getfo(full_path, result)
+                    result.seek(0)
+                    return result
