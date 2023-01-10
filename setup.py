@@ -20,7 +20,8 @@ REQUIREMENTS = [
     "python-dateutil",
     "xarray",
     "h5netcdf",
-    "diskcache",
+    "pyhdf",
+    "rioxarray",
 ]
 
 setup(

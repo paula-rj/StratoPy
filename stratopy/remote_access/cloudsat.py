@@ -5,6 +5,9 @@
 # All rights reserved.
 
 import xarray as xa
+from pyhdf.HDF import HDF, HC
+from pyhdf.VS import VS
+from pyhdf.SD import SD
 
 from . import base
 
@@ -87,6 +90,11 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         -----------
         result: Binary file-like object.
         """
-        import ipdb; ipdb.set_trace()
-        xarr = xa.open_dataset(result, engine="h5netcdf")
-        return xarr
+        hdf_file = HDF(result, HC.READ)
+        vs = VS(hdf_file)
+
+        vd_lat = vs.attach("Latitude")
+        lat_data = vd_lat[:]
+        vd_lat.detach()
+
+        return lat_data
