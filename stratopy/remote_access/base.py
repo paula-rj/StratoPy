@@ -240,26 +240,45 @@ class SFTPMixin:
             username = username.replace("@", "AT", 1)
 
         # Client object
-        self._transport = paramiko.Transport(host, port)
+        self._client = paramiko.SSHClient()
+        # self._transport = paramiko.Transport(host, port)
+
+        # Policy obj for automatically adding the hostname and new host key
+        policy = paramiko.AutoAddPolicy()
+        self._client.set_missing_host_key_policy(policy)
+
+        # Gets key file
+        pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
 
         # Starts connection with Cloudsat SFTP server
-        pkey = paramiko.RSAKey.from_private_key_file(keyfile, password=keypass)
-        self._transport.connect(username=username, pkey=pkey)
-        import ipdb; ipdb.set_trace()
+        self._client.connect(host, port=port, username=username, pkey=pkey)
+        # self._transport.connect(username=username, pkey=pkey)
 
     def __del__(self):
         self.close()
 
     def close(self):
-        self._transport.close()
+        self._client.close()
 
     def _download(self, query):
         store_dir, pattern = query.rsplit("/", 1)
         result = io.BytesIO()
-        with paramiko.SFTPClient.from_transport(self._transport) as sftp:
-            for entry in sftp.listdir_attr(path=store_dir):
-                if fnmatch.fnmatch(entry.filename, pattern):
-                    full_path = "/".join([store_dir, entry.filename])
-                    sftp.getfo(full_path, result)
-                    result.seek(0)
-                    return result
+        with self._client.open_sftp() as sftp:
+            for filename in sftp.listdir(store_dir):
+                if fnmatch.fnmatch(filename, pattern):
+                    full_path = "/".join([store_dir, filename])
+                    local_path = f"/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/datasets/{filename}"
+                    f = sftp.get(
+                        remotepath=full_path,
+                        localpath=local_path,
+                    )
+
+                    return local_path
+
+        # with paramiko.SFTPClient.from_transport(self._transport) as sftp:
+        #    for entry in sftp.listdir_attr(path=store_dir):
+        #        if fnmatch.fnmatch(entry.filename, pattern):
+        #            full_path = "/".join([store_dir, entry.filename])
+        #            sftp.getfo(full_path, result)
+        #            result.seek(0)
+        #            return result
