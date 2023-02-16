@@ -4,6 +4,7 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+import numpy as np
 import xarray as xa
 from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
@@ -97,4 +98,13 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         lat_data = vd_lat[:]
         vd_lat.detach()
 
-        return lat_data
+        vd_lon = vs.attach("Longitude")
+        lon_data = vd_lon[:]
+        vd_lon.detach()
+
+        np_arr = np.array([lon_data, lat_data])
+        shape = np_arr.shape[:1]
+        np_arr = np.reshape(np_arr, shape)
+        xarr = xa.DataArray(np_arr, dims=("lon", "lat"))
+
+        return xarr

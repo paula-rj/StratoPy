@@ -9,9 +9,12 @@
 # =============================================================================
 
 import abc
+import atexit
 import fnmatch
 import io
 import os
+import shutil
+import tempfile
 from stat import *
 
 import dateutil.parser
@@ -260,25 +263,30 @@ class SFTPMixin:
     def close(self):
         self._client.close()
 
+    TEMP_DIR = tempfile.mkdtemp(prefix="stpy_cloudsat_")
+    atexit.register(
+        shutil.rmtree, TEMP_DIR
+    )  # al salir de PYTHON se ejecuta eso
+    atexit.register(print, "chau paula!")  # al salir de PYTHON se ejecuta eso
+
     def _download(self, query):
+        TEMP_DIR = tempfile.mkdtemp(prefix="stpy_cloudsat_")
+        atexit.register(
+            shutil.rmtree, TEMP_DIR
+        )  # al salir de PYTHON se ejecuta eso
+        atexit.register(
+            print, "chau paula!"
+        )  # al salir de PYTHON se ejecuta eso
+        tmp_path = tempfile.mktemp(dir=TEMP_DIR)
         store_dir, pattern = query.rsplit("/", 1)
-        result = io.BytesIO()
         with self._client.open_sftp() as sftp:
             for filename in sftp.listdir(store_dir):
                 if fnmatch.fnmatch(filename, pattern):
                     full_path = "/".join([store_dir, filename])
-                    local_path = f"/home/pola/.virtualenvs/stratopy/StratoPy/stratopy/datasets/{filename}"
+                    local_path = tmp_path
                     f = sftp.get(
                         remotepath=full_path,
                         localpath=local_path,
                     )
 
                     return local_path
-
-        # with paramiko.SFTPClient.from_transport(self._transport) as sftp:
-        #    for entry in sftp.listdir_attr(path=store_dir):
-        #        if fnmatch.fnmatch(entry.filename, pattern):
-        #            full_path = "/".join([store_dir, entry.filename])
-        #            sftp.getfo(full_path, result)
-        #            result.seek(0)
-        #            return result
