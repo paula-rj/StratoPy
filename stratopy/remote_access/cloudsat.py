@@ -8,7 +8,7 @@ import numpy as np
 import xarray as xa
 from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
-from pyhdf.SD import SD
+from pyhdf.SD import SD, SDC
 
 from . import base
 
@@ -91,20 +91,56 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         -----------
         result: Binary file-like object.
         """
+        
+        # Datasets
+        sd_file = SD(result, SDC.READ)
+        height = sd_file.select("Height").get()
+        cloud_scenario = sd_file.select("cloud_scenario").get()
+        cloudLayerBase = sd_file.select("CloudLayerBase").get()
+        cloudLayerTop = sd_file.select("CloudLayerTop").get()
+        cloudLayerType = sd_file.select("CloudLayerType").get()
+        
+        # HDF
         hdf_file = HDF(result, HC.READ)
         vs = VS(hdf_file)
-
+        
+        # Important attributes, one number only
+        vd_UTCstart = vs.attach("UTC_start")
+        UTCstart = vd_UTCstart[:]
+        vd_UTCstart.detach()
+        
+        vd_verticalBin = vs.attach("Vertical_binsize")
+        vertical_Binsize =  np.array(vd_verticalBin[:]).flatten()
+        vd_verticalBin.detach()
+        
+        #geolocated space-time data
+        vd_timeprofile = vs.attach("Profile_time")
+        time = np.array(vd_timeprofile[:]).flatten()
+        vd_timeprofile.detach()
+        
         vd_lat = vs.attach("Latitude")
-        lat_data = vd_lat[:]
+        lat = np.array(vd_lat[:]).flatten()
         vd_lat.detach()
 
         vd_lon = vs.attach("Longitude")
-        lon_data = vd_lon[:]
+        lon = np.array(vd_lon[:]).flatten()
         vd_lon.detach()
-
-        np_arr = np.array([lon_data, lat_data])
-        shape = np_arr.shape[:1]
-        np_arr = np.reshape(np_arr, shape)
-        xarr = xa.DataArray(np_arr, dims=("lon", "lat"))
-
+        
+        vd_CloudLayer = vs.attach("CloudLayer")
+        cloudLayer =  np.array(vd_CloudLayer[:]).flatten()
+        vd_CloudLayer.detach()
+        
+        vd_precip = vs.attach("Precip_flag")
+        precip_flag = np.array(vd_precip[:]).flatten()
+        vd_precip.detach()
+        
+        vd_land = vs.attach("Navigation_land_sea_flag")
+        land_sea_flag = np.array(vd_land[:]).flatten()
+        vd_land.detach()
+        
+        # Array to Xarray
+        np_arr = np.array([lon, lat, time])
+        dims = ("Csat_trace", "height")
+        xarr = xa.DataArray(np_arr, dims=dims)
+        
         return xarr
