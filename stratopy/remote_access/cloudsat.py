@@ -139,14 +139,38 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         land_sea_flag = np.array(vd_land[:]).flatten()
         vd_land.detach()
 
-        # Array to Xarray
+        # Xarrays named after the layers of height they contain
 
-        dims = ["data", "cloudsat_trace", "height"]
+        coords0 = {
+            "geodata": ["time", "lat", "lon", "precip_flag", "land_sea_flag"],
+            "cloudsat_trace": np.arange(36950),
+        }
+        xarr0 = xa.DataArray(
+            [time, lat, lon, precip_flag, land_sea_flag],
+            dims=["geodata", "cloudsat_trace"],
+            coords=coords0,
+        )
 
-        coords = {
+        coords10 = {
+            "data": ["base", "top", "layer"],
+            "cloudsat_trace": np.arange(36950),
+            "layer": np.arange(10),
+        }
+        xarr10 = xa.DataArray(
+            [cloudLayerBase, cloudLayerTop, cloudLayerType],
+            dims=["data", "cloudsat_trace", "layer"],
+            coords=coords10,
+        )
+
+        coords125 = {
             "data": ["cloudsat_trace", "height"],
             "cloudsat_trace": np.arange(36950),
             "height": np.arange(125),
         }
-        xarr = xa.DataArray([cloud_scenario, height], dims=dims, coords=coords)
-        return xarr
+        xarr125 = xa.DataArray(
+            [cloud_scenario, height],
+            dims=["data", "cloudsat_trace", "height"],
+            coords=coords125,
+        )
+
+        return xarr125
