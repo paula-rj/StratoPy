@@ -7,13 +7,13 @@ from unittest import mock
 
 import pytest
 
-from stratopy.remote_access import cloudsat
+from stratopy.extractors import cloudsat
 
 
 @mock.patch("paramiko.SSHClient.connect", return_value=None)
 def test_CloudSat_conn(mock_conn):
-    for prod_type in cloudsat.CloudSatextractor._PRODUCT_TYPES:
-        cs_obj = cloudsat.CloudSatextractor(
+    for prod_type in cloudsat.CloudSat._PRODUCT_TYPES:
+        cs_obj = cloudsat.CloudSat(
             product_type=prod_type,
             username="fakeusr@gmail.edu",
             keypass="2022",
@@ -26,13 +26,13 @@ def test_CloudSat_conn(mock_conn):
 @mock.patch("paramiko.SSHClient.connect", return_value=None)
 def test_wrong_product(mock_conn):
     with pytest.raises(ValueError):
-        cloudsat.CloudSatextractor("holis", "fakeusr@gmail.edu", keypass="2022")
+        cloudsat.CloudSat("holis", "fakeusr@gmail.edu", keypass="2022")
 
 
 @mock.patch("paramiko.SSHClient.connect", return_value=None)
 @mock.patch("paramiko.RSAKey.from_private_key_file")
 def test_CloudSat_obj(mock_conn, mock_keys):
-    cs_obj = cloudsat.CloudSatextractor(
+    cs_obj = cloudsat.CloudSat(
         "2B-CLDCLASS.P1_R05", "fakeusr@gmail.edu", keypass="1234"
     )
     assert cs_obj.__repr__() == "<CloudSat product_type='2B-CLDCLASS.P1_R05'>"
@@ -48,7 +48,7 @@ def test_Cloudsat_fetch(mconn, data_bytes, dataset):
     with mock.patch(
         "paramiko.SSHClient.open_sftp", return_value=buff
     ) as mopen:
-        cs_obj = cloudsat.CloudSatextractor(
+        cs_obj = cloudsat.CloudSat(
             "2B-CLDCLASS.P1_R05", "fakeusr@gmail.edu", keypass="2022"
         )
         result = cs_obj.fetch("25/jun/2010", tzone="UTC")

@@ -5,15 +5,20 @@
 # All rights reserved.
 
 import numpy as np
-import xarray as xa
-from pyhdf.HDF import HDF, HC
-from pyhdf.VS import VS
+
+from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD, SDC
+from pyhdf.VS import VS
+
+import xarray as xa
 
 from . import base
 
+_TRACE = np.arange(36950, dtype=np.int32)
+_LAYERS = np.arange(10, dtype=np.int8)
 
-class CloudSatextractor(base.SFTPMixin, base.ConnectorABC):
+
+class CloudSat(base.SFTPMixin, base.ConnectorABC):
     """
     Object created by retrieving products from CloudSat satellite.
 
@@ -49,7 +54,6 @@ class CloudSatextractor(base.SFTPMixin, base.ConnectorABC):
         product_type,
         username,
         *,
-        scen_or_layer="layer",
         keyfile=None,
         keypass=None,
     ):
@@ -61,20 +65,12 @@ class CloudSatextractor(base.SFTPMixin, base.ConnectorABC):
             keypass=keypass,
         )
         self.product_type = product_type
-        self.scen_or_layer = (scen_or_layer,)
 
         if product_type not in self._PRODUCT_TYPES:
             raise ValueError(
                 "Invalid product type. "
                 f"Expected one of: {self._PRODUCT_TYPES}. "
                 f"Found {product_type!r}"
-            )
-
-        if scen_or_layer not in self._SCEN_OR_LAYER:
-            raise ValueError(
-                "Invalid scenario for cloud types "
-                f"Expected one of: {self._SCEN_OR_LAYER}. "
-                f"Found {scen_or_layer!r}"
             )
 
     def __repr__(self):
@@ -164,29 +160,9 @@ class CloudSatextractor(base.SFTPMixin, base.ConnectorABC):
 
         # Xarrays named after the layers of height they contain
 
-        _TRACE = np.arange(36950, dtype=np.int32)
-        _LAYERS = np.arange(10, dtype=np.int8)
-
-        scenario_ds = xa.Dataset(
+        ds = xa.Dataset(
             {
                 "cloud_scenario": (["cloudsat_trace", "z"], cloud_scenario),
-            },
-            coords={
-                "cloudsat_trace": _TRACE,
-                "height": (["cloudsat_trace", "z"], height, {"units": "m"}),
-                "lat": (["cloudsat_trace"], lat),
-                "lon": (["cloudsat_trace"], lon),
-                "time": (["cloudsat_trace"], time),
-                "precip_flag": (["cloudsat_trace"], precip_flag),
-                "land_sea_flag": (
-                    ["cloudsat_trace"],
-                    land_sea_flag,
-                ),
-            },
-        )
-
-        layer_ds = xa.Dataset(
-            {
                 "cloud_layer_type": (
                     ["cloudsat_trace", "layer"],
                     cloudLayerType,
@@ -201,8 +177,9 @@ class CloudSatextractor(base.SFTPMixin, base.ConnectorABC):
                 ),
             },
             coords={
-                "cloudsat_trace": _TRACE,
-                "layer": _LAYERS,
+                "cloudsat_trace": _TRACE.copy,
+                "height": (["cloudsat_trace", "z"], height, {"units": "m"}),
+                "layer": _LAYERS.copy,
                 "lat": (["cloudsat_trace"], lat),
                 "lon": (["cloudsat_trace"], lon),
                 "time": (["cloudsat_trace"], time),
@@ -211,10 +188,16 @@ class CloudSatextractor(base.SFTPMixin, base.ConnectorABC):
                     ["cloudsat_trace"],
                     land_sea_flag,
                 ),
+                "cloud_layer_base": (
+                    ["cloudsat_trace", "layer"],
+                    cloudLayerBase,
+                ),
+                "cloud_layer_top": (
+                    ["cloudsat_trace", "layer"],
+                    cloudLayerTop,
+                ),
             },
+            attrs={"UTCstart": UTCstart, "bin_size": vertical_Binsize},
         )
 
-        if self.scen_or_layer == "layer":
-            return layer_ds
-        else:
-            return scenario_ds
+        return ds

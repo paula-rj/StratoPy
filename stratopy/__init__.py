@@ -32,6 +32,6 @@ __version__ = "0.2dev"
 import os
 
 if os.getenv("__STRATOPY_IN_SETUP__") != "True":  # noqa
-    from .remote_access import GOES16extractor  # noqa
+    from .extractors import GOES16  # noqa
 
 del os

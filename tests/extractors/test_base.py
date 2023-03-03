@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from stratopy.remote_access import base
+from stratopy.extractors import base
 
 
 def test_ConnectorABC():
