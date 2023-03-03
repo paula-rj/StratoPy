@@ -13,7 +13,7 @@ from pyhdf.SD import SD, SDC
 from . import base
 
 
-class CloudSat(base.SFTPMixin, base.ConnectorABC):
+class CloudSatextractor(base.SFTPMixin, base.ConnectorABC):
     """
     Object created by retrieving products from CloudSat satellite.
 
@@ -37,10 +37,22 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         "2B-CLDCLASS.P_R04",
         "2B-CLDCLASS-LIDAR.P_R04",
     )
+    _SCEN_OR_LAYER = (
+        "scenario",
+        "layer",
+    )
 
     _CLOUDSAT_HOST, _CLOUDSAT_PORT = "www.cloudsat.cira.colostate.edu", 22
 
-    def __init__(self, product_type, username, *, keyfile=None, keypass=None):
+    def __init__(
+        self,
+        product_type,
+        username,
+        *,
+        scen_or_layer="layer",
+        keyfile=None,
+        keypass=None,
+    ):
         super().__init__(
             host=self._CLOUDSAT_HOST,
             port=self._CLOUDSAT_PORT,
@@ -49,12 +61,20 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             keypass=keypass,
         )
         self.product_type = product_type
+        self.scen_or_layer = (scen_or_layer,)
 
         if product_type not in self._PRODUCT_TYPES:
             raise ValueError(
                 "Invalid product type. "
                 f"Expected one of: {self._PRODUCT_TYPES}. "
                 f"Found {product_type!r}"
+            )
+
+        if scen_or_layer not in self._SCEN_OR_LAYER:
+            raise ValueError(
+                "Invalid scenario for cloud types "
+                f"Expected one of: {self._SCEN_OR_LAYER}. "
+                f"Found {scen_or_layer!r}"
             )
 
     def __repr__(self):
@@ -86,6 +106,8 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
 
     def _parse_result(self, result):
         """Converts the downloaded hdf file into xarray object.
+        Warning! Height is upside down
+        height[0]is highest
 
         Parameters:
         -----------
@@ -104,7 +126,7 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         cloud_scenario = sd_file.select("cloud_scenario").get()
         cloudLayerBase = sd_file.select("CloudLayerBase").get()
         cloudLayerTop = sd_file.select("CloudLayerTop").get()
-        cloudLayerType = sd_file.select("CloudLayerType").get()
+        cloudLayerType = sd_file.select("CloudLayerType").get().astype("int8")
 
         # HDF
         hdf_file = HDF(result, HC.READ)
@@ -133,50 +155,38 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         vd_lon.detach()
 
         vd_precip = vs.attach("Precip_flag")
-        precip_flag = np.array(vd_precip[:]).flatten()
+        precip_flag = np.array(vd_precip[:]).flatten().astype("int8")
         vd_precip.detach()
 
         vd_land = vs.attach("Navigation_land_sea_flag")
-        land_sea_flag = np.array(vd_land[:]).flatten()
+        land_sea_flag = np.array(vd_land[:]).flatten().astype("float32")
         vd_land.detach()
 
         # Xarrays named after the layers of height they contain
 
-        coords0 = {
-            "geodata": ["time", "lat", "lon", "precip_flag", "land_sea_flag"],
-            "cloudsat_trace": np.arange(36950),
-        }
-        xarr0 = xa.DataArray(
-            [time, lat, lon, precip_flag, land_sea_flag],
-            dims=["geodata", "cloudsat_trace"],
-            coords=coords0,
-        )
+        _TRACE = np.arange(36950, dtype=np.int32)
+        _LAYERS = np.arange(10, dtype=np.int8)
 
-        coords10 = {
-            "data": ["base", "top", "layer"],
-            "cloudsat_trace": np.arange(36950),
-            "layer": np.arange(10),
-        }
-        xarr10 = xa.DataArray(
-            [cloudLayerBase, cloudLayerTop, cloudLayerType],
-            dims=["data", "cloudsat_trace", "layer"],
-            coords=coords10,
-        )
-
-        coords125 = {
-            "data": ["cloudsat_trace", "height"],
-            "cloudsat_trace": np.arange(36950),
-            "height": np.arange(125),
-        }
-        xarr125 = xa.DataArray(
-            [cloud_scenario, height],
-            dims=["data", "cloudsat_trace", "height"],
-            coords=coords125,
-        )
-
-        ds = xa.Dataset(
+        scenario_ds = xa.Dataset(
             {
                 "cloud_scenario": (["cloudsat_trace", "z"], cloud_scenario),
+            },
+            coords={
+                "cloudsat_trace": _TRACE,
+                "height": (["cloudsat_trace", "z"], height, {"units": "m"}),
+                "lat": (["cloudsat_trace"], lat),
+                "lon": (["cloudsat_trace"], lon),
+                "time": (["cloudsat_trace"], time),
+                "precip_flag": (["cloudsat_trace"], precip_flag),
+                "land_sea_flag": (
+                    ["cloudsat_trace"],
+                    land_sea_flag,
+                ),
+            },
+        )
+
+        layer_ds = xa.Dataset(
+            {
                 "cloud_layer_type": (
                     ["cloudsat_trace", "layer"],
                     cloudLayerType,
@@ -191,9 +201,8 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
                 ),
             },
             coords={
-                "cloudsat_trace": np.arange(36950),
-                "height": (["cloudsat_trace", "z"], height),
-                "layer": np.arange(10),
+                "cloudsat_trace": _TRACE,
+                "layer": _LAYERS,
                 "lat": (["cloudsat_trace"], lat),
                 "lon": (["cloudsat_trace"], lon),
                 "time": (["cloudsat_trace"], time),
@@ -205,4 +214,7 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             },
         )
 
-        return ds
+        if self.scen_or_layer == "layer":
+            return layer_ds
+        else:
+            return scenario_ds

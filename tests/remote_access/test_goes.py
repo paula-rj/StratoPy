@@ -12,20 +12,22 @@ from stratopy.remote_access import goes
 import xarray as xa
 
 
-@pytest.mark.parametrize("ptype", goes.GOES16._PRODUCT_TYPES_PARSERS)
+@pytest.mark.parametrize("ptype", goes.GOES16extractor._PRODUCT_TYPES_PARSERS)
 def test_GOES_get_endpoint(ptype):
-    goes_obj = goes.GOES16(ptype)
+    goes_obj = goes.GOES16extractor(ptype)
     assert goes_obj.get_endpoint() == f"s3://noaa-goes16/{ptype}"
 
 
 def test_wrong_product():
     with pytest.raises(ValueError):
-        goes.GOES16("holis")
+        goes.GOES16extractor("holis")
 
 
-@pytest.mark.parametrize("prod_type", goes.GOES16._PRODUCT_TYPES_PARSERS)
+@pytest.mark.parametrize(
+    "prod_type", goes.GOES16extractor._PRODUCT_TYPES_PARSERS
+)
 def test_repr(prod_type):
-    goes_obj = goes.GOES16(prod_type)
+    goes_obj = goes.GOES16extractor(prod_type)
     expected = f"<GOES16 product_type={prod_type!r}>"
     assert repr(goes_obj) == expected
 
@@ -40,7 +42,9 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L1b-RadF").fetch("25/jun/2010", tzone="UTC")
+        result = goes.GOES16extractor("ABI-L1b-RadF").fetch(
+            "25/jun/2010", tzone="UTC"
+        )
 
     mglob.assert_called_once_with(
         "s3://noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760000*"  # noqa
@@ -68,7 +72,9 @@ def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L2-ACHTF").fetch("25/jun/2010", tzone="UTC")
+        result = goes.GOES16extractor("ABI-L2-ACHTF").fetch(
+            "25/jun/2010", tzone="UTC"
+        )
 
     mglob.assert_called_once_with(
         "s3://noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000*"  # noqa

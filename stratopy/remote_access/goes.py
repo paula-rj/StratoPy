@@ -83,7 +83,7 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
 # =============================================================================
 
 
-class GOES16(base.S3Mixin, base.ConnectorABC):
+class GOES16extractor(base.S3Mixin, base.ConnectorABC):
     """
     Object that is created by retrieving products from GOES-16 satellite.
 
@@ -172,5 +172,5 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         -----------
         result: the file in Bytes.
         """
-        xarr = xa.open_dataset(result, engine="h5netcdf")
-        return xarr
+        goes_ds = xa.open_dataset(result, engine="h5netcdf")
+        return goes_ds

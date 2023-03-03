@@ -4,7 +4,7 @@ import xarray as xa
 import numpy as np
 import atexit
 import shutil
-import requests
+#import requests
 import tempfile
 import paramiko
 from stat import *
@@ -13,6 +13,7 @@ from pyhdf.HDF import HDF, HC
 from pyhdf.VS import VS
 from pyhdf.SD import SD, SDC
 import pyhdf
+import pympler
 
 """ DEFAULT_SSH_KEY = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa"))
 TEMP_DIR = tempfile.mkdtemp(prefix="stpy_cloudsat_")
@@ -80,7 +81,7 @@ def opencs(result):
     cloud_scenario = sd_file.select("cloud_scenario").get()  # (36950, 125)
     cloudLayerBase = sd_file.select("CloudLayerBase").get()  # (36950, 10)
     cloudLayerTop = sd_file.select("CloudLayerTop").get()  # (36950, 10)
-    cloudLayerType = sd_file.select("CloudLayerType").get()  # (36950, 10)
+    cloudLayerType = sd_file.select("CloudLayerType").get().astype("int8")  # (36950, 10)
 
     # HDF
     hdf_file = HDF(result, HC.READ)
@@ -105,22 +106,18 @@ def opencs(result):
     vd_lat.detach()
 
     vd_lon = vs.attach("Longitude")
-    lon = np.array(vd_lon[:]).flatten()  # (36950,)
+    lon = np.array(vd_lon[:]).flatten() # (36950,)
     vd_lon.detach()
 
     vd_precip = vs.attach("Precip_flag")
-    precip_flag = np.array(vd_precip[:]).flatten()  # (36950,)
+    precip_flag = np.array(vd_precip[:]).flatten().astype("int8")  # (36950,)
     vd_precip.detach()
 
     vd_land = vs.attach("Navigation_land_sea_flag")
-    land_sea_flag = np.array(vd_land[:]).flatten()  # (36950,)
+    land_sea_flag = np.array(vd_land[:]).flatten().astype("float32")  # (36950,)
     vd_land.detach()
-
-    print(cloudLayerType.shape)
+  
     # Array to Xarray
-
-    np_arr10 = np.array([cloudLayerBase, cloudLayerTop, cloudLayerType])
-    print(np_arr10.shape)
 
     coords125 = {
         "data": ["cloudsat_trace", "height"],
@@ -156,6 +153,11 @@ def opencs(result):
         coords=coords0,
     )
 
+    trace = np.arange(36950, dtype= np.int32)
+    layers = np.arange(10, dtype= np.int8)
+    
+    print(layers)
+    
     ds = xa.Dataset(
         {
             "cloud_scenario": (["cloudsat_trace", "z"], cloud_scenario),
@@ -164,9 +166,9 @@ def opencs(result):
             "cloud_layer_top": (["cloudsat_trace", "layer"], cloudLayerTop),
         },
         coords={
-            "cloudsat_trace": np.arange(36950),
-            "height": (["cloudsat_trace", "z"], height),
-            "layer": np.arange(10),
+            "cloudsat_trace": trace,
+            "height": (["cloudsat_trace", "z"], height, {'units': 'm'}),
+            "layer": layers,
             "lat": (["cloudsat_trace"], lat),
             "lon": (["cloudsat_trace"], lon),
             "time": (["cloudsat_trace"], time),
@@ -177,9 +179,7 @@ def opencs(result):
             ),
         },
     )
-
     print(ds)
     return ds
-
 
 opencs("2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf")
