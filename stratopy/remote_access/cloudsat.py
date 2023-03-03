@@ -94,7 +94,8 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         Returns:
         --------
         xarr: Xarray-like
-            Contains the most relevant data of a 2B-CLADCLASS file.
+            Contains the most relevant data of a 2B-CLADCLASS file,
+            in xarray format.
         """
 
         # Datasets
@@ -173,4 +174,35 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             coords=coords125,
         )
 
-        return xarr125
+        ds = xa.Dataset(
+            {
+                "cloud_scenario": (["cloudsat_trace", "z"], cloud_scenario),
+                "cloud_layer_type": (
+                    ["cloudsat_trace", "layer"],
+                    cloudLayerType,
+                ),
+                "cloud_layer_base": (
+                    ["cloudsat_trace", "layer"],
+                    cloudLayerBase,
+                ),
+                "cloud_layer_top": (
+                    ["cloudsat_trace", "layer"],
+                    cloudLayerTop,
+                ),
+            },
+            coords={
+                "cloudsat_trace": np.arange(36950),
+                "height": (["cloudsat_trace", "z"], height),
+                "layer": np.arange(10),
+                "lat": (["cloudsat_trace"], lat),
+                "lon": (["cloudsat_trace"], lon),
+                "time": (["cloudsat_trace"], time),
+                "precip_flag": (["cloudsat_trace"], precip_flag),
+                "land_sea_flag": (
+                    ["cloudsat_trace"],
+                    land_sea_flag,
+                ),
+            },
+        )
+
+        return ds
