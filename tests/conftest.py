@@ -12,6 +12,10 @@ from unittest import mock
 
 import pytest
 
+from pyhdf.HDF import HC, HDF
+from pyhdf.SD import SD, SDC
+from pyhdf.VS import VS
+
 import xarray as xa
 
 # =============================================================================
@@ -124,3 +128,19 @@ def dataset(data_bytes):
         return xarr
 
     return _make
+
+
+@pytest.fixture(scope="session")
+def data_hdf(data_path):
+    def read_hdf(sat, fname):
+        fpath = data_path(sat, fname)
+        sd_file = SD(fpath, SDC.READ)
+        hdf_file = HDF(fpath, HC.READ)
+
+        return sd_file, hdf_file
+
+    return read_hdf
+
+
+def mock_conn():
+    return None

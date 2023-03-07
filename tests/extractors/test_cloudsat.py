@@ -39,7 +39,7 @@ def test_CloudSat_obj(mock_conn, mock_keys):
 
 
 @mock.patch("paramiko.SSHClient.connect", return_value=None)
-def test_Cloudsat_fetch(mconn, data_bytes, dataset):
+def test_CloudSat_fetch(mock_conn, data_bytes, dataset):
     buff = data_bytes(
         "CloudSat",
         "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",  # noqa
