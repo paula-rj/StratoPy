@@ -274,9 +274,6 @@ class SFTPMixin:
         atexit.register(
             shutil.rmtree, TEMP_DIR
         )  # al salir de PYTHON se ejecuta eso
-        atexit.register(
-            print, "chau paula!"
-        )  # al salir de PYTHON se ejecuta eso
         tmp_path = tempfile.mktemp(dir=TEMP_DIR)
         store_dir, pattern = query.rsplit("/", 1)
         with self._client.open_sftp() as sftp:
@@ -284,10 +281,7 @@ class SFTPMixin:
                 if fnmatch.fnmatch(filename, pattern):
                     full_path = "/".join([store_dir, filename])
                     # Downloads file from full and copies into tmp
-                    f = sftp.get(
-                        remotepath=full_path,
-                        localpath=tmp_path,
-                    )
+                    sftp.get(remotepath=full_path, localpath=tmp_path)
 
                     # Returns temps cause parser_result gets a path as input
                     return tmp_path
