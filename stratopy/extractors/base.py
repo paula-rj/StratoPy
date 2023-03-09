@@ -283,10 +283,11 @@ class SFTPMixin:
             for filename in sftp.listdir(store_dir):
                 if fnmatch.fnmatch(filename, pattern):
                     full_path = "/".join([store_dir, filename])
-                    local_path = tmp_path
+                    # Downloads file from full and copies into tmp
                     f = sftp.get(
                         remotepath=full_path,
-                        localpath=local_path,
+                        localpath=tmp_path,
                     )
 
-                    return local_path
+                    # Returns temps cause parser_result gets a path as input
+                    return tmp_path

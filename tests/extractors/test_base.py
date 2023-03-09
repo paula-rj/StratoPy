@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from stratopy.remote_access import base
+from stratopy.extractors import base
 
 
 def test_ConnectorABC():
@@ -58,6 +58,25 @@ def test_S3mixin_FileNotFoundError():
         with pytest.raises(FileNotFoundError):
             conn.fetch("27 jul 1981", tzone="UTC")
     mglob.assert_called_once_with("1981-07-27T00:00:00+00:00")
+
+
+def test_SFTPMixin_FileNotFoundError():
+    class TestFileNotFoundError(base.SFTPMixin, base.ConnectorABC):
+        def get_endpoint(cls):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return pdate.isoformat()
+
+        def _parse_result(self, response):
+            return None
+
+    conn = TestFileNotFoundError()
+
+    with mock.patch("paramiko.SSHClient.get", return_value=[]) as mconn:
+        with pytest.raises(FileNotFoundError):
+            conn.fetch("27 jul 1981", tzone="UTC")
+    mconn.assert_called_once_with("1981-07-27T00:00:00+00:00")
 
 
 def test_ConnectorABC_get_endpoint_not_implementhed():

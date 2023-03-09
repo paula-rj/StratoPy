@@ -83,7 +83,7 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
 # =============================================================================
 
 
-class GOES16extractor(base.S3Mixin, base.ConnectorABC):
+class GOES16(base.S3Mixin, base.ConnectorABC):
     """
     Object that is created by retrieving products from GOES-16 satellite.
 
