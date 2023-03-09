@@ -45,7 +45,7 @@ def test_CloudSat_obj(mock_conn, mock_keys):
 def test_CloudSat_fetch(mock_conn):
     local_temp_path = mock_conn(
         "CloudSat",
-        "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",  # noqa
+        "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",
     )
 
     with mock.patch(
