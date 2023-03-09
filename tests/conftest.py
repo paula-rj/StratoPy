@@ -10,11 +10,14 @@ import pathlib
 from collections.abc import MutableMapping
 from unittest import mock
 
+import atexit
 import pytest
 
 from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD, SDC
 from pyhdf.VS import VS
+
+import tempfile
 
 import xarray as xa
 
@@ -23,6 +26,7 @@ import xarray as xa
 # =============================================================================
 
 DATA = pathlib.Path(os.path.abspath(os.path.dirname(__file__))) / "data"
+TEMP_DIR = tempfile.mkdtemp(prefix="stpy_cloudsat_")
 
 # =============================================================================
 # CACHE PATCH
@@ -111,7 +115,10 @@ def data_path():
 
 @pytest.fixture(scope="session")
 def data_bytes(data_path):
+    "Reads a file in bytes from path."
+
     def _read_bytes_io(sat, fname):
+        "Reads bytes"
         fpath = data_path(sat, fname)
         with open(fpath, "rb") as fp:
             buff = io.BytesIO(fp.read())
@@ -120,8 +127,11 @@ def data_bytes(data_path):
     return _read_bytes_io
 
 
+# Para testear parse result, recibe lo de base y tira un xarray
 @pytest.fixture(scope="session")
 def dataset(data_bytes):
+    "Retrieves xarray dataset from bytes."
+
     def _make(sat, fname, engine):
         buff = data_bytes(sat, fname)
         xarr = xa.open_dataset(buff, engine=engine)
@@ -131,16 +141,29 @@ def dataset(data_bytes):
 
 
 @pytest.fixture(scope="session")
-def data_hdf(data_path):
-    def read_hdf(sat, fname):
+def mock_conn(data_path):
+    def get_sftp(sat, fname):
+        """Para testear que copie la file que baja al tmp path,
+        que es lo que hace el sftp.get"""
         fpath = data_path(sat, fname)
-        sd_file = SD(fpath, SDC.READ)
-        hdf_file = HDF(fpath, HC.READ)
+        tmp_path = tempfile.mktemp(dir=TEMP_DIR)
+        with mock_conn.open_sftp() as sftp:
+            f = sftp.get(
+                remotepath=fpath,
+                localpath=tmp_path,
+            )
+        return tmp_path
 
-        return sd_file, hdf_file
-
-    return read_hdf
+    return get_sftp
 
 
-def mock_conn():
-    return None
+# Para testear parse_result, recibe lo de base y tira un xarray
+@pytest.fixture(scope="session")
+def hdf_dataset(mock_conn):
+    def _make_xarray_fromhdf(sat, fname):
+        hdf = HDF(mock_conn(sat, fname), HC.READ)
+        hdf = SD(mock_conn(sat, fname), SDC.READ)
+        # xarr =
+        return hdf
+
+    return _make_xarray_fromhdf
