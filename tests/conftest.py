@@ -10,16 +10,13 @@ import pathlib
 from collections.abc import MutableMapping
 from unittest import mock
 
-import atexit
 import pytest
-
-from pyhdf.HDF import HC, HDF
-from pyhdf.SD import SD, SDC
-from pyhdf.VS import VS
 
 import tempfile
 
 import xarray as xa
+
+from stratopy.extractors.cloudsat import read_hdf4
 
 # =============================================================================
 # GLOBALS
@@ -148,7 +145,7 @@ def mock_conn(data_path):
         fpath = data_path(sat, fname)
         tmp_path = tempfile.mktemp(dir=TEMP_DIR)
         with mock_conn.open_sftp() as sftp:
-            f = sftp.get(
+            sftp.get(
                 remotepath=fpath,
                 localpath=tmp_path,
             )
@@ -161,9 +158,7 @@ def mock_conn(data_path):
 @pytest.fixture(scope="session")
 def hdf_dataset(mock_conn):
     def _make_xarray_fromhdf(sat, fname):
-        hdf = HDF(mock_conn(sat, fname), HC.READ)
-        hdf = SD(mock_conn(sat, fname), SDC.READ)
-        # xarr =
-        return hdf
+        xarr = read_hdf4(mock_conn(sat, fname))
+        return xarr
 
     return _make_xarray_fromhdf
