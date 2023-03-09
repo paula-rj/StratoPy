@@ -18,6 +18,94 @@ _TRACE = np.arange(36950, dtype=np.int32)
 _LAYERS = np.arange(10, dtype=np.int8)
 
 
+def read_hdf4(path_or_buff):
+    # Datasets
+    sd_file = SD(path_or_buff, SDC.READ)
+    height = sd_file.select("Height").get()
+    cloud_scenario = sd_file.select("cloud_scenario").get()
+    cloudLayerBase = sd_file.select("CloudLayerBase").get()
+    cloudLayerTop = sd_file.select("CloudLayerTop").get()
+    cloudLayerType = sd_file.select("CloudLayerType").get().astype("int8")
+
+    # HDF
+    hdf_file = HDF(path_or_buff, HC.READ)
+    vs = VS(hdf_file)
+
+    # Important attributes, one number only
+    vd_UTCstart = vs.attach("UTC_start")
+    UTCstart = vd_UTCstart[:]
+    vd_UTCstart.detach()
+
+    vd_verticalBin = vs.attach("Vertical_binsize")
+    vertical_Binsize = np.array(vd_verticalBin[:]).flatten()
+    vd_verticalBin.detach()
+
+    # geolocated data, 1D arrays
+    vd_timeprofile = vs.attach("Profile_time")
+    time = np.array(vd_timeprofile[:]).flatten()
+    vd_timeprofile.detach()
+
+    vd_lat = vs.attach("Latitude")
+    lat = np.array(vd_lat[:]).flatten()
+    vd_lat.detach()
+
+    vd_lon = vs.attach("Longitude")
+    lon = np.array(vd_lon[:]).flatten()
+    vd_lon.detach()
+
+    vd_precip = vs.attach("Precip_flag")
+    precip_flag = np.array(vd_precip[:]).flatten().astype("int8")
+    vd_precip.detach()
+
+    vd_land = vs.attach("Navigation_land_sea_flag")
+    land_sea_flag = np.array(vd_land[:]).flatten().astype("float32")
+    vd_land.detach()
+
+    # Xarrays named after the layers of height they contain
+
+    ds = xa.Dataset(
+        {
+            "cloud_scenario": (["cloudsat_trace", "z"], cloud_scenario),
+            "cloud_layer_type": (
+                ["cloudsat_trace", "layer"],
+                cloudLayerType,
+            ),
+            "cloud_layer_base": (
+                ["cloudsat_trace", "layer"],
+                cloudLayerBase,
+            ),
+            "cloud_layer_top": (
+                ["cloudsat_trace", "layer"],
+                cloudLayerTop,
+            ),
+        },
+        coords={
+            "cloudsat_trace": _TRACE.copy,
+            "height": (["cloudsat_trace", "z"], height, {"units": "m"}),
+            "layer": _LAYERS.copy,
+            "lat": (["cloudsat_trace"], lat),
+            "lon": (["cloudsat_trace"], lon),
+            "time": (["cloudsat_trace"], time),
+            "precip_flag": (["cloudsat_trace"], precip_flag),
+            "land_sea_flag": (
+                ["cloudsat_trace"],
+                land_sea_flag,
+            ),
+            "cloud_layer_base": (
+                ["cloudsat_trace", "layer"],
+                cloudLayerBase,
+            ),
+            "cloud_layer_top": (
+                ["cloudsat_trace", "layer"],
+                cloudLayerTop,
+            ),
+        },
+        attrs={"UTCstart": UTCstart, "bin_size": vertical_Binsize},
+    )
+
+    return ds
+
+
 class CloudSat(base.SFTPMixin, base.ConnectorABC):
     """
     Object created by retrieving products from CloudSat satellite.
@@ -115,89 +203,4 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             Contains the most relevant data of a 2B-CLADCLASS file,
             in xarray format.
         """
-
-        # Datasets
-        sd_file = SD(result, SDC.READ)
-        height = sd_file.select("Height").get()
-        cloud_scenario = sd_file.select("cloud_scenario").get()
-        cloudLayerBase = sd_file.select("CloudLayerBase").get()
-        cloudLayerTop = sd_file.select("CloudLayerTop").get()
-        cloudLayerType = sd_file.select("CloudLayerType").get().astype("int8")
-
-        # HDF
-        hdf_file = HDF(result, HC.READ)
-        vs = VS(hdf_file)
-
-        # Important attributes, one number only
-        vd_UTCstart = vs.attach("UTC_start")
-        UTCstart = vd_UTCstart[:]
-        vd_UTCstart.detach()
-
-        vd_verticalBin = vs.attach("Vertical_binsize")
-        vertical_Binsize = np.array(vd_verticalBin[:]).flatten()
-        vd_verticalBin.detach()
-
-        # geolocated data, 1D arrays
-        vd_timeprofile = vs.attach("Profile_time")
-        time = np.array(vd_timeprofile[:]).flatten()
-        vd_timeprofile.detach()
-
-        vd_lat = vs.attach("Latitude")
-        lat = np.array(vd_lat[:]).flatten()
-        vd_lat.detach()
-
-        vd_lon = vs.attach("Longitude")
-        lon = np.array(vd_lon[:]).flatten()
-        vd_lon.detach()
-
-        vd_precip = vs.attach("Precip_flag")
-        precip_flag = np.array(vd_precip[:]).flatten().astype("int8")
-        vd_precip.detach()
-
-        vd_land = vs.attach("Navigation_land_sea_flag")
-        land_sea_flag = np.array(vd_land[:]).flatten().astype("float32")
-        vd_land.detach()
-
-        # Xarrays named after the layers of height they contain
-
-        ds = xa.Dataset(
-            {
-                "cloud_scenario": (["cloudsat_trace", "z"], cloud_scenario),
-                "cloud_layer_type": (
-                    ["cloudsat_trace", "layer"],
-                    cloudLayerType,
-                ),
-                "cloud_layer_base": (
-                    ["cloudsat_trace", "layer"],
-                    cloudLayerBase,
-                ),
-                "cloud_layer_top": (
-                    ["cloudsat_trace", "layer"],
-                    cloudLayerTop,
-                ),
-            },
-            coords={
-                "cloudsat_trace": _TRACE.copy,
-                "height": (["cloudsat_trace", "z"], height, {"units": "m"}),
-                "layer": _LAYERS.copy,
-                "lat": (["cloudsat_trace"], lat),
-                "lon": (["cloudsat_trace"], lon),
-                "time": (["cloudsat_trace"], time),
-                "precip_flag": (["cloudsat_trace"], precip_flag),
-                "land_sea_flag": (
-                    ["cloudsat_trace"],
-                    land_sea_flag,
-                ),
-                "cloud_layer_base": (
-                    ["cloudsat_trace", "layer"],
-                    cloudLayerBase,
-                ),
-                "cloud_layer_top": (
-                    ["cloudsat_trace", "layer"],
-                    cloudLayerTop,
-                ),
-            },
-            attrs={"UTCstart": UTCstart, "bin_size": vertical_Binsize},
-        )
-
-        return ds
+        return read_hdf4(result)
