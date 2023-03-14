@@ -18,7 +18,7 @@ def test_ConnectorABC():
             return []
 
         def _makequery(self, endpoint, pdate):
-
+            # noqa
             endpoint.extend([("_makequery", pdate.isoformat())])
             return endpoint
 
@@ -73,6 +73,8 @@ def test_SFTPMixin_FileNotFoundError():
 
     conn = TestFileNotFoundError()
 
+    @mock.patch("paramiko.SSHClient.connect", return_value=None)
+    # COmo hago la coneccion 
     with mock.patch("paramiko.SSHClient.get", return_value=[]) as mconn:
         with pytest.raises(FileNotFoundError):
             conn.fetch("27 jul 1981", tzone="UTC")

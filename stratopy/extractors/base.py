@@ -15,7 +15,8 @@ import io
 import os
 import shutil
 import tempfile
-from stat import *
+
+# from stat import *
 
 import dateutil.parser
 
@@ -267,7 +268,9 @@ class SFTPMixin:
     atexit.register(
         shutil.rmtree, TEMP_DIR
     )  # al salir de PYTHON se ejecuta eso
-    atexit.register(print, "chau paula!")  # al salir de PYTHON se ejecuta eso
+    atexit.register(
+        print, "File downloaded"
+    )  # al salir de PYTHON se ejecuta eso
 
     def _download(self, query):
         TEMP_DIR = tempfile.mkdtemp(prefix="stpy_cloudsat_")

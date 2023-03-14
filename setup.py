@@ -22,6 +22,7 @@ REQUIREMENTS = [
     "h5netcdf",
     "pyhdf",
     "rioxarray",
+    "paramiko",
 ]
 
 setup(

@@ -7,16 +7,15 @@
 import io
 import os
 import pathlib
+import tempfile
 from collections.abc import MutableMapping
 from unittest import mock
 
 import pytest
 
-import tempfile
+from stratopy.extractors.cloudsat import read_hdf4
 
 import xarray as xa
-
-from stratopy.extractors.cloudsat import read_hdf4
 
 # =============================================================================
 # GLOBALS
