@@ -234,6 +234,13 @@ class SFTPMixin:
     keypass: str
         Password for your ssh key. You may not have any.
         Default = None
+
+    Returns
+    -------
+
+    Raise
+    -----
+
     """
 
     def __init__(self, host, port, username, *, keyfile=None, keypass=None):
@@ -279,12 +286,18 @@ class SFTPMixin:
         )  # al salir de PYTHON se ejecuta eso
         tmp_path = tempfile.mktemp(dir=TEMP_DIR)
         store_dir, pattern = query.rsplit("/", 1)
+
+        # Creates sftp session (on SSH server) object
         with self._client.open_sftp() as sftp:
+
+            # Raises FileNotFoundError if file not found
             for filename in sftp.listdir(store_dir):
+
                 if fnmatch.fnmatch(filename, pattern):
                     full_path = "/".join([store_dir, filename])
+
                     # Downloads file from full and copies into tmp
                     sftp.get(remotepath=full_path, localpath=tmp_path)
 
-                    # Returns temps cause parser_result gets a path as input
+                    # Returns temps cause parse_result gets a path as input
                     return tmp_path

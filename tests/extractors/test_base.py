@@ -71,14 +71,20 @@ def test_SFTPMixin_FileNotFoundError():
         def _parse_result(self, response):
             return None
 
-    conn = TestFileNotFoundError()
+        with mock.patch("paramiko.SSHClient") as mock_client:
+            with mock.patch("paramiko.AutoAddPolicy") as mock_pol:
+                mock_client.set_missing_host_key_policy(mock_pol)
 
-    @mock.patch("paramiko.SSHClient.connect", return_value=None)
-    # COmo hago la coneccion 
-    with mock.patch("paramiko.SSHClient.get", return_value=[]) as mconn:
+    with mock.patch("paramiko.RSAKey", return_value="key") as mock_key:
+        mpkey = mock_key.from_private_key_file("fake/ssh/path", "1234")
+        conn = TestFileNotFoundError(
+            "www.cloudsat.cira.colostate.edu", 22, "pepito@mimail.com"
+        )
+
+    with mock.patch("paramiko.SSHClient.open_sftp", return_value=[]) as conn:
         with pytest.raises(FileNotFoundError):
             conn.fetch("27 jul 1981", tzone="UTC")
-    mconn.assert_called_once_with("1981-07-27T00:00:00+00:00")
+    conn.assert_called_once_with("1981-07-27T00:00:00+00:00")
 
 
 def test_ConnectorABC_get_endpoint_not_implementhed():
