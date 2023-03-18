@@ -4,6 +4,8 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+import os
+
 from unittest import mock
 
 import pytest
@@ -11,6 +13,9 @@ import pytest
 from stratopy.extractors import base
 
 
+# ----------------------------------
+# General tests
+# -----------------------------------
 def test_ConnectorABC():
     class FakeConnector(base.ConnectorABC):
         @classmethod
@@ -39,52 +44,6 @@ def test_ConnectorABC():
         "_parse_result",
     ]
     assert result == expected
-
-
-def test_S3mixin_FileNotFoundError():
-    class TestFileNotFoundError(base.S3Mixin, base.ConnectorABC):
-        def get_endpoint(cls):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return pdate.isoformat()
-
-        def _parse_result(self, response):
-            return None
-
-    conn = TestFileNotFoundError()
-
-    with mock.patch("s3fs.S3FileSystem.glob", return_value=[]) as mglob:
-        with pytest.raises(FileNotFoundError):
-            conn.fetch("27 jul 1981", tzone="UTC")
-    mglob.assert_called_once_with("1981-07-27T00:00:00+00:00")
-
-
-def test_SFTPMixin_FileNotFoundError():
-    class TestFileNotFoundError(base.SFTPMixin, base.ConnectorABC):
-        def get_endpoint(cls):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return pdate.isoformat()
-
-        def _parse_result(self, response):
-            return None
-
-        with mock.patch("paramiko.SSHClient") as mock_client:
-            with mock.patch("paramiko.AutoAddPolicy") as mock_pol:
-                mock_client.set_missing_host_key_policy(mock_pol)
-
-    with mock.patch("paramiko.RSAKey", return_value="key") as mock_key:
-        mpkey = mock_key.from_private_key_file("fake/ssh/path", "1234")
-        conn = TestFileNotFoundError(
-            "www.cloudsat.cira.colostate.edu", 22, "pepito@mimail.com"
-        )
-
-    with mock.patch("paramiko.SSHClient.open_sftp", return_value=[]) as conn:
-        with pytest.raises(FileNotFoundError):
-            conn.fetch("27 jul 1981", tzone="UTC")
-    conn.assert_called_once_with("1981-07-27T00:00:00+00:00")
 
 
 def test_ConnectorABC_get_endpoint_not_implementhed():
@@ -157,3 +116,68 @@ def test_ConnectorABC_parse_result_not_implementhed():
 
     with pytest.raises(NotImplementedError):
         Fake4Connector().fetch("27 jul 1981", tzone="UTC")
+
+
+# ------------------------------
+# S3Mixin
+# ------------------------------
+
+
+def test_S3mixin_FileNotFoundError():
+    class TestFileNotFoundError(base.S3Mixin, base.ConnectorABC):
+        def get_endpoint(cls):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return pdate.isoformat()
+
+        def _parse_result(self, response):
+            return None
+
+    conn = TestFileNotFoundError()
+
+    with mock.patch("s3fs.S3FileSystem.glob", return_value=[]) as mglob:
+        with pytest.raises(FileNotFoundError):
+            conn.fetch("27 jul 1981", tzone="UTC")
+    mglob.assert_called_once_with("1981-07-27T00:00:00+00:00")
+
+
+# ----------------------------------------------
+# SFTPMixin
+# -----------------------------------------------
+DEFAULT_SSH_KEY = os.path.expanduser(
+    os.path.join("tests/data", ".ssh", "id_rsa")
+)
+
+
+def test_SFTPMixin_FileNotFoundError():
+    class TestFileNotFoundError(base.SFTPMixin, base.ConnectorABC):
+        def get_endpoint(cls):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return pdate.isoformat()
+
+        def _parse_result(self, response):
+            return None
+
+        # Mocks connection
+        with mock.patch("paramiko.SSHClient") as mock_client:
+            with mock.patch("paramiko.AutoAddPolicy") as mock_pol:
+                mock_client.set_missing_host_key_policy(mock_pol)
+
+    # Mocks key with sample key in tests data
+    with mock.patch("paramiko.RSAKey", return_value="key") as mock_key:
+        mpkey = mock_key.from_private_key_file(open(DEFAULT_SSH_KEY))
+
+    conn = TestFileNotFoundError(
+        "www.cloudsat.cira.colostate.edu",
+        22,
+        "pepito@mimail.com",
+        keyfile=mpkey,
+    )
+
+    with mock.patch("paramiko.SSHClient.open_sftp", return_value=[]) as conn:
+        with pytest.raises(FileNotFoundError):
+            conn.fetch("27 jul 1981", tzone="UTC")
+    conn.assert_called_once_with("1981-07-27T00:00:00+00:00")
