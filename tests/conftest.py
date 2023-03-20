@@ -103,6 +103,8 @@ def patch_cache():
 
 @pytest.fixture(scope="session")
 def data_path():
+    """Retrieves path where sample data is stored."""
+
     def _make_path(sat, fname):
         return DATA / sat / fname
 
@@ -123,7 +125,7 @@ def data_bytes(data_path):
     return _read_bytes_io
 
 
-# Para testear parse result, recibe lo de base y tira un xarray
+# Para testear parse_result, recibe lo de base y tira un xarray
 @pytest.fixture(scope="session")
 def dataset(data_bytes):
     "Retrieves xarray dataset from bytes."
@@ -136,14 +138,15 @@ def dataset(data_bytes):
     return _make
 
 
+# SFTP
 @pytest.fixture(scope="session")
-def mock_conn(data_path):
+def data_sftp(data_path):
     def get_sftp(sat, fname):
         """Para testear que copie la file que baja al tmp path,
         que es lo que hace el sftp.get"""
         fpath = data_path(sat, fname)
         tmp_path = tempfile.mktemp(dir=TEMP_DIR)
-        with mock_conn.open_sftp() as sftp:
+        with data_sftp.open_sftp() as sftp:
             sftp.get(
                 remotepath=fpath,
                 localpath=tmp_path,
@@ -155,9 +158,9 @@ def mock_conn(data_path):
 
 # Para testear parse_result, recibe lo de base y tira un xarray
 @pytest.fixture(scope="session")
-def hdf_dataset(mock_conn):
+def dataset_from_hdf(get_sftp):
     def _make_xarray_fromhdf(sat, fname):
-        xarr = read_hdf4(mock_conn(sat, fname))
+        xarr = read_hdf4(get_sftp(sat, fname))
         return xarr
 
     return _make_xarray_fromhdf

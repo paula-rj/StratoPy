@@ -80,9 +80,9 @@ def read_hdf4(path_or_buff):
             ),
         },
         coords={
-            "cloudsat_trace": _TRACE.copy,
+            "trace": _TRACE.copy,
             "height": (["cloudsat_trace", "z"], height, {"units": "m"}),
-            "layer": _LAYERS.copy,
+            "layers": _LAYERS.copy,
             "lat": (["cloudsat_trace"], lat),
             "lon": (["cloudsat_trace"], lon),
             "time": (["cloudsat_trace"], time),
@@ -90,14 +90,6 @@ def read_hdf4(path_or_buff):
             "land_sea_flag": (
                 ["cloudsat_trace"],
                 land_sea_flag,
-            ),
-            "cloud_layer_base": (
-                ["cloudsat_trace", "layer"],
-                cloudLayerBase,
-            ),
-            "cloud_layer_top": (
-                ["cloudsat_trace", "layer"],
-                cloudLayerTop,
             ),
         },
         attrs={"UTCstart": UTCstart, "bin_size": vertical_Binsize},

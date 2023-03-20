@@ -142,7 +142,7 @@ def test_S3mixin_FileNotFoundError():
     mglob.assert_called_once_with("1981-07-27T00:00:00+00:00")
 
 
-# ----------------------------------------------
+# -----------------------------------------------
 # SFTPMixin
 # -----------------------------------------------
 DEFAULT_SSH_KEY = os.path.expanduser(
@@ -161,20 +161,19 @@ def test_SFTPMixin_FileNotFoundError():
         def _parse_result(self, response):
             return None
 
-        # Mocks connection
-        with mock.patch("paramiko.SSHClient") as mock_client:
-            with mock.patch("paramiko.AutoAddPolicy") as mock_pol:
-                mock_client.set_missing_host_key_policy(mock_pol)
+        mock_client = mock.MagicMock()
+        mock_policy = mock.MagicMock()
 
-    # Mocks key with sample key in tests data
-    with mock.patch("paramiko.RSAKey", return_value="key") as mock_key:
-        mpkey = mock_key.from_private_key_file(open(DEFAULT_SSH_KEY))
+        @mock.patch("paramiko.SSHClient", mock_client)
+        @mock.patch("paramiko.AutoAddPolicy", mock_policy)
+        def mock_connection(mock_client, mock_pol):
+            mock_client.set_missing_host_key_policy(mock_pol)
 
     conn = TestFileNotFoundError(
         "www.cloudsat.cira.colostate.edu",
         22,
         "pepito@mimail.com",
-        keyfile=mpkey,
+        keyfile=DEFAULT_SSH_KEY,
     )
 
     with mock.patch("paramiko.SSHClient.open_sftp", return_value=[]) as conn:
