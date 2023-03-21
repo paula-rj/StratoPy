@@ -145,38 +145,44 @@ def test_S3mixin_FileNotFoundError():
 # -----------------------------------------------
 # SFTPMixin
 # -----------------------------------------------
-DEFAULT_SSH_KEY = os.path.expanduser(
-    os.path.join("tests/data", ".ssh", "id_rsa")
-)
 
 
-def test_SFTPMixin_FileNotFoundError():
-    class TestFileNotFoundError(base.SFTPMixin, base.ConnectorABC):
+@mock.patch("paramiko.SSHClient.open_sftp")
+@mock.patch("paramiko.SSHClient.connect")
+@mock.patch("paramiko.RSAKey.from_private_key_file", return_value="pkey")
+def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
+    class TestSFTP(base.SFTPMixin, base.ConnectorABC):
         def get_endpoint(cls):
-            return None
+            return "endpoint"
 
         def _makequery(self, endpoint, pdate):
-            return pdate.isoformat()
+            return "dir/pattern.*"
 
         def _parse_result(self, response):
-            return None
+            return response
 
-        mock_client = mock.MagicMock()
-        mock_policy = mock.MagicMock()
+    conn = TestSFTP("host", "port", "zaraza@coso.com", keyfile="algo")
 
-        @mock.patch("paramiko.SSHClient", mock_client)
-        @mock.patch("paramiko.AutoAddPolicy", mock_policy)
-        def mock_connection(mock_client, mock_pol):
-            mock_client.set_missing_host_key_policy(mock_pol)
-
-    conn = TestFileNotFoundError(
-        "www.cloudsat.cira.colostate.edu",
-        22,
-        "pepito@mimail.com",
-        keyfile=DEFAULT_SSH_KEY,
+    from_private_key_file.assert_called_once_with("algo", password=None)
+    connect.assert_called_once_with(
+        "host", port="port", username="zarazaATcoso.com", pkey="pkey"
     )
 
-    with mock.patch("paramiko.SSHClient.open_sftp", return_value=[]) as conn:
-        with pytest.raises(FileNotFoundError):
-            conn.fetch("27 jul 1981", tzone="UTC")
-    conn.assert_called_once_with("1981-07-27T00:00:00+00:00")
+    # mock listdir
+    listdir = open_sftp.return_value.__enter__.return_value.listdir
+    listdir.return_value = ["pattern.ext"]
+
+    get = open_sftp.return_value.__enter__.return_value.get
+    get.return_value = "value"
+
+    response = conn.fetch("27/07/1981", force=True)
+
+    listdir.assert_called_once_with("dir")
+
+    get.assert_called_once()
+    get.call_args.kwargs["remotepath"] == "dir/pattern.ext"
+    # localpath is a randomstring
+
+    assert os.path.basename(response).startswith("stpy_cloudsat_")
+
+    del conn  # to check coverage

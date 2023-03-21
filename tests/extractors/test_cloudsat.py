@@ -12,7 +12,7 @@ import pytest
 import xarray as xa
 
 from stratopy.extractors import cloudsat
-import ipdb
+
 
 CLOUDSAT_PATH = (
     "tests/data/CloudSat/"
@@ -29,39 +29,31 @@ def test_read_hdf4():
     assert isinstance(cs_dataset, xa.Dataset)
 
 
-mock_client = mock.MagicMock()
-mock_policy = mock.MagicMock()
-
-
-@mock.patch("paramiko.SSHClient", mock_client)
-@mock.patch("paramiko.AutoAddPolicy", mock_policy)
-def test_wrong_product():
+@mock.patch("paramiko.SSHClient")
+@mock.patch("paramiko.AutoAddPolicy")
+def test_wrong_product(client, policy):
     with pytest.raises(ValueError):
         cloudsat.CloudSat(
             "wrong_prod", "fakeusr@gmail.edu", keyfile=DEFAULT_SSH_KEY
         )
 
 
-@mock.patch("paramiko.SSHClient", mock_client)
-@mock.patch("paramiko.AutoAddPolicy", mock_policy)
+@mock.patch("paramiko.SSHClient")
+@mock.patch("paramiko.AutoAddPolicy")
 @pytest.mark.parametrize("ptype", cloudsat.CloudSat._PRODUCT_TYPES)
-def test_repr(ptype):
+def test_repr(client, policy, ptype):
     cs_obj = cloudsat.CloudSat(
         product_type=ptype,
         username="fakeusr@gmail.edu",
         keyfile=DEFAULT_SSH_KEY,
     )
     assert cs_obj.get_endpoint() == f"Data/{ptype}"
-    expected = f"<CloudSat product_type={ptype!r}>"
-    assert cs_obj.__repr__() == expected
+    assert repr(cs_obj) == f"<CloudSat product_type={ptype!r}>"
 
 
-ipdb.set_trace()
-
-
-@mock.patch("paramiko.SSHClient", mock_client)
-@mock.patch("paramiko.AutoAddPolicy", mock_policy)
-def test_CloudSat_fetch(msftp, data_sftp, dataset_from_hdf):
+@mock.patch("paramiko.SSHClient")
+@mock.patch("paramiko.AutoAddPolicy")
+def test_CloudSat_fetch(client, policy, msftp, data_sftp, dataset_from_hdf):
 
     path = data_sftp(
         "CloudSat",

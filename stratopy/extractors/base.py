@@ -13,7 +13,6 @@ import atexit
 import fnmatch
 import io
 import os
-import shutil
 import tempfile
 
 # from stat import *
@@ -271,20 +270,7 @@ class SFTPMixin:
     def close(self):
         self._client.close()
 
-    TEMP_DIR = tempfile.mkdtemp(prefix="stpy_cloudsat_")
-    atexit.register(
-        shutil.rmtree, TEMP_DIR
-    )  # al salir de PYTHON se ejecuta eso
-    atexit.register(
-        print, "File downloaded"
-    )  # al salir de PYTHON se ejecuta eso
-
     def _download(self, query):
-        TEMP_DIR = tempfile.mkdtemp(prefix="stpy_cloudsat_")
-        atexit.register(
-            shutil.rmtree, TEMP_DIR
-        )  # al salir de PYTHON se ejecuta eso
-        tmp_path = tempfile.mktemp(dir=TEMP_DIR)
         store_dir, pattern = query.rsplit("/", 1)
 
         # Creates sftp session (on SSH server) object
@@ -294,10 +280,17 @@ class SFTPMixin:
             for filename in sftp.listdir(store_dir):
 
                 if fnmatch.fnmatch(filename, pattern):
+
                     full_path = "/".join([store_dir, filename])
+
+                    # temporary container
+                    _, tmp_path = tempfile.mkstemp(prefix="stpy_cloudsat_")
+                    atexit.register(os.remove, tmp_path)
 
                     # Downloads file from full and copies into tmp
                     sftp.get(remotepath=full_path, localpath=tmp_path)
 
                     # Returns temps cause parse_result gets a path as input
                     return tmp_path
+
+        # It never comes here because the listdir pulls a file-no-found
