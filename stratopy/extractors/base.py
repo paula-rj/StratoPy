@@ -190,6 +190,11 @@ class S3Mixin:
         ----------
         query: str or path
             The full query needed to download the file.
+
+        Returns
+        -------
+        result: Bytes
+            File in bytes.
         """
 
         # Starts connection with AWS S3 bucket
@@ -272,12 +277,12 @@ class SFTPMixin:
 
         # Creates sftp session (on SSH server) object
         with self._client.open_sftp() as sftp:
-
+            # noqa
             # Raises FileNotFoundError if file not found
             for filename in sftp.listdir(store_dir):
-
+                # noqa
                 if fnmatch.fnmatch(filename, pattern):
-
+                    # noqa
                     full_path = "/".join([store_dir, filename])
 
                     # temporary container

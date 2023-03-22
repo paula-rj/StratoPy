@@ -18,9 +18,21 @@ _TRACE = np.arange(36950, dtype=np.int32)
 _LAYERS = np.arange(10, dtype=np.int8)
 
 
-def read_hdf4(path_or_buff):
-    # Datasets
-    sd_file = SD(path_or_buff, SDC.READ)
+def read_hdf4(path):
+    """Reads a HDF-EOS file from CloudSat
+    and returns it as an Xarray Dataset
+
+    Parameters
+    ----------
+    path: str or Path
+        Path where the file is stored
+
+    Returns
+    -------
+    ds: Xarray Dataset
+        Dataset containing the most relevant coordinates
+        and attributes of a 2B-CLDCLASS file."""
+    sd_file = SD(path, SDC.READ)
     height = sd_file.select("Height").get()
     cloud_scenario = sd_file.select("cloud_scenario").get()
     cloudLayerBase = sd_file.select("CloudLayerBase").get()
@@ -28,7 +40,7 @@ def read_hdf4(path_or_buff):
     cloudLayerType = sd_file.select("CloudLayerType").get().astype("int8")
 
     # HDF
-    hdf_file = HDF(path_or_buff, HC.READ)
+    hdf_file = HDF(path, HC.READ)
     vs = VS(hdf_file)
 
     # Important attributes, one number only

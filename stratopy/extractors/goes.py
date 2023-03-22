@@ -145,6 +145,11 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
             the requested date and time.
             It should contain year, month, day, hour and minutes.
 
+        Return
+        ------
+        query: str or Path
+            Full path where the file is stored in the server.
+
         """
         date_dir = dt.strftime("%Y/%j/%H")
 
@@ -168,9 +173,15 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     def _parse_result(self, result):
         """Converts the downloaded netcdf file-like into xarray object.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result: the file in Bytes.
+
+        Returns
+        -------
+        goes_ds: Xarray Dataset
+            Dataset containing the information from the
+            original NetCDF file.
         """
         goes_ds = xa.open_dataset(result, engine="h5netcdf")
         return goes_ds

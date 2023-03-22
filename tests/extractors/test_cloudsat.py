@@ -7,9 +7,9 @@ from unittest import mock
 
 import pytest
 
-import xarray as xa
-
 from stratopy.extractors import cloudsat
+
+import xarray as xa
 
 
 CLOUDSAT_PATH = (
@@ -55,6 +55,20 @@ def test_fetch(from_private_key_file, connect, open_sftp):
         keyfile="some_file",
     )
 
+    connect.assert_called_once_with(
+        "www.cloudsat.cira.colostate.edu",
+        port=22,
+        username="fakeusrATgmail.edu",
+        pkey="pkey",
+    )
+
+    # Test make query
+    dt = cs_obj.parse_date("25/jun/2010 18:00", time_zone="UTC")
+    mq = cs_obj._makequery(cs_obj.get_endpoint(), dt)
+    assert mq == "Data/2B-CLDCLASS.P1_R05/2010/176/20101761800*"
+
     # tests read_hdf4()
     expected = cloudsat.read_hdf4(CLOUDSAT_PATH)
+    result = cs_obj._parse_result(CLOUDSAT_PATH)
     assert isinstance(expected, xa.Dataset)
+    xa.testing.assert_equal(expected, result)

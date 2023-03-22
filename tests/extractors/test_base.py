@@ -3,9 +3,7 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-
 import os
-
 from unittest import mock
 
 import pytest
@@ -142,9 +140,9 @@ def test_S3mixin_FileNotFoundError():
     mglob.assert_called_once_with("1981-07-27T00:00:00+00:00")
 
 
-# -----------------------------------------------
+# ---------------------------------------------------
 # SFTPMixin
-# -----------------------------------------------
+# ---------------------------------------------------
 
 
 @mock.patch("paramiko.SSHClient.open_sftp")

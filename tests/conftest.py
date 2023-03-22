@@ -13,8 +13,6 @@ from unittest import mock
 
 import pytest
 
-from stratopy.extractors.cloudsat import read_hdf4
-
 import xarray as xa
 
 # =============================================================================
