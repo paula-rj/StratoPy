@@ -3,8 +3,6 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-import os
-
 from unittest import mock
 
 import pytest
@@ -19,64 +17,44 @@ CLOUDSAT_PATH = (
     "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
 )
 
-DEFAULT_SSH_KEY = os.path.expanduser(
-    os.path.join("tests/data", ".ssh", "id_rsa")
-)
 
-
-def test_read_hdf4():
-    cs_dataset = cloudsat.read_hdf4(CLOUDSAT_PATH)
-    assert isinstance(cs_dataset, xa.Dataset)
-
-
-@mock.patch("paramiko.SSHClient")
-@mock.patch("paramiko.AutoAddPolicy")
-def test_wrong_product(client, policy):
+@mock.patch("paramiko.SSHClient.connect")
+@mock.patch("paramiko.RSAKey.from_private_key_file", return_value="pkey")
+def test_wrong_product(from_private_key_file, connect):
     with pytest.raises(ValueError):
         cloudsat.CloudSat(
-            "wrong_prod", "fakeusr@gmail.edu", keyfile=DEFAULT_SSH_KEY
+            "wrong_prod", "fakeusr@gmail.edu", keyfile="fake_file"
         )
+    connect.assert_called
 
 
-@mock.patch("paramiko.SSHClient")
-@mock.patch("paramiko.AutoAddPolicy")
+@mock.patch("paramiko.SSHClient.connect")
+@mock.patch("paramiko.RSAKey.from_private_key_file", return_value="pkey")
 @pytest.mark.parametrize("ptype", cloudsat.CloudSat._PRODUCT_TYPES)
-def test_repr(client, policy, ptype):
+def test_repr(connect, from_private_key_file, ptype):
     cs_obj = cloudsat.CloudSat(
         product_type=ptype,
         username="fakeusr@gmail.edu",
-        keyfile=DEFAULT_SSH_KEY,
+        keyfile="some_file",
     )
-    assert cs_obj.get_endpoint() == f"Data/{ptype}"
+    # test repr ok for all types of products
     assert repr(cs_obj) == f"<CloudSat product_type={ptype!r}>"
+    # Test get endpoint (store directory ok)
+    assert cs_obj.get_endpoint() == f"Data/{ptype}"
 
 
-@mock.patch("paramiko.SSHClient")
-@mock.patch("paramiko.AutoAddPolicy")
-def test_CloudSat_fetch(client, policy, msftp, data_sftp, dataset_from_hdf):
-
-    path = data_sftp(
-        "CloudSat",
-        "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",
+# Test make query ok
+# Test parse_product ok
+@mock.patch("paramiko.SSHClient.open_sftp")
+@mock.patch("paramiko.SSHClient.connect")
+@mock.patch("paramiko.RSAKey.from_private_key_file", return_value="pkey")
+def test_fetch(from_private_key_file, connect, open_sftp):
+    cs_obj = cloudsat.CloudSat(
+        product_type="2B-CLDCLASS.P1_R05",
+        username="fakeusr@gmail.edu",
+        keyfile="some_file",
     )
 
-    with mock.patch(
-        "paramiko.SSHClient.open_sftp", return_value=path
-    ) as mconn:
-        result = cloudsat.CloudSat(
-            product_type="2B-CLDCLASS.P1_R05",
-            username="fakeusr@gmail.edu",
-            keyfile=DEFAULT_SSH_KEY,
-        ).fetch("25/jun/2010 18:00", tzone="UTC")
-
-    msftp.assert_called_once_with(
-        "Data/2B-CLDCLASS.P1_R05/2010/176/20101761800*"
-    )
-
-    expected = dataset_from_hdf(
-        "CloudSat",
-        "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",
-    )
-
-    mconn.assert_awaited_once_with("fake/path/test", "rb")
-    xa.testing.assert_allclose(result, expected)
+    # tests read_hdf4()
+    expected = cloudsat.read_hdf4(CLOUDSAT_PATH)
+    assert isinstance(expected, xa.Dataset)

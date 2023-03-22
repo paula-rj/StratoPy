@@ -183,7 +183,7 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
     def _parse_result(self, result):
         """Converts the downloaded hdf file into xarray object.
         Warning! Height is upside down
-        height[0]is highest
+        height[0] is highest
 
         Parameters:
         -----------

@@ -15,8 +15,6 @@ import io
 import os
 import tempfile
 
-# from stat import *
-
 import dateutil.parser
 
 import paramiko
@@ -236,9 +234,8 @@ class SFTPMixin:
 
     Returns
     -------
-
-    Raise
-    -----
+    tmp_path: str or Path
+        Temporary path where HDF4 file is stored.
 
     """
 

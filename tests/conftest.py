@@ -136,31 +136,3 @@ def dataset(data_bytes):
         return xarr
 
     return _make
-
-
-# SFTP
-@pytest.fixture(scope="session")
-def data_sftp(data_path):
-    def get_sftp(sat, fname):
-        """Para testear que copie la file que baja al tmp path,
-        que es lo que hace el sftp.get"""
-        fpath = data_path(sat, fname)
-        tmp_path = tempfile.mktemp(dir=TEMP_DIR)
-        with data_sftp.open_sftp() as sftp:
-            sftp.get(
-                remotepath=fpath,
-                localpath=tmp_path,
-            )
-        return tmp_path
-
-    return get_sftp
-
-
-# Para testear parse_result, recibe lo de base y tira un xarray
-@pytest.fixture(scope="session")
-def dataset_from_hdf(get_sftp):
-    def _make_xarray_fromhdf(sat, fname):
-        xarr = read_hdf4(get_sftp(sat, fname))
-        return xarr
-
-    return _make_xarray_fromhdf
