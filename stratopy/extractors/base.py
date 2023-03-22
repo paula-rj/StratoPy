@@ -122,16 +122,19 @@ class ConnectorABC(abc.ABC):
         return type(self).__name__
 
     def parse_date(self, date, time_zone):
-        """Builts the date for which a product will be downloaded.
+        """Builts the date UTC, from a str, for which a product will be downloaded.
 
         Parameters
         ----------
         date: str
-            The date in format allowed by python-dateutils
+            The date in format allowed by python-dateutils.
+        time_zone: str
+            The time zone for the input date and time.
 
         Returns
         -------
-            datetime object
+            dt_utc: datetime object
+                Date and time in UTC as datetime object.
         """
         usr_date = dateutil.parser.parse(date)
         zone = pytz.timezone(time_zone)

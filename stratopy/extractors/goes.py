@@ -4,6 +4,10 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+# =============================================================================
+# IMPORTS
+# =============================================================================
+
 import dateutil.parser
 
 import pytz

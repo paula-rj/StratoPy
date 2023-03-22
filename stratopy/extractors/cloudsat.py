@@ -4,6 +4,9 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+# =============================================================================
+# IMPORTS
+# =============================================================================
 import numpy as np
 
 from pyhdf.HDF import HC, HDF
@@ -188,8 +191,8 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         """
         date_dir = date_time.strftime("%Y/%j")
         # 2019009155049_67652_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf
-        pdate = date_time.strftime("%Y%j%H%M") + "*"
-        query = "/".join([endpoint, date_dir, pdate])
+        parsed_date = date_time.strftime("%Y%j%H%M") + "*"
+        query = "/".join([endpoint, date_dir, parsed_date])
         return query
 
     def _parse_result(self, result):
