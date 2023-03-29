@@ -14,6 +14,7 @@ import fnmatch
 import io
 import os
 import tempfile
+import datetime as dt
 
 import dateutil.parser
 
@@ -259,9 +260,6 @@ class SFTPMixin:
         if keyfile is None:
             keyfile = DEFAULT_SSH_KEY
 
-        if "@" in username:
-            username = username.replace("@", "AT", 1)
-
         # Client object
         self._client = paramiko.SSHClient()
         # self._transport = paramiko.Transport(host, port)
@@ -290,6 +288,7 @@ class SFTPMixin:
         with self._client.open_sftp() as sftp:
             # noqa
             # Raises FileNotFoundError if file not found
+
             for filename in sftp.listdir(store_dir):
                 # noqa
                 if fnmatch.fnmatch(filename, pattern):
@@ -297,7 +296,8 @@ class SFTPMixin:
                     full_path = "/".join([store_dir, filename])
 
                     # temporary container
-                    _, tmp_path = tempfile.mkstemp(prefix="stpy_cloudsat_")
+                    cls_name = type(self).__name__
+                    _, tmp_path = tempfile.mkstemp(prefix=f"stpy_{cls_name}_")
                     atexit.register(os.remove, tmp_path)
 
                     # Downloads file from full and copies into tmp

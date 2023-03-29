@@ -152,6 +152,9 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         keyfile=None,
         keypass=None,
     ):
+        if "@" in username:
+            username = username.replace("@", "AT", 1)
+
         super().__init__(
             host=self._CLOUDSAT_HOST,
             port=self._CLOUDSAT_PORT,
@@ -211,3 +214,35 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             in xarray format.
         """
         return read_hdf4(result)
+
+    def _download(self, query):
+        store_dir, pattern = query.rsplit("/", 1)
+        dt_pattern = dt.datetime.strptime(pattern, "%Y%j%H%M%S")
+
+        import datetime as dt
+
+        # Creates sftp session (on SSH server) object
+        with self._client.open_sftp() as sftp:
+            # noqa
+            # Raises FileNotFoundError if file not found
+            candidates = sftp.listdir(store_dir)
+            dt_candidates = [
+                dt.datetime.strptime(date[:11], "%Y%j%H%M%S")
+                for date in candidates
+            ]
+            filename_idx = utils.nearest_date(dt_canditates, patternt)
+            filename = candates[filename_idx]
+
+            full_path = "/".join([store_dir, filename])
+
+            # temporary container
+            cls_name = type(self).__name__
+            _, tmp_path = tempfile.mkstemp(prefix=f"stpy_{cls_name}_")
+            atexit.register(os.remove, tmp_path)
+
+            # Downloads file from full and copies into tmp
+            sftp.get(remotepath=full_path, localpath=tmp_path)
+
+            # Returns temps cause parse_result gets a path as input
+            return tmp_path)
+
