@@ -47,8 +47,8 @@ class NothingHereError(FileNotFoundError):
 class ConnectorABC(abc.ABC):
     @abc.abstractmethod
     def get_endpoint(self):
-        """Meant to return the url of the server where the files are stored.
-        For example, AWS, FTP, HTTP.
+        """Returns the url of the server where the files are stored.
+        For example, AWS, SFTP, HTTP.
 
         Raises
         ------
@@ -60,8 +60,7 @@ class ConnectorABC(abc.ABC):
 
     @abc.abstractmethod
     def _makequery(self, endpoint, date):
-        """Meant to build the whole query needed
-        to download the product.
+        """Builds the whole query needed to download the product.
         This method is unique for each satellite.
         Assumes that given the parameters it is possible to build the query.
 
@@ -87,7 +86,7 @@ class ConnectorABC(abc.ABC):
         Parameters
         ----------
         query: str
-            The query needed to download the product.
+            The query needed to download a product.
 
         Raises
         ------
@@ -99,11 +98,12 @@ class ConnectorABC(abc.ABC):
 
     @abc.abstractmethod
     def _parse_result(self, result):
-        """Meant to convert the downloaded file into xarray object.
+        """Converts the downloaded file into xarray object.
 
         Parameters:
         -----------
-        result: the file in some format
+        result: the file in the format,
+            for example, bytes, HDF, etc.
 
         Raises
         ------
@@ -122,7 +122,8 @@ class ConnectorABC(abc.ABC):
         return type(self).__name__
 
     def parse_date(self, date, time_zone):
-        """Builts the date UTC, from a str, for which a product will be downloaded.
+        """Builts the date UTC, from a str,
+            for which a product will be downloaded.
 
         Parameters
         ----------
@@ -144,11 +145,18 @@ class ConnectorABC(abc.ABC):
 
     def fetch(self, date, tzone="UTC", force=False):
         """
-        Downloads the requested product and retrieves it as xarray.
+        Downloads the requested product and retrieves it as xarray Dataset.
 
         Parameters
         ----------
         date: str
+            Date and time for downloading the product.
+        tzone: str
+            default: "UTC"
+            Time zone for the given date and time.
+        force: bool
+            default: False
+            Forces to download the file even if it is in the cache.
 
         Returns
         -------

@@ -17,6 +17,14 @@ import xarray as xa
 from . import base
 
 # =============================================================================
+# CONSTANTS
+# =============================================================================
+
+MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(
+    pytz.UTC
+)
+
+# =============================================================================
 # QUERY PARSERS
 # =============================================================================
 
@@ -157,10 +165,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         """
         date_dir = dt.strftime("%Y/%j/%H")
 
-        mode_change_date = dateutil.parser.parse(
-            "2019 feb 19 15:00 UTC"
-        ).astimezone(pytz.UTC)
-        if dt < mode_change_date:
+        if dt < MODE_CHANGE_DATE:
             mode = 3  # 15 min
         else:
             mode = 6  # 10 min
