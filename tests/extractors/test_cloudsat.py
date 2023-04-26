@@ -3,6 +3,7 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
+import os
 from unittest import mock
 
 import pytest
@@ -72,3 +73,20 @@ def test_fetch(from_private_key_file, connect, open_sftp):
     result = cs_obj._parse_result(CLOUDSAT_PATH)
     assert isinstance(expected, xa.Dataset)
     xa.testing.assert_equal(expected, result)
+
+    # mock listdir
+    listdir = open_sftp.return_value.__enter__.return_value.listdir
+    listdir.return_value = ["pattern.ext"]
+
+    get = open_sftp.return_value.__enter__.return_value.get
+    get.return_value = "value"
+
+    response = cs_obj._download(mq)
+
+    listdir.assert_called_once_with("dir")
+
+    get.assert_called_once()
+    get.call_args.kwargs["remotepath"] == "dir/pattern.ext"
+    # localpath is a randomstring
+
+    assert os.path.basename(response).startswith("stpy_cloudsat_")

@@ -116,9 +116,9 @@ def test_ConnectorABC_parse_result_not_implementhed():
         Fake4Connector().fetch("27 jul 1981", tzone="UTC")
 
 
-# ------------------------------
+# --------------------------------------------------------------
 # S3Mixin
-# ------------------------------
+# --------------------------------------------------------------
 
 
 def test_S3mixin_FileNotFoundError():
@@ -163,7 +163,7 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
 
     from_private_key_file.assert_called_once_with("algo", password=None)
     connect.assert_called_once_with(
-        "host", port="port", username="zarazaATcoso.com", pkey="pkey"
+        "host", port="port", username="zaraza@coso.com", pkey="pkey"
     )
 
     # mock listdir

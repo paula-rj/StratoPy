@@ -7,6 +7,11 @@
 # =============================================================================
 # IMPORTS
 # =============================================================================
+import atexit
+import datetime as dt
+import os
+import tempfile
+
 import numpy as np
 
 from pyhdf.HDF import HC, HDF
@@ -16,6 +21,7 @@ from pyhdf.VS import VS
 import xarray as xa
 
 from . import base
+from ..utils import nearest_date
 
 _TRACE = np.arange(36950, dtype=np.int32)
 _LAYERS = np.arange(10, dtype=np.int8)
@@ -216,33 +222,31 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         return read_hdf4(result)
 
     def _download(self, query):
+        # splits full query to obtain date pattern YYYYdddHHMM*
         store_dir, pattern = query.rsplit("/", 1)
-        dt_pattern = dt.datetime.strptime(pattern, "%Y%j%H%M%S")
-
-        import datetime as dt
-
         # Creates sftp session (on SSH server) object
         with self._client.open_sftp() as sftp:
-            # noqa
             # Raises FileNotFoundError if file not found
             candidates = sftp.listdir(store_dir)
+            # List of files for selected date
             dt_candidates = [
                 dt.datetime.strptime(date[:11], "%Y%j%H%M%S")
                 for date in candidates
             ]
-            filename_idx = utils.nearest_date(dt_canditates, patternt)
-            filename = candates[filename_idx]
+            filename_idx = nearest_date(dt_candidates, pattern)
+            filename = candidates[filename_idx]
 
             full_path = "/".join([store_dir, filename])
 
-            # temporary container
+            # Temporary container
             cls_name = type(self).__name__
-            _, tmp_path = tempfile.mkstemp(prefix=f"stpy_{cls_name}_")
+            _, tmp_path = tempfile.mkstemp(
+                suffix=".hdf", prefix=f"stpy_{cls_name}_"
+            )
             atexit.register(os.remove, tmp_path)
 
             # Downloads file from full and copies into tmp
             sftp.get(remotepath=full_path, localpath=tmp_path)
 
             # Returns temps cause parse_result gets a path as input
-            return tmp_path)
-
+            return tmp_path
