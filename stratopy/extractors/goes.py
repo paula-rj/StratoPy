@@ -3,6 +3,10 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
+r""" This module defines the needed methods and classes for extracting
+a product from the GOES16 AWS server.
+Currently works only for products defines in the
+_PRODUCT_TYPES_PARSERS attribute."""
 
 # =============================================================================
 # IMPORTS
@@ -65,11 +69,11 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
     ptype: str
         Product type (available list in .....)
     mode: int
-        Aquisition mode of ABI sensor
+        Aquisition mode of ABI sensor.
     channel: int
-        Channel of ABI
+        Channel of ABI. Not needed here.
     dtime: datetiem object
-        Date and time in UTC
+        Date and time in UTC.
 
     Returns:
     --------
@@ -97,7 +101,9 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
 
 class GOES16(base.S3Mixin, base.ConnectorABC):
     """
-    Object that is created by retrieving products from GOES-16 satellite.
+    Creates a connection with GOES16 AWS server given the product type and
+    a channel, if it exist for that product. This connection is meant to
+    download the product later.
 
     Attributes
     ----------
@@ -138,6 +144,9 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         )
 
     def __repr__(self):
+        return f"<GOES16 product_type={self.product_type!r}>"
+
+    def _repr_html_(self):
         return f"<GOES16 product_type={self.product_type!r}>"
 
     def get_endpoint(self):

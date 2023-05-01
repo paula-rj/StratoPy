@@ -4,6 +4,12 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+r"""This module defines the abstract methods that must be implemented
+every for each new extractor, within the Connector class.
+Besides, it implements a perse_date function and a fetch funtion,
+that integrates the whole downloading pipeline.
+The extraction classes for every host, ie AWS, SFTP, and any other,
+are also implemenmted in the base module."""
 # =============================================================================
 # IMPORTS
 # =============================================================================
@@ -82,7 +88,7 @@ class ConnectorABC(abc.ABC):
 
     @abc.abstractmethod
     def _download(self, query):
-        """Meant to download the file.
+        """Download one file.
 
         Parameters
         ----------
@@ -99,7 +105,7 @@ class ConnectorABC(abc.ABC):
 
     @abc.abstractmethod
     def _parse_result(self, result):
-        """Converts the downloaded file into xarray object.
+        """Converts the downloaded file into Xarray object.
 
         Parameters:
         -----------
@@ -123,7 +129,7 @@ class ConnectorABC(abc.ABC):
         return type(self).__name__
 
     def parse_date(self, date, time_zone):
-        """Builts the date UTC, from a str,
+        """Builts the date in UTC format, from a str,
             for which a product will be downloaded.
 
         Parameters
@@ -235,7 +241,7 @@ DEFAULT_SSH_KEY = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa"))
 
 
 class SFTPMixin:
-    """Downloads a file from CloudSat SFTP server.
+    """Downloads a file from a SFTP server.
 
     Parameters
     ----------
@@ -286,13 +292,10 @@ class SFTPMixin:
 
         # Creates sftp session (on SSH server) object
         with self._client.open_sftp() as sftp:
-            # noqa
             # Raises FileNotFoundError if file not found
 
             for filename in sftp.listdir(store_dir):
-                # noqa
                 if fnmatch.fnmatch(filename, pattern):
-                    # noqa
                     full_path = "/".join([store_dir, filename])
 
                     # temporary container

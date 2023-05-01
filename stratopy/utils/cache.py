@@ -3,6 +3,7 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
+r"""This module implements the cache methods."""
 
 # =============================================================================
 # IMPORTS
@@ -19,7 +20,7 @@ import diskcache as dcache
 # CONSTANTS
 # =============================================================================
 
-#: Where carpyncho gonna store the entire data.
+# Where stratopy gonna store the entire data.
 STRATOPY_DEFAULT_DATA_PATH = pathlib.Path(
     os.path.expanduser(os.path.join("~", "stratopy_data"))
 )

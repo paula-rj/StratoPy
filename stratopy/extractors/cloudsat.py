@@ -4,6 +4,11 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
+r"""This module defines the needed methods and classes for extracting a product
+from the Cloudsat DPC (https://www.cloudsat.cira.colostate.edu/).
+The CloudSat class is an extractor that is meant to create a cloudsat objet
+and then fetch the object given a certain date and time."""
+
 # =============================================================================
 # IMPORTS
 # =============================================================================
@@ -29,7 +34,8 @@ _LAYERS = np.arange(10, dtype=np.int8)
 
 def read_hdf4(path):
     """Reads a HDF-EOS file from CloudSat
-    and returns it as an Xarray Dataset
+    and returns it as an Xarray Dataset.
+    Currently is only useful for 2B-CLDCLASS files.
 
     Parameters
     ----------
@@ -121,21 +127,27 @@ def read_hdf4(path):
 
 class CloudSat(base.SFTPMixin, base.ConnectorABC):
     """
-    Object created by retrieving products from CloudSat satellite.
+    Establich a connection with the CloudSat DPC,
+    given a username, password and ssh keyfile.
 
     Attributes
     ----------
     product_type: str
         Type of product to be downloaded. Currently 3 available.
     username: str
-        username at CloudSat server
-        https://www.cloudsat.cira.colostate.edu/
+        username at CloudSat server.
     keyfile:
         Key for
         Default = None
     keypass: str
         Password for you ssh key. You may not have any.
         Default = None
+
+    Notes
+    -----
+        The user must have and account created at CloudSat DPC
+        (https://www.cloudsat.cira.colostate.edu/) to be able
+        to use this class and retrieve a product from the CloudSat server.
     """
 
     _PRODUCT_TYPES = (
@@ -178,6 +190,9 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             )
 
     def __repr__(self):
+        return f"<CloudSat product_type={self.product_type!r}>"
+
+    def _repr_html_(self):
         return f"<CloudSat product_type={self.product_type!r}>"
 
     def get_endpoint(self):
