@@ -2,40 +2,19 @@ Stratopy Documentation
 ======================
 
 
-**Stratopy** consists of five main modules. It's available modules and documentation are listed below.
+**Stratopy** consists of three types of modules, based on the ETL design:
+The Extractors, the transformers and the Loaders.
+Besides, we include a datasets module, that contains data needed to perform 
+some transformations, and some other util modules.
+The available modules and documentation are listed below.
 
 ____________________________
-``stratopy.cloudsat`` module
+``stratopy.extractors`` module
 ____________________________
 
-.. automodule:: stratopy.cloudsat
+.. automodule:: stratopy.extractors
    :members:
    :undoc-members:
    :show-inheritance:
 
-________________________
-``stratopy.core`` module
-________________________
 
-.. automodule:: stratopy.core
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   
-________________________
-``stratopy.goes`` module
-________________________
-
-.. automodule:: stratopy.goes
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-______________________
-``stratopy.IO`` module
-______________________
-
-.. automodule:: stratopy.IO
-   :members:
-   :undoc-members:
-   :show-inheritance:

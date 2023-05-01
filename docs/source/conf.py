@@ -22,11 +22,13 @@ sys.path.insert(0, str(STRATOPY_PATH))
 # -- Project information -----------------------------------------------------
 
 project = "StratoPy"
-copy_right = "2021, Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa"
-author = "Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa"
+copy_right = (
+    "2021, Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa, Juan Cabral"
+)
+author = "Paula Romero, Georgynio Rosales, Jose Robledo, Julian Villa, Juan Cabral"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.0"
+release = "0.2.0"
 
 
 # -- General configuration ---------------------------------------------------
@@ -64,9 +66,7 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
 
-html_logo = (
-    "https://raw.githubusercontent.com/paula-rj/StratoPy/main/res/logo.jpg"
-)
+html_logo = "https://raw.githubusercontent.com/paula-rj/StratoPy/main/res/logo.jpg"
 html_theme_options = {
     "logo_only": True,
     "display_version": False,
