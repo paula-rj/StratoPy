@@ -8,9 +8,9 @@ Besides, we include a datasets module, that contains data needed to perform
 some transformations, and some other util modules.
 The available modules and documentation are listed below.
 
-____________________________
+______________________________
 ``stratopy.extractors`` module
-____________________________
+______________________________
 
 .. automodule:: stratopy.extractors
    :members:

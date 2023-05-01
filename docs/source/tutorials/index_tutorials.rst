@@ -1,7 +1,7 @@
 Tutorials
-========
+=========
 
-A series of tutorials in Jupyter notebooks to learn how to use  :app:`Stratopy`.
+A series of tutorials in Jupyter notebooks to learn how to use  `Stratopy`.
 
 
 .. toctree::
@@ -9,6 +9,5 @@ A series of tutorials in Jupyter notebooks to learn how to use  :app:`Stratopy`.
    :caption: Contents:
 
    download_cloudsat.ipynb
-   new_tutorial.ipynb
    tutorial.ipynb
 

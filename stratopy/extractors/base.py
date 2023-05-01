@@ -52,6 +52,24 @@ class NothingHereError(FileNotFoundError):
 
 
 class ConnectorABC(abc.ABC):
+    """Base class for implementing any extractor.
+
+    Methods
+    -------
+    get_endpoint:
+        Gets host url.
+    _makequery:
+        Retrieves the whole url for downloading a product.
+    _download:
+        Downloads a product.
+    _parse_result:
+        Returns the original product as an Xarray Dataset.
+    parse_date:
+        Recieves the date for the download as a str.
+    fetch:
+        Coordinates all the pipeline for downloading a product.
+    """
+
     @abc.abstractmethod
     def get_endpoint(self):
         """Returns the url of the server where the files are stored.
@@ -201,8 +219,16 @@ class ConnectorABC(abc.ABC):
 
 
 class S3Mixin:
+    """Implements an extractor from AWS.
+
+    Methods
+    -------
+    _download:
+        Downloads a products given a query.
+    """
+
     def _download(self, query):
-        """Downloads a file from AWS.
+        """Downloads a file from AWS and returns it as Bytes.
 
         Parameters
         ----------
@@ -241,7 +267,7 @@ DEFAULT_SSH_KEY = os.path.expanduser(os.path.join("~", ".ssh", "id_rsa"))
 
 
 class SFTPMixin:
-    """Downloads a file from a SFTP server.
+    """Implements an extractor from a SFTP server.
 
     Parameters
     ----------
@@ -255,10 +281,12 @@ class SFTPMixin:
         Password for your ssh key. You may not have any.
         Default = None
 
-    Returns
+    Methods
     -------
-    tmp_path: str or Path
-        Temporary path where HDF4 file is stored.
+    close:
+        Closes connection.
+    _download:
+        Downloads a product given a query.
 
     """
 
@@ -288,6 +316,19 @@ class SFTPMixin:
         self._client.close()
 
     def _download(self, query):
+        """Downloads a file from a SFTP server.
+
+        Parameters
+        ----------
+        query: str
+            url for downloading the product.
+
+        Returns
+        -------
+        tmp_path: str or Path
+            Temporary path where HDF4 file is stored.
+
+        """
         store_dir, pattern = query.rsplit("/", 1)
 
         # Creates sftp session (on SSH server) object
@@ -308,5 +349,3 @@ class SFTPMixin:
 
                     # Returns temps cause parse_result gets a path as input
                     return tmp_path
-
-        # It never comes here because the listdir pulls a file-no-found

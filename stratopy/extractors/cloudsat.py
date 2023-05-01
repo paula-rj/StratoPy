@@ -127,7 +127,7 @@ def read_hdf4(path):
 
 class CloudSat(base.SFTPMixin, base.ConnectorABC):
     """
-    Establich a connection with the CloudSat DPC,
+    Establishes a connection with the CloudSat DPC,
     given a username, password and ssh keyfile.
 
     Attributes
@@ -142,6 +142,17 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
     keypass: str
         Password for you ssh key. You may not have any.
         Default = None
+
+    Methods
+    -------
+    get_endpoint:
+        Gets host url, a directory from CloudSat DPC.
+    _makequery:
+        Retrieves the whole url for downloading a product.
+    parse_result:
+        Converts an HDF file into an Xarray Dataset.
+    _download:
+        Downloads a product from CloudSat DPC.
 
     Notes
     -----

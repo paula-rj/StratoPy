@@ -8,4 +8,4 @@ GOES
 
 .. automodule:: stratopy.extractors.goes
 
-  .. autoclass:: Goes
+  .. autoclass:: GOES16

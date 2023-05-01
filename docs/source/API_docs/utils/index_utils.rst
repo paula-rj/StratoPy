@@ -3,7 +3,7 @@
 Utils Documentation
 ==============================
 
-This is the API Documentation for the utils implemented in :app:`StratoPy`
+This is the API Documentation for the utils implemented in `StratoPy`
 
 .. toctree::
    :maxdepth: 2

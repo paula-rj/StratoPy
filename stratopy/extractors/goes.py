@@ -113,6 +113,15 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         ABI channel
     mode: int
         Aquisition mode of the sensor
+
+    Methods
+    -------
+    get_endpoint:
+        Gets host url, a directory from s3 AWS.
+    _makequery:
+        Retrieves the whole url for downloading a product.
+    parse_result:
+        Converts a netCDF file into an Xarray Dataset.
     """
 
     _PRODUCT_TYPES_PARSERS = {
