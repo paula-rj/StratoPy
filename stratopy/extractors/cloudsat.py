@@ -13,7 +13,6 @@ and then fetch the object given a certain date and time."""
 # IMPORTS
 # =============================================================================
 import atexit
-import datetime as dt
 import os
 import tempfile
 
@@ -262,7 +261,9 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
 
             # Temporary container
             cls_name = type(self).__name__
-            _, tmp_path = tempfile.mkstemp(suffix=".hdf", prefix=f"stpy_{cls_name}_")
+            _, tmp_path = tempfile.mkstemp(
+                suffix=".hdf", prefix=f"stpy_{cls_name}_"
+            )
             atexit.register(os.remove, tmp_path)
 
             # Downloads file from full and copies into tmp

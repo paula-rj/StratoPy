@@ -29,7 +29,9 @@ FAKE_FILE_LIST = [
 @mock.patch("paramiko.RSAKey.from_private_key_file", return_value="pkey")
 def test_wrong_product(from_private_key_file, connect):
     with pytest.raises(ValueError):
-        cloudsat.CloudSat("wrong_prod", "fakeusr@gmail.edu", keyfile="fake_file")
+        cloudsat.CloudSat(
+            "wrong_prod", "fakeusr@gmail.edu", keyfile="fake_file"
+        )
     connect.assert_called
 
 
