@@ -4,4 +4,5 @@ sphinx-rtd-theme
 nbsphinx
 myst-parser
 numpydoc
+furo==2021.11.16
 .
