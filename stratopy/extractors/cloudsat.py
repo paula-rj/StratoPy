@@ -226,7 +226,7 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         """
         date_dir = date_time.strftime("%Y/%j")
         # 2019009155049_67652_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf
-        parsed_date = date_time.strftime("%Y%j%H%M") + "*"
+        parsed_date = date_time.strftime("%Y%j%H%M%S")
         query = "/".join([endpoint, date_dir, parsed_date])
         return query
 
@@ -255,20 +255,14 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             # Raises FileNotFoundError if file not found
             candidates = sftp.listdir(store_dir)
             # List of files for selected date
-            dt_candidates = [
-                dt.datetime.strptime(date[:11], "%Y%j%H%M%S")
-                for date in candidates
-            ]
-            filename_idx = nearest_date(dt_candidates, pattern)
+            filename_idx = nearest_date.closest_datetime(candidates, pattern)
             filename = candidates[filename_idx]
 
             full_path = "/".join([store_dir, filename])
 
             # Temporary container
             cls_name = type(self).__name__
-            _, tmp_path = tempfile.mkstemp(
-                suffix=".hdf", prefix=f"stpy_{cls_name}_"
-            )
+            _, tmp_path = tempfile.mkstemp(suffix=".hdf", prefix=f"stpy_{cls_name}_")
             atexit.register(os.remove, tmp_path)
 
             # Downloads file from full and copies into tmp

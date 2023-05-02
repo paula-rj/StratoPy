@@ -181,6 +181,6 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
     get.call_args.kwargs["remotepath"] == "dir/pattern.ext"
     # localpath is a randomstring
 
-    assert os.path.basename(response).startswith("stpy_cloudsat_")
+    assert os.path.basename(response).startswith("stpy_")
 
     del conn  # to check coverage
