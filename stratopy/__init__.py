@@ -22,7 +22,7 @@ It consists in five modules:
 """
 
 __name__ = "stratopy"
-__version__ = "0.2dev"
+__version__ = "0.2.dev0"
 
 
 # =============================================================================
