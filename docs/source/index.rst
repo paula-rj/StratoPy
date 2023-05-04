@@ -26,8 +26,6 @@ You need python 3.9+ to install Stratopy. For more information about installatio
 
    self
    installation
-   stratopy
+   API_docs/stratopy
    tutorials/index_tutorials
-   API_docs/extractors/index_ext
-   API_docs/utils/index_utils
    Aboutus

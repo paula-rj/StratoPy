@@ -3,13 +3,13 @@
 :mod:`stratopy.extractors.base`
 --------------------------------
 
-Base
-~~~~~~~~~~~~~~~~~~~~~~~
-
 .. automodule:: stratopy.extractors.base
-
+  
   .. autoclass:: ConnectorABC
-    
+    :members: parse_date, fetch
+  
   .. autoclass:: S3Mixin
+    :members: close
 
   .. autoclass:: SFTPMixin
+    :members: close

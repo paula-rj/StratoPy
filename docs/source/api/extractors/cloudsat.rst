@@ -3,12 +3,9 @@
 :mod:`stratopy.extractors.cloudsat`
 -----------------------------------
 
-CloudSat
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 .. automodule:: stratopy.extractors.cloudsat
 
+  .. autofunction:: read_hdf4 
+
   .. autoclass:: CloudSat
-
-
-
+    :members: get_endpoint

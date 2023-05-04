@@ -8,7 +8,7 @@
 # META
 # =============================================================================
 
-""""""
+r"""Init module for importig extractors classes."""
 
 
 from .goes import GOES16  # noqa

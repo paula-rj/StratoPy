@@ -3,8 +3,7 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-r"""This module implements some useful methods that may be common to some
-extractors."""
+r"""Module that implements usefull functions, common to some extractors."""
 
 # =============================================================================
 # IMPORTS

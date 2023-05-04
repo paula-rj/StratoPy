@@ -4,10 +4,11 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
-r"""This module defines the needed methods and classes for extracting a product
-from the Cloudsat DPC (https://www.cloudsat.cira.colostate.edu/).
-The CloudSat class is an extractor that is meant to create a cloudsat objet
-and then fetch the object given a certain date and time."""
+r"""Module that defines methods for extracting a product from the Cloudsat DPC.
+
+The CloudSat class is an extractor that is meant to create a cloudsat object
+and then fetch the object given a certain date and time.
+"""
 
 # =============================================================================
 # IMPORTS
@@ -32,8 +33,8 @@ _LAYERS = np.arange(10, dtype=np.int8)
 
 
 def read_hdf4(path):
-    """Reads a HDF-EOS file from CloudSat
-    and returns it as an Xarray Dataset.
+    """Reads a HDF file CloudSat product and returns it as an Xarray Dataset.
+
     Currently is only useful for 2B-CLDCLASS files.
 
     Parameters
@@ -45,7 +46,8 @@ def read_hdf4(path):
     -------
     ds: Xarray Dataset
         Dataset containing the most relevant coordinates
-        and attributes of a 2B-CLDCLASS file."""
+        and attributes of a 2B-CLDCLASS file.
+    """
     sd_file = SD(path, SDC.READ)
     height = sd_file.select("Height").get()
     cloud_scenario = sd_file.select("cloud_scenario").get()
@@ -126,36 +128,40 @@ def read_hdf4(path):
 
 class CloudSat(base.SFTPMixin, base.ConnectorABC):
     """
-    Establishes a connection with the CloudSat DPC,
-    given a username, password and ssh keyfile.
+    Establishes a connection with the CloudSat DPC.
 
-    Attributes
+    Parameters
     ----------
     product_type: str
         Type of product to be downloaded. Currently 3 available.
     username: str
         username at CloudSat server.
     keyfile:
-        Key for
+        Key for ssh connection.
         Default = None
     keypass: str
         Password for you ssh key. You may not have any.
         Default = None
 
+    Attributes
+    ----------
+    _PRODUCT_TYPES: tuple
+        types of products available for downloading.
+    _SCEN_OR_LAYER: tuple
+        Work with cld_scenario or Layer.
+    _CLOUDSAT_HOST: str
+        SFTP server at CloudSat DPC.
+    _CLOUDSAT_PORT: int
+        Host port.
+
     Methods
     -------
-    get_endpoint:
+    get_endpoint
         Gets host url, a directory from CloudSat DPC.
-    _makequery:
-        Retrieves the whole url for downloading a product.
-    parse_result:
-        Converts an HDF file into an Xarray Dataset.
-    _download:
-        Downloads a product from CloudSat DPC.
 
     Notes
     -----
-        The user must have and account created at CloudSat DPC
+        CloudSat DPC: The user must have and account created at CloudSat DPC
         (https://www.cloudsat.cira.colostate.edu/) to be able
         to use this class and retrieve a product from the CloudSat server.
     """
@@ -200,20 +206,22 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
             )
 
     def __repr__(self):
+        """Representation for a CloudSat object as chosen product type."""
         return f"<CloudSat product_type={self.product_type!r}>"
 
     def _repr_html_(self):
+        """Representation for a CloudSat object as chosen product type."""
         return f"<CloudSat product_type={self.product_type!r}>"
 
     def get_endpoint(self):
-        """Gets the directory direction where all the CloudSat
-        files are stored in the SFTP. Returns the URL as str.
+        """Gets the directory url for CloudSat files.
+
+        Returns the URL as str.
         """
         return "/".join(["Data", self.product_type])
 
     def _makequery(self, endpoint, date_time):
-        """Builds the whole query needed to download the product
-        from Cloudsat server.
+        """Builds the whole query needed to download the product from DPC.
 
         Parameters
         ----------
@@ -230,19 +238,21 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
         return query
 
     def _parse_result(self, result):
-        """Converts the downloaded hdf file into xarray object.
-        Warning! Height is upside down
-        height[0] is highest
+        """Converts the downloaded HDF file into Xarray Dataset.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         result: Path where the file is stored.
 
-        Returns:
-        --------
+        Returns
+        -------
         xarr: Xarray-like
             Contains the most relevant data of a 2B-CLADCLASS file,
             in xarray format.
+
+        Notes
+        -----
+        Warning! Height is upside down, height[0] is highest.
         """
         return read_hdf4(result)
 

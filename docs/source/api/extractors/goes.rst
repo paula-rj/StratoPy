@@ -3,9 +3,5 @@
 :mod:`stratopy.extractors.goes`
 --------------------------------
 
-GOES
-~~~~~~~~~~~~~~~~~~~~~~~
-
 .. automodule:: stratopy.extractors.goes
-
-  .. autoclass:: GOES16
+  :members:

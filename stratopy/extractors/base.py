@@ -4,12 +4,13 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 
-r"""This module defines the abstract methods that must be implemented
-every for each new extractor, within the Connector class.
+r"""Module that defines the abstract implementation for each sat extractor.
+
 Besides, it implements a perse_date function and a fetch funtion,
 that integrates the whole downloading pipeline.
 The extraction classes for every host, ie AWS, SFTP, and any other,
-are also implemenmted in the base module."""
+are also implemenmted in the base module.
+"""
 # =============================================================================
 # IMPORTS
 # =============================================================================
@@ -39,8 +40,8 @@ from ..utils import from_cache, get_default_cache
 
 class NothingHereError(FileNotFoundError):
     """Error raised is the file is not found in the server.
-    Only one file, or nothing, can be downloaded.
 
+    Only one file, or nothing, can be downloaded.
     """
 
     pass
@@ -56,38 +57,28 @@ class ConnectorABC(abc.ABC):
 
     Methods
     -------
-    get_endpoint:
-        Gets host url.
-    _makequery:
-        Retrieves the whole url for downloading a product.
-    _download:
-        Downloads a product.
-    _parse_result:
-        Returns the original product as an Xarray Dataset.
-    parse_date:
+    parse_date
         Recieves the date for the download as a str.
-    fetch:
+    fetch
         Coordinates all the pipeline for downloading a product.
     """
 
     @abc.abstractmethod
     def get_endpoint(self):
         """Returns the url of the server where the files are stored.
-        For example, AWS, SFTP, HTTP.
 
-        Raises
-        ------
-        NotImplementedError
-            If this method is not implemented in a class
-            that herits from ConnectorABC.
+        For example, AWS, SFTP, HTTP.
+        Raises NotImplementedError if not implemented in an extractor class.
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _makequery(self, endpoint, date):
-        """Builds the whole query needed to download the product.
+        """Builds the whole query needed to downloading the product.
+
         This method is unique for each satellite.
         Assumes that given the parameters it is possible to build the query.
+        Raises NotImplementedError if not implemented in an extractor class.
 
         Parameters
         ----------
@@ -95,29 +86,19 @@ class ConnectorABC(abc.ABC):
             Url where the products form a satellite are hosted.
         date: datetime obj
             requested date and time
-
-        Raises
-        ------
-        NotImplementedError
-            If this method is not implemented in a class
-            that herits from ConnectorABC.
         """
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _download(self, query):
-        """Download one file.
+        """Downloads one file.
+
+        Raises NotImplementedError if not implemented in an extractor class.
 
         Parameters
         ----------
         query: str
             The query needed to download a product.
-
-        Raises
-        ------
-        NotImplementedError
-            If this method is not implemented in a class
-            that herits from ConnectorABC.
         """
         raise NotImplementedError()
 
@@ -125,30 +106,26 @@ class ConnectorABC(abc.ABC):
     def _parse_result(self, result):
         """Converts the downloaded file into Xarray object.
 
-        Parameters:
-        -----------
-        result: the file in the format,
-            for example, bytes, HDF, etc.
+        Raises NotImplementedError if not implemented in an extractor class.
 
-        Raises
-        ------
-        NotImplementedError
-            If this method is not implemented in a class
-            that herits from ConnectorABC.
+        Parameters
+        ----------
+        result: the file in the format for example bytes, HDF, etc.
         """
         raise NotImplementedError()
 
     @property
     def cache(self):
+        """Looks for in cache if already stored."""
         return get_default_cache()
 
     @property
     def cache_tag(self):
+        """Returns type of cache."""
         return type(self).__name__
 
     def parse_date(self, date, time_zone):
-        """Builts the date in UTC format, from a str,
-            for which a product will be downloaded.
+        """Builts the date from a str in UTC format for downloading a product.
 
         Parameters
         ----------
@@ -219,13 +196,7 @@ class ConnectorABC(abc.ABC):
 
 
 class S3Mixin:
-    """Implements an extractor from AWS.
-
-    Methods
-    -------
-    _download:
-        Downloads a products given a query.
-    """
+    """Implements an extractor from AWS."""
 
     def _download(self, query):
         """Downloads a file from AWS and returns it as Bytes.
@@ -240,7 +211,6 @@ class S3Mixin:
         result: Bytes
             File in bytes.
         """
-
         # Starts connection with AWS S3 bucket
         s3 = s3fs.S3FileSystem(anon=True)
 
@@ -283,11 +253,8 @@ class SFTPMixin:
 
     Methods
     -------
-    close:
+    close
         Closes connection.
-    _download:
-        Downloads a product given a query.
-
     """
 
     def __init__(self, host, port, username, *, keyfile=None, keypass=None):
@@ -310,9 +277,11 @@ class SFTPMixin:
         # self._transport.connect(username=username, pkey=pkey)
 
     def __del__(self):
+        """Implements close for connection."""
         self.close()
 
     def close(self):
+        """Closes connection."""
         self._client.close()
 
     def _download(self, query):

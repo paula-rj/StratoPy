@@ -3,10 +3,10 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-r""" This module defines the needed methods and classes for extracting
-a product from the GOES16 AWS server.
-Currently works only for products defines in the
-_PRODUCT_TYPES_PARSERS attribute."""
+r"""Module that defines the methods for extracting a GOES16 product.
+
+Currently works only for products defined in PRODUCT TYPES attribute.
+"""
 
 # =============================================================================
 # IMPORTS
@@ -34,11 +34,12 @@ MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(
 
 
 def _with_channel_parser(ptype, dtime, channel, mode):
-    """Returns the name of the product as a string,
-    if the product has channels (ABI) to chose.
+    """Returns the name of the product as a str.
 
-    Parameters:
-    -----------
+    Works for products with channels (ABI).
+
+    Parameters
+    ----------
     ptype: str
         Product type (available list in .....)
     mode: int
@@ -48,8 +49,8 @@ def _with_channel_parser(ptype, dtime, channel, mode):
     dtime: datetiem object
         Date and time in UTC
 
-    Returns:
-    --------
+    Returns
+    -------
     parsed: str
         Full name of the file
 
@@ -61,11 +62,12 @@ def _with_channel_parser(ptype, dtime, channel, mode):
 
 
 def _whithout_channel_parser(ptype, dtime, channel, mode):
-    """Returns the name of the product as a string,
-    if the product does not have channels (ABI) to choose.
+    """Returns the name of the product as a str.
 
-    Parameters:
-    -----------
+    Works for products without channels (ABI).
+
+    Parameters
+    ----------
     ptype: str
         Product type (available list in .....)
     mode: int
@@ -75,19 +77,11 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
     dtime: datetiem object
         Date and time in UTC.
 
-    Returns:
-    --------
+    Returns
+    -------
     parsed: str
-        Full name of the file
-
-    Raises
-    ------
-    Value error
-        If the user changes the default channel
-        value to something different than None.
-
+        Full name of the file.
     """
-
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
     pdate = dtime.strftime("%Y%j%H%M")
     parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
@@ -101,27 +95,28 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
 
 class GOES16(base.S3Mixin, base.ConnectorABC):
     """
-    Creates a connection with GOES16 AWS server given the product type and
-    a channel, if it exist for that product. This connection is meant to
-    download the product later.
+    Creates a connection with GOES16 AWS server.
 
-    Attributes
+    The connection is meant to download the product later.
+
+    Parameters
     ----------
     product_type: str
-        Type of product to be downloaded
+        Type of product to be downloaded.
     channel: int
         ABI channel
     mode: int
-        Aquisition mode of the sensor
+        Aquisition mode of the sensor.
+
+    Attributes
+    ----------
+    _PRODUCT_TYPES_PARSERS: Gets the type of product.
+    PRODUCT_TYPES: Type of products available.
 
     Methods
     -------
-    get_endpoint:
+    get_endpoint
         Gets host url, a directory from s3 AWS.
-    _makequery:
-        Retrieves the whole url for downloading a product.
-    parse_result:
-        Converts a netCDF file into an Xarray Dataset.
     """
 
     _PRODUCT_TYPES_PARSERS = {
@@ -153,14 +148,17 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         )
 
     def __repr__(self):
+        """Representation for a CloudSat object as chosen product type."""
         return f"<GOES16 product_type={self.product_type!r}>"
 
     def _repr_html_(self):
+        """Representation for a CloudSat object as chosen product type."""
         return f"<GOES16 product_type={self.product_type!r}>"
 
     def get_endpoint(self):
-        """Gets the URL direction where all the GOES16
-        files are stored. Returns the URL as str.
+        """Gets the URL direction where all the GOES16 files are stored.
+
+        Returns the URL as str.
         """
         return "/".join(["s3:/", "noaa-goes16", self.product_type])
 
@@ -175,8 +173,8 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
             the requested date and time.
             It should contain year, month, day, hour and minutes.
 
-        Return
-        ------
+        Returns
+        -------
         query: str or Path
             Full path where the file is stored in the server.
 
@@ -207,8 +205,7 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         Returns
         -------
         goes_ds: Xarray Dataset
-            Dataset containing the information from the
-            original NetCDF file.
+            Dataset containing the information from the original NetCDF file.
         """
         goes_ds = xa.open_dataset(result, engine="h5netcdf")
         return goes_ds
