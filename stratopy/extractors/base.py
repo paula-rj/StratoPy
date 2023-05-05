@@ -214,8 +214,9 @@ class S3Mixin:
         # Starts connection with AWS S3 bucket
         s3 = s3fs.S3FileSystem(anon=True)
 
-        semi_query, pattern = query.rsplit("_s", 1)
-        store_dir, _ = semi_query.rsplit("OR")
+        semi_query = query.rsplit("_s", 1)
+        store_dir = semi_query[0].rsplit("OR", 1)[0]
+        pattern = semi_query[-1][:-1]  # Takes * out
 
         # Lists all available files in store dir, full path
         avails = s3.glob(store_dir)
@@ -226,7 +227,7 @@ class S3Mixin:
         candidates = [av.rsplit("_s")[1] for av in avails]
 
         # Pattern without *
-        filename_idx = nearest_date.closest_datetime(candidates, pattern[:-1])
+        filename_idx = nearest_date.closest_datetime(candidates, pattern)
 
         filepath = avails[filename_idx]
 

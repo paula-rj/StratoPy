@@ -81,7 +81,7 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
         Full name of the file.
     """
     # OR_ABI-L2-MCMIPF-M6_G16_s20190021800
-    pdate = dtime.strftime("%Y%j%H%M")
+    pdate = dtime.strftime("%Y%j%H%M%S")
     parsed = f"OR_{ptype}-M{mode}_G16_s{pdate}*"
     return parsed
 

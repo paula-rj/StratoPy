@@ -11,27 +11,43 @@ from stratopy.extractors import goes
 
 import xarray as xa
 
+FAKE_AVAILS_LIST = [
+    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760045364_e20190010126142_c20190010126218.nc",
+    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C16_G16_s20101760015363_e20190010141142_c20190010141219.nc",
+    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760000363_e20190040611130_c20190040611199.nc",
+]
+
+FAKE_AVAILS_LIST_noCH = [
+    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760045364_e20190010126142_c20190010126218.nc",
+    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760015363_e20190010141142_c20190010141219.nc",
+    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000363_e20190040611130_c20190040611199.nc",
+]
+
 
 @pytest.mark.parametrize("ptype", goes.GOES16._PRODUCT_TYPES_PARSERS)
 def test_GOES_get_endpoint(ptype):
-    goes_obj = goes.GOES16(ptype)
+    goes_obj = goes.GOES16(ptype, channel=13)
     assert goes_obj.get_endpoint() == f"s3://noaa-goes16/{ptype}"
 
 
 def test_wrong_product():
     with pytest.raises(ValueError):
-        goes.GOES16("holis")
+        goes.GOES16("holis", channel=13)
 
 
 @pytest.mark.parametrize("prod_type", goes.GOES16._PRODUCT_TYPES_PARSERS)
 def test_repr(prod_type):
-    goes_obj = goes.GOES16(prod_type)
-    expected = f"<GOES16 product_type={prod_type!r}>"
-    assert repr(goes_obj) == expected
+    goes_obj = goes.GOES16(prod_type, channel=13)
+    if prod_type == "ABI-L2-MCMIPF" or prod_type == "ABI-L2-ACHTF":
+        expected = f"<GOES16 product_type={prod_type!r}, ch=None>"
+        assert repr(goes_obj) == expected
+    else:
+        expected = f"<GOES16 product_type={prod_type!r}, ch=13>"
+        assert repr(goes_obj) == expected
 
 
 # tests with channel
-@mock.patch("s3fs.S3FileSystem.glob", return_value=["fake/path/test"])
+@mock.patch("s3fs.S3FileSystem.glob", return_value=FAKE_AVAILS_LIST)
 def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
     # noqa
     buff = data_bytes(
@@ -40,18 +56,20 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L1b-RadF").fetch("25/jun/2010", tzone="UTC")
+        result = goes.GOES16("ABI-L1b-RadF", 3).fetch("25/jun/2010 00:02", tzone="UTC")
 
-    mglob.assert_called_once_with(
-        "s3://noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760000*"  # noqa
-    )
+    # Llama al directory donde estan todos los archivos, para comparar fechas
+    mglob.assert_called_once_with("s3://noaa-goes16/ABI-L1b-RadF/2010/176/00/")
 
     expected = dataset(
         "GOES16",
         "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",  # noqa
         "h5netcdf",
     )
-    mopen.assert_called_once_with("fake/path/test", "rb")
+    mopen.assert_called_once_with(
+        "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760000363_e20190040611130_c20190040611199.nc",  # noqa
+        "rb",
+    )
     xa.testing.assert_allclose(result, expected)
 
     assert isinstance(result, xa.Dataset)  # new
@@ -59,7 +77,7 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
 
 
 # tests without channel
-@mock.patch("s3fs.S3FileSystem.glob", return_value=["fake/path/test"])
+@mock.patch("s3fs.S3FileSystem.glob", return_value=FAKE_AVAILS_LIST)
 def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
     # noqa
     buff = data_bytes(
@@ -68,18 +86,20 @@ def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L2-ACHTF").fetch("25/jun/2010", tzone="UTC")
+        result = goes.GOES16("ABI-L2-ACHTF", 3).fetch("25/jun/2010 00:02", tzone="UTC")
 
-    mglob.assert_called_once_with(
-        "s3://noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000*"  # noqa
-    )
+    # Llama al directory donde estan todos los archivos, para comparar fechas
+    mglob.assert_called_once_with("s3://noaa-goes16/ABI-L2-ACHTF/2010/176/00/")
 
     expected = dataset(
         "GOES16",
         "OR_ABI-L2-ACHTF-M6_G16_s20200091200211_e20200091209519_c20200091211458.nc",  # noqa
         "h5netcdf",
     )
-    mopen.assert_called_once_with("fake/path/test", "rb")
+    mopen.assert_called_once_with(
+        "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000363_e20190040611130_c20190040611199.nc",
+        "rb",
+    )
 
     xa.testing.assert_allclose(result, expected)
 
