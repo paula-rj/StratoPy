@@ -14,9 +14,11 @@ and then fetch the object given a certain date and time.
 # IMPORTS
 # =============================================================================
 import atexit
+import datetime as dt
 import os
 import tempfile
 
+from dateutil import parser
 import numpy as np
 
 from pyhdf.HDF import HC, HDF
@@ -59,6 +61,22 @@ def read_hdf4(path):
     hdf_file = HDF(path, HC.READ)
     vs = VS(hdf_file)
 
+    # Seconds since start of granule
+    vd_seconds = vs.attach("Profile_time")
+    profile_seconds = np.array(vd_seconds[:])[:, 0]
+    vd_seconds.detach()
+
+    # TAI timestamp for the first profile in the data file
+    vd_TAI = vs.attach("TAI_start")
+    TAI = vd_TAI[0][0]
+    vd_TAI.detach()
+
+    # Getting profile time for evey footprint
+    start = parser.parse("1993-01-01") + dt.timedelta(seconds=TAI)
+    # A profile is taken every 0.16 s
+    offsets = [dt.timedelta(seconds=sec) for sec in profile_seconds]
+    profile_time = np.array([start + offset for offset in offsets])
+
     # Important attributes, one number only
     vd_UTCstart = vs.attach("UTC_start")
     UTCstart = vd_UTCstart[:]
@@ -68,10 +86,7 @@ def read_hdf4(path):
     vertical_Binsize = np.array(vd_verticalBin[:]).flatten()
     vd_verticalBin.detach()
 
-    # geolocated data, 1D arrays
-    vd_timeprofile = vs.attach("Profile_time")
-    time = np.array(vd_timeprofile[:]).flatten()
-    vd_timeprofile.detach()
+    # Geolocated data, 1D arrays
 
     vd_lat = vs.attach("Latitude")
     lat = np.array(vd_lat[:]).flatten()
@@ -113,7 +128,7 @@ def read_hdf4(path):
             "layers": _LAYERS.copy,
             "lat": (["cloudsat_trace"], lat),
             "lon": (["cloudsat_trace"], lon),
-            "time": (["cloudsat_trace"], time),
+            "time": (["cloudsat_trace"], profile_time),
             "precip_flag": (["cloudsat_trace"], precip_flag),
             "land_sea_flag": (
                 ["cloudsat_trace"],
@@ -271,9 +286,7 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
 
             # Temporary container
             cls_name = type(self).__name__
-            _, tmp_path = tempfile.mkstemp(
-                suffix=".hdf", prefix=f"stpy_{cls_name}_"
-            )
+            _, tmp_path = tempfile.mkstemp(suffix=".hdf", prefix=f"stpy_{cls_name}_")
             atexit.register(os.remove, tmp_path)
 
             # Downloads file from full and copies into tmp
