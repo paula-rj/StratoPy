@@ -57,8 +57,9 @@ def gen_vect(col_row, band_dict):
 
 def merge(
     cloudsat_obj,
-    date_time,
+    time_selected,
     prod_type,
+    ch,
     all_layers=False,
     no_clouds=False,
     norm=True,
@@ -70,8 +71,9 @@ def merge(
     cloudsat_obj: ``extractors.cloudsat.CloudSat``
         Stratopy CloudSat object.
 
-    date_time = str
-        date and time selected for downloading GOES16 object.
+    time_selected = str
+        Time selected for downloading GOES16 object.
+        It must be withing the range of the cloudsat granule start-end.
 
     all_layers: bool
         If True, the final dataframe should include
@@ -92,17 +94,17 @@ def merge(
     Xarray.Dataset
         Dataset containing merged data.
     """
-    dt_selected = parser.parse(date_time)
+    dt_selected = parser.parse(time_selected)
     granule_range = cloudsat_obj["time"][0], cloudsat_obj["time"][-1]
     if dt_selected < granule_range[0] or dt_selected > granule_range[1]:
-        raise NothingHereError
+        raise NothingHereError(granule_range)
     else:
-        goes_date = nearest_date.closest_datetime()
-        goes_obj = GOES16(product_type=prod_type, channel=16).fetch(goes_date)
+        goes_obj = GOES16(product_type=prod_type, channel=ch).fetch(time_selected)
 
-    # recorte
-    # merge
-    # return
+    img = goes_obj["CMI"][:].data
+
+    # Recorte y mergin
+    # Normalization
     band_dict = {}
     for key, band in goes_obj._data.items():
         img = np.array(band["CMI"][:].data)
@@ -133,8 +135,8 @@ def merge(
         cloudsat_obj = cloudsat_obj[cloudsat_obj.layer_0 != 0]
 
     cloudsat_obj["col_row"] = cloudsat_obj.apply(
-        lambda x: scan2colfil(
-            latlon2scan(x.Latitude, x.Longitude),
+        lambda x: nearest_date.scan2colfil(
+            nearest_date.latlon2scan(x.Latitude, x.Longitude),
         ),
         axis=1,
     )

@@ -31,7 +31,7 @@ import pytz
 
 import s3fs
 
-from ..utils import from_cache, get_default_cache
+from ..utils import from_cache, get_default_cache, nearest_date
 
 # =============================================================================
 # EXCEPTIONS
@@ -214,13 +214,21 @@ class S3Mixin:
         # Starts connection with AWS S3 bucket
         s3 = s3fs.S3FileSystem(anon=True)
 
-        # Lists all available files
-        avail = s3.glob(query)
-        if not avail:
-            raise NothingHereError(query)
+        semi_query, pattern = query.rsplit("_s", 1)
+        store_dir, _ = semi_query.rsplit("OR")
 
-        # TODO: Buscar la fecha mas cercana no la primera
-        filepath = avail[0]
+        # Lists all available files in store dir, full path
+        avails = s3.glob(store_dir)
+        if not avails:
+            raise NothingHereError(store_dir)
+
+        # Splits full paths, gets only from start date
+        candidates = [av.rsplit("_s")[1] for av in avails]
+
+        # Pattern without *
+        filename_idx = nearest_date.closest_datetime(candidates, pattern[:-1])
+
+        filepath = avails[filename_idx]
 
         # Open in-memory binary and write it
         with s3.open(filepath, "rb") as fp:
