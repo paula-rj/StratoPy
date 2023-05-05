@@ -24,7 +24,9 @@ from . import base
 # CONSTANTS
 # =============================================================================
 
-MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(pytz.UTC)
+MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(
+    pytz.UTC
+)
 
 # =============================================================================
 # QUERY PARSERS
@@ -140,16 +142,22 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
         self.product_type = product_type
         self._ptype_parser = self._PRODUCT_TYPES_PARSERS[product_type]
         self.channel = (
-            int(channel) if self._ptype_parser is _with_channel_parser else None
+            int(channel)
+            if self._ptype_parser is _with_channel_parser
+            else None
         )
 
     def __repr__(self):
         """Representation for a GOOES16 object as chosen product type, band."""
-        return f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
+        return (
+            f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
+        )
 
     def _repr_html_(self):
         """Representation for a GOOES16 object as chosen product type, band."""
-        return f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
+        return (
+            f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
+        )
 
     def get_endpoint(self):
         """Gets the URL direction where all the GOES16 files are stored.

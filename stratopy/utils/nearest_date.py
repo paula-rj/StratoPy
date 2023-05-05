@@ -41,6 +41,8 @@ def closest_datetime(files_array, to_search):
     dt_to_search = datetime.datetime.strptime(to_search, "%Y%j%H%M%S")
     # Difference
     diff_abs = np.abs(dt_list - dt_to_search)
-    diff_abs_seconds = [datetime.timedelta.total_seconds(da) for da in diff_abs]
+    diff_abs_seconds = [
+        datetime.timedelta.total_seconds(da) for da in diff_abs
+    ]
     # Returns index of element with min time difference
     return np.argmin(diff_abs_seconds)

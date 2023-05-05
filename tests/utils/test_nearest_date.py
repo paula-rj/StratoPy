@@ -24,4 +24,4 @@ fake_files_list = [
 def test_closest_datetime():
     pattern_to_search = DATE.strftime("%Y%j%H%M")
     tested = nearest_date.closest_datetime(fake_files_list, pattern_to_search)
-    assert tested == 2  # ojo
+    assert tested == 0

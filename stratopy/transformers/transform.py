@@ -10,11 +10,12 @@ r"""Contains methods to perform transformation operations on loaded images."""
 # IMPORTS
 # =============================================================================
 from dateutil import parser
+
 import numpy as np
-import xarray
-from ..utils import nearest_date
+
 from ..extractors.base import NothingHereError
 from ..extractors.goes import GOES16
+from ..utils import nearest_date
 
 
 # =============================================================================
@@ -63,9 +64,9 @@ def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
         np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2
     )
     b = -2 * H * np.cos(x) * np.cos(y)
-    c = H ** 2 - Re ** 2
+    c = H**2 - Re**2
 
-    aux = b ** 2 - 4 * a * c
+    aux = b**2 - 4 * a * c
 
     rs = np.zeros(aux.shape)
 
@@ -121,7 +122,7 @@ def sat2latlon(
     gr2rad = np.pi / 180
 
     lat = (
-        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy ** 2))
+        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy**2))
         / gr2rad
     )
     lon = lon0 - np.arctan(sy / (H - sx)) / gr2rad
@@ -171,7 +172,7 @@ def latlon2scan(
     sy = -rc * np.cos(latc) * np.sin((lon - lon0) * gr2rad)
     sz = rc * np.sin(latc)
 
-    s_norm = np.sqrt(sx ** 2 + sy ** 2 + sz ** 2)
+    s_norm = np.sqrt(sx**2 + sy**2 + sz**2)
 
     x = np.arcsin(-sy / s_norm)
     y = np.arctan(sz / sx)
@@ -253,7 +254,7 @@ def scan2colfil(x_y, x0=-0.151844, y0=0.151844, scale=5.6e-05, tipo=1):
 
 def gen_vect(col_row, band_dict):
     """For a given (col,row) coordinate, generates a matrix of size 3x3xN.
-    
+
     The central pixel is the one located in (col, fil) coordinate.
     N should be 1 if the goes object contains one band CMI,
     N should be 3 if the goes object contains three band CMI,
@@ -288,6 +289,9 @@ def gen_vect(col_row, band_dict):
     return np.array(band_vec)
 
 
+# =============================================================================
+# Collocations
+# =============================================================================
 def merge(
     cloudsat_obj,
     time_selected,
@@ -332,7 +336,9 @@ def merge(
     if dt_selected < granule_range[0] or dt_selected > granule_range[1]:
         raise NothingHereError(granule_range)
     else:
-        goes_obj = GOES16(product_type=prod_type, channel=ch).fetch(time_selected)
+        goes_obj = GOES16(product_type=prod_type, channel=ch).fetch(
+            time_selected
+        )
 
     img = goes_obj["CMI"][:].data
 

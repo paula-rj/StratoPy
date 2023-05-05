@@ -19,6 +19,7 @@ import os
 import tempfile
 
 from dateutil import parser
+
 import numpy as np
 
 from pyhdf.HDF import HC, HDF
@@ -286,7 +287,9 @@ class CloudSat(base.SFTPMixin, base.ConnectorABC):
 
             # Temporary container
             cls_name = type(self).__name__
-            _, tmp_path = tempfile.mkstemp(suffix=".hdf", prefix=f"stpy_{cls_name}_")
+            _, tmp_path = tempfile.mkstemp(
+                suffix=".hdf", prefix=f"stpy_{cls_name}_"
+            )
             atexit.register(os.remove, tmp_path)
 
             # Downloads file from full and copies into tmp

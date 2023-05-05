@@ -12,15 +12,15 @@ from stratopy.extractors import goes
 import xarray as xa
 
 FAKE_AVAILS_LIST = [
-    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760045364_e20190010126142_c20190010126218.nc",
-    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C16_G16_s20101760015363_e20190010141142_c20190010141219.nc",
-    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760000363_e20190040611130_c20190040611199.nc",
+    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760045364_e20190010126142_c20190010126218.nc",  # noqa
+    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C16_G16_s20101760015363_e20190010141142_c20190010141219.nc",  # noqa
+    "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760000363_e20190040611130_c20190040611199.nc",  # noqa
 ]
 
 FAKE_AVAILS_LIST_noCH = [
-    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760045364_e20190010126142_c20190010126218.nc",
-    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760015363_e20190010141142_c20190010141219.nc",
-    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000363_e20190040611130_c20190040611199.nc",
+    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760045364_e20190010126142_c20190010126218.nc",  # noqa
+    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760015363_e20190010141142_c20190010141219.nc",  # noqa
+    "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000363_e20190040611130_c20190040611199.nc",  # noqa
 ]
 
 
@@ -56,7 +56,9 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L1b-RadF", 3).fetch("25/jun/2010 00:02", tzone="UTC")
+        result = goes.GOES16("ABI-L1b-RadF", 3).fetch(
+            "25/jun/2010 00:02", tzone="UTC"
+        )
 
     # Llama al directory donde estan todos los archivos, para comparar fechas
     mglob.assert_called_once_with("s3://noaa-goes16/ABI-L1b-RadF/2010/176/00/")
@@ -86,7 +88,9 @@ def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L2-ACHTF", 3).fetch("25/jun/2010 00:02", tzone="UTC")
+        result = goes.GOES16("ABI-L2-ACHTF", 3).fetch(
+            "25/jun/2010 00:02", tzone="UTC"
+        )
 
     # Llama al directory donde estan todos los archivos, para comparar fechas
     mglob.assert_called_once_with("s3://noaa-goes16/ABI-L2-ACHTF/2010/176/00/")
@@ -97,7 +101,7 @@ def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
         "h5netcdf",
     )
     mopen.assert_called_once_with(
-        "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000363_e20190040611130_c20190040611199.nc",
+        "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000363_e20190040611130_c20190040611199.nc",  # noqa
         "rb",
     )
 
