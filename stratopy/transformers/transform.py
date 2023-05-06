@@ -9,9 +9,13 @@ r"""Contains methods to perform transformation operations on loaded images."""
 # =============================================================================
 # IMPORTS
 # =============================================================================
-from dateutil import parser
+from datetime import datetime
+
+from dateutil import parser, tz
 
 import numpy as np
+
+import xarray as xa
 
 from ..extractors.base import NothingHereError
 from ..extractors.goes import GOES16
@@ -19,240 +23,9 @@ from ..utils import nearest_date
 
 
 # =============================================================================
-# Transformation functions (coords)
+# Collocations
 # =============================================================================
-def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
-    """Convert scan to satellite coordinates.
-
-    Transform x,y geostationary scan coordinates into
-    cartesian coordinates with origin on the satellite. Based
-    PUG3, version 5.2.8.1.
-
-    Parameters
-    ----------
-    x : float, float arr numpy.ma.core.MaskedArray
-        Horizontal coordinate, in radians.
-    y : float, float arr numpy.ma.core.MaskedArray
-        Vertical coordinate, in radians. Parallel to earth's axis.
-        longitud
-    Re: float
-        Equatorial radius, in m.
-    Rp: float
-        Polar radius, in m.
-    h: float
-        Satellite's height, in m.
-
-    Returns
-    -------
-    sx : float, float arr
-        Coordinate pointing to the center of the Earth.
-    sy : float, float arr
-        Horizontal coordinate.
-    sz : float, float arr
-        Vertical coordinate.
-    """
-    if (
-        str(type(x))[8:-2] != "numpy.ma.core.MaskedArray"
-        or str(type(y))[8:-2] != "numpy.ma.core.MaskedArray"
-    ):
-        x = np.ma.MaskedArray(x)
-        y = np.ma.MaskedArray(y)
-    mask = x.mask
-
-    H = Re + h  # satellite orbital radius
-    a = np.sin(x) ** 2 + np.cos(x) ** 2 * (
-        np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2
-    )
-    b = -2 * H * np.cos(x) * np.cos(y)
-    c = H**2 - Re**2
-
-    aux = b**2 - 4 * a * c
-
-    rs = np.zeros(aux.shape)
-
-    sx = np.ma.MaskedArray(np.zeros(aux.shape), mask)
-    sy = np.ma.MaskedArray(np.zeros(aux.shape), mask)
-    sz = np.ma.MaskedArray(np.zeros(aux.shape), mask)
-
-    rs[aux >= 0] = -(b[aux >= 0] + np.sqrt(aux[aux >= 0])) / (2 * a[aux >= 0])
-
-    sx[aux >= 0] = rs[aux >= 0] * np.cos(x[aux >= 0]) * np.cos(y[aux >= 0])
-    sy[aux >= 0] = -rs[aux >= 0] * np.sin(x[aux >= 0])
-    sz[aux >= 0] = rs[aux >= 0] * np.cos(x[aux >= 0]) * np.sin(y[aux >= 0])
-
-    return sx, sy, sz
-
-
-def sat2latlon(
-    sx, sy, sz, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
-):
-    """Convert satellite to geographic coordinates.
-
-    Transforms cartesian coordinates with origin
-    in the satellite sx,sy,sz into
-    latitude/longitude coordinates.
-    Based on PUG3 5.1.2.8.1
-
-    Parameters
-    ----------
-    sx : float, float arr
-        Coordinate pointing to the Earth's center.
-    sy : float, float arr
-        Horizontal coordinate.
-    sz : float, float arr
-        Vertical coordinate.
-    lon0 : float
-        Satellite's longitude, origin of plane coordinate system.
-    Re: float
-        Equatorial radius, in m.
-    Rp: float
-        Polar radius, in m.
-    h: float
-        Satellite's height, in m.
-
-    Returns
-    -------
-    lat : float, float arr
-        Latitude coordinates.
-    lon : float, float arr
-        Longitude coordinates.
-
-    """
-    H = Re + h
-    gr2rad = np.pi / 180
-
-    lat = (
-        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy**2))
-        / gr2rad
-    )
-    lon = lon0 - np.arctan(sy / (H - sx)) / gr2rad
-    return lat, lon
-
-
-def latlon2scan(
-    lat, lon, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
-):
-    """Convert geographical to scan coordinates.
-
-    Transform latitud/longitud coordinates
-    into x/y geoestationary projection.
-    Based on PUG3 5.1.2.8.2
-
-    Parameters
-    ----------
-    lat: float, float arr
-        Latitude.
-    lon: float, float arr
-        Longitude.
-    lon0 : float
-        Satellite's longitude, origin of plane coordinate system.
-    Re: float
-        Equatorial radius, in m.
-    Rp: float
-        Polar radius, in m.
-    h: float
-        Satellite's height, in m.
-
-    Returns
-    -------
-    x : float, float arr
-       Horizontal coordinate, in radianes.
-    y : float, float arr
-       Vertical coordinate, in radianes. Paralell to Earth's axis.
-    """
-    H = Re + h
-    e = (1 - (Rp / Re) ** 2) ** 0.5  # excentricity
-    gr2rad = np.pi / 180
-
-    latc = np.arctan((Rp / Re) ** 2 * np.tan(lat * gr2rad))
-
-    rc = Rp / (1 - (e * np.cos(latc)) ** 2) ** 0.5
-
-    sx = H - rc * np.cos(latc) * np.cos((lon - lon0) * gr2rad)
-    sy = -rc * np.cos(latc) * np.sin((lon - lon0) * gr2rad)
-    sz = rc * np.sin(latc)
-
-    s_norm = np.sqrt(sx**2 + sy**2 + sz**2)
-
-    x = np.arcsin(-sy / s_norm)
-    y = np.arctan(sz / sx)
-
-    return x, y
-
-
-def colfil2scan(col, row, x0=-0.151844, y0=0.151844, scale=5.6e-05):
-    """Reproject into radians.
-
-    Transforms columns/rows of the image into
-    x/y en geostationary projection.
-    Based on PUG3 5.1.2.8.2
-
-    Parameters
-    ----------
-    col : int, int arr
-        Selected column.
-    row : int, int arr
-        Selected row.
-    x0 : float
-        Position of the first coordinate x[0] in radians.
-    y0 : float
-        Horizontal coordinate of the first spot, in radians.
-        Paralell to Earth's axis
-    scale : float
-        Pixel size in radians.
-
-    Returns
-    -------
-    x : float, float arr
-        Horizontal coordinate, in radianes.
-    y : float, float arr
-        Vertical coordinate, in radianes. Paralell to Earth's axis.
-    """
-    x = col * scale + x0
-    y = -row * scale + y0
-    return x, y
-
-
-def scan2colfil(x_y, x0=-0.151844, y0=0.151844, scale=5.6e-05, tipo=1):
-    """Get the coordinate possition.
-
-    Converts x/y coordinates (scan projection) into (row,column) coordinates,
-    a geostationary projection. Based on PUG3, version 5.2.8.2
-
-    Parameters
-    ----------
-    x_y : float tuple, float arr
-       Tuple containig, in radians,
-       (horizontal coordinate x, vertical coordinate y).
-    x0 : float
-        Position of the first x cooridnate x[0] in radians.
-    y0 : float
-        Horizontal coordinate of the first spot, in radians.
-        Paralell to Earth's axis.
-    scale : float
-        Pixel size, in radians.
-    tipo : TYPE, optional
-        Output type, 0 for float, 1 for int.
-        Default: 1
-
-    Returns
-    -------
-    col :
-        column number coordinate.
-    row :
-        Row number coordinate.
-    """
-    col = (x_y[0] - x0) / scale  # x
-    row = -(x_y[1] - y0) / scale  # y
-    if tipo == 0:
-        return col, row
-    elif tipo == 1:
-        return round(col), round(row)
-    else:
-        raise TypeError("Type must be 0 (float) or 1 (int)")
-
-
-def gen_vect(col_row, band_dict):
+def gen_vect(col, row, goesdata):
     """For a given (col,row) coordinate, generates a matrix of size 3x3xN.
 
     The central pixel is the one located in (col, fil) coordinate.
@@ -272,55 +45,47 @@ def gen_vect(col_row, band_dict):
     array-like
         Band vector.
     """
-    key_list = list(band_dict.keys())
-    brows, bcols = band_dict.get(key_list[0]).shape
+    # key_list = list(band_dict.keys())
+    image = goesdata["CMI"].to_numpy()
+    brows, bcols = image.shape
 
-    if col_row[0] > bcols or col_row[1] > brows:
+    if col[0] > bcols or row[0] > brows:
         raise ValueError("Input column or row larger than image size")
-    band_vec = np.zeros((3, 3, len(band_dict)))
+    # band_vec = np.zeros((3, 3, N))
 
     # cut
-    for count, band in enumerate(band_dict.values()):
-        band_vec[:, :, count] = band[
-            col_row[1] - 1 : col_row[1] + 2,
-            col_row[0] - 1 : col_row[0] + 2,
-        ].copy()
+    band_vec = image[
+        row - 1 : row + 2,
+        col - 1 : col + 2,
+    ].copy()
 
-    return np.array(band_vec)
+    return band_vec
 
 
-# =============================================================================
-# Collocations
-# =============================================================================
 def merge(
-    cloudsat_obj,
+    csat_data,
     time_selected,
     prod_type,
     ch,
-    all_layers=False,
-    no_clouds=False,
     norm=True,
 ):
     """Merge data from Cloudsat with co-located data from GOES-16.
 
     Parameters
     ----------
-    cloudsat_obj: ``extractors.cloudsat.CloudSat``
-        Stratopy CloudSat object.
+    csat_data: ``extractors.cloudsat.CloudSat``
+        Stratopy CloudSat fetched file.
 
     time_selected = str
         Time selected for downloading GOES16 object.
         It must be withing the range of the cloudsat granule start-end.
+        Not inclute time zone within the str.
 
-    all_layers: bool
-        If True, the final dataframe should include
-        all layers of the CLDCLASS product.
-        Default: False
+    prod_type:str
+        Type of product to download from GOES16.
 
-    no_clouds: bool
-        If Ture, the final dataframe should include
-        coordinates where no clouds were detected by CloudSat.
-        Default: False
+    ch: int
+        Channel for downloading GOES16 file.
 
     norm: bool
         If True, normalizes all GOES channels [0,1].
@@ -332,57 +97,49 @@ def merge(
         Dataset containing merged data.
     """
     dt_selected = parser.parse(time_selected)
-    granule_range = cloudsat_obj["time"][0], cloudsat_obj["time"][-1]
-    if dt_selected < granule_range[0] or dt_selected > granule_range[1]:
-        raise NothingHereError(granule_range)
+
+    # Checks if selected time is within cloudsat pass range
+    ts0 = (
+        csat_data["time"].to_numpy()[0] - np.datetime64("1970-01-01T00:00:00Z")
+    ) / np.timedelta64(1, "s")
+    ts1 = (
+        csat_data["time"].to_numpy()[-1]
+        - np.datetime64("1970-01-01T00:00:00Z")
+    ) / np.timedelta64(1, "s")
+    first_time = datetime.utcfromtimestamp(ts0).astimezone(tz.UTC)
+    last_time = datetime.utcfromtimestamp(ts1).astimezone(tz.UTC)
+
+    if dt_selected < first_time or dt_selected > last_time:
+        raise NothingHereError()
     else:
         goes_obj = GOES16(product_type=prod_type, channel=ch).fetch(
             time_selected
         )
 
-    img = goes_obj["CMI"][:].data
+    img = goes_obj.CMI.to_numpy()
 
-    # Recorte y mergin
-    # Normalization
-    band_dict = {}
-    for key, band in goes_obj._data.items():
-        img = np.array(band["CMI"][:].data)
-        # Normalize data
-        if norm:
-            mini = np.amin(img[img != 65535.0])  # min
-            dif = np.amax(img[img != 65535.0]) - mini  # max - min
-            img = (img - mini) / dif
-        band_dict.update({key: img})
+    # Normalize data
+    if norm:
+        mini = np.amin(img[img != np.nan])  # min
+        dif = np.amax(img[img != np.nan]) - mini  # max - min
+        img = (img - mini) / dif
 
-    # Cloudsat
-    if all_layers is False:
-        cloudsat_obj = cloudsat_obj.drop(
-            [
-                "layer_1",
-                "layer_2",
-                "layer_3",
-                "layer_4",
-                "layer_5",
-                "layer_6",
-                "layer_7",
-                "layer_8",
-                "layer_9",
-            ],
-            axis=1,
-        )
-    if no_clouds is False:
-        cloudsat_obj = cloudsat_obj[cloudsat_obj.layer_0 != 0]
-
-    cloudsat_obj["col_row"] = cloudsat_obj.apply(
-        lambda x: nearest_date.scan2colfil(
-            nearest_date.latlon2scan(x.Latitude, x.Longitude),
-        ),
-        axis=1,
+    # armar las tuplas
+    scanx, scany = nearest_date.latlon2scan(
+        csat_data.lat.to_numpy(), csat_data.lon.to_numpy()
     )
+    cols, rows = nearest_date.scan2colfil(scanx, scany)
 
     # Merge
-    cloudsat_obj["goes_vec"] = cloudsat_obj.apply(
-        lambda x: gen_vect(x.col_row, band_dict), axis=1
+    da = xa.apply_ufunc(gen_vect, cols, rows, img)
+    ds = xa.Dataset(
+        data_vars=dict(da),
+        coords=dict(
+            lat=csat_data.lat,
+            lon=csat_data.lon,
+            time=csat_data.time,
+        ),
+        attrs=dict(description="Merged Dataset"),
     )
 
-    return cloudsat_obj
+    return ds
