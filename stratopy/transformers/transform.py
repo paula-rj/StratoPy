@@ -19,7 +19,7 @@ import xarray as xa
 
 from ..extractors.base import NothingHereError
 from ..extractors.goes import GOES16
-from ..utils import nearest_date
+from . import coord_change
 
 
 # =============================================================================
@@ -103,8 +103,7 @@ def merge(
         csat_data["time"].to_numpy()[0] - np.datetime64("1970-01-01T00:00:00Z")
     ) / np.timedelta64(1, "s")
     ts1 = (
-        csat_data["time"].to_numpy()[-1]
-        - np.datetime64("1970-01-01T00:00:00Z")
+        csat_data["time"].to_numpy()[-1] - np.datetime64("1970-01-01T00:00:00Z")
     ) / np.timedelta64(1, "s")
     first_time = datetime.utcfromtimestamp(ts0).astimezone(tz.UTC)
     last_time = datetime.utcfromtimestamp(ts1).astimezone(tz.UTC)
@@ -112,9 +111,7 @@ def merge(
     if dt_selected < first_time or dt_selected > last_time:
         raise NothingHereError()
     else:
-        goes_obj = GOES16(product_type=prod_type, channel=ch).fetch(
-            time_selected
-        )
+        goes_obj = GOES16(product_type=prod_type, channel=ch).fetch(time_selected)
 
     img = goes_obj.CMI.to_numpy()
 
@@ -125,10 +122,10 @@ def merge(
         img = (img - mini) / dif
 
     # armar las tuplas
-    scanx, scany = nearest_date.latlon2scan(
+    scanx, scany = coord_change.latlon2scan(
         csat_data.lat.to_numpy(), csat_data.lon.to_numpy()
     )
-    cols, rows = nearest_date.scan2colfil(scanx, scany)
+    cols, rows = coord_change.scan2colfil(scanx, scany)
 
     # Merge
     da = xa.apply_ufunc(gen_vect, cols, rows, img)
