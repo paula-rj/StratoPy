@@ -56,12 +56,12 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L1b-RadF", 3).fetch(
-            "25/jun/2010 00:02", tzone="UTC"
-        )
+        result = goes.GOES16("ABI-L1b-RadF", 3).fetch("25/jun/2010 00:02", tzone="UTC")
 
     # Llama al directory donde estan todos los archivos, para comparar fechas
-    mglob.assert_called_once_with("s3://noaa-goes16/ABI-L1b-RadF/2010/176/00/")
+    mglob.assert_called_once_with(
+        "s3://noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16*"
+    )
 
     expected = dataset(
         "GOES16",
@@ -88,12 +88,12 @@ def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
     )
 
     with mock.patch("s3fs.S3FileSystem.open", return_value=buff) as mopen:
-        result = goes.GOES16("ABI-L2-ACHTF", 3).fetch(
-            "25/jun/2010 00:02", tzone="UTC"
-        )
+        result = goes.GOES16("ABI-L2-ACHTF", 3).fetch("25/jun/2010 00:02", tzone="UTC")
 
     # Llama al directory donde estan todos los archivos, para comparar fechas
-    mglob.assert_called_once_with("s3://noaa-goes16/ABI-L2-ACHTF/2010/176/00/")
+    mglob.assert_called_once_with(
+        "s3://noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16*"
+    )
 
     expected = dataset(
         "GOES16",

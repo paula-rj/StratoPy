@@ -215,13 +215,13 @@ class S3Mixin:
         s3 = s3fs.S3FileSystem(anon=True)
 
         semi_query = query.rsplit("_s", 1)
-        store_dir = semi_query[0].rsplit("OR", 1)[0]
+        store_dir_ch = f"{semi_query[0]}*"
         pattern = semi_query[-1][:-1]  # Takes * out
 
-        # Lists all available files in store dir, full path
-        avails = s3.glob(store_dir)
+        # Lists all available files in store dir/OR_prod_type-ch, full path
+        avails = s3.glob(store_dir_ch)
         if not avails:
-            raise NothingHereError(store_dir)
+            raise NothingHereError(store_dir_ch)
 
         # Splits full paths, gets only from start date
         candidates = [av.rsplit("_s")[1] for av in avails]
