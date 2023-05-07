@@ -26,7 +26,9 @@ def test_latlon2scan():
 
 
 def test_colfil2scan():
-    np.testing.assert_equal((-0.151844, 0.151844), coord_change.colfil2scan(0.0, 0.0))
+    np.testing.assert_equal(
+        (-0.151844, 0.151844), coord_change.colfil2scan(0.0, 0.0)
+    )
 
 
 def test_scan2colfil():

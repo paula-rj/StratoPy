@@ -9,23 +9,25 @@ r"""Contains methods to perform transformation operations on loaded images."""
 # =============================================================================
 # IMPORTS
 # =============================================================================
-from datetime import datetime
-
 from dateutil import parser, tz
 
 import numpy as np
 
+from pandas import Timestamp
+
+import pytz
+
 import xarray as xa
 
+from . import coord_change
 from ..extractors.base import NothingHereError
 from ..extractors.goes import GOES16
-from . import coord_change
 
 
 # =============================================================================
 # Collocations
 # =============================================================================
-def gen_vect(col, row, goesdata):
+def gen_vect(col, row, image):
     """For a given (col,row) coordinate, generates a matrix of size 3x3xN.
 
     The central pixel is the one located in (col, fil) coordinate.
@@ -46,10 +48,9 @@ def gen_vect(col, row, goesdata):
         Band vector.
     """
     # key_list = list(band_dict.keys())
-    image = goesdata["CMI"].to_numpy()
     brows, bcols = image.shape
 
-    if col[0] > bcols or row[0] > brows:
+    if col > bcols or row > brows:
         raise ValueError("Input column or row larger than image size")
     # band_vec = np.zeros((3, 3, N))
 
@@ -96,47 +97,55 @@ def merge(
     Xarray.Dataset
         Dataset containing merged data.
     """
-    dt_selected = parser.parse(time_selected)
+    dt_selected = parser.parse(time_selected).astimezone(tz.UTC)
 
     # Checks if selected time is within cloudsat pass range
-    ts0 = (
-        csat_data["time"].to_numpy()[0] - np.datetime64("1970-01-01T00:00:00Z")
-    ) / np.timedelta64(1, "s")
-    ts1 = (
-        csat_data["time"].to_numpy()[-1] - np.datetime64("1970-01-01T00:00:00Z")
-    ) / np.timedelta64(1, "s")
-    first_time = datetime.utcfromtimestamp(ts0).astimezone(tz.UTC)
-    last_time = datetime.utcfromtimestamp(ts1).astimezone(tz.UTC)
+    first_time = (
+        Timestamp(csat_data.time.to_numpy()[0])
+        .to_pydatetime()
+        .replace(tzinfo=pytz.UTC)
+    )
+    last_time = (
+        Timestamp(csat_data.time.to_numpy()[-1])
+        .to_pydatetime()
+        .replace(tzinfo=pytz.UTC)
+    )
 
     if dt_selected < first_time or dt_selected > last_time:
-        raise NothingHereError()
+        raise NothingHereError(
+            f"{dt_selected} out of range for this CloudSat track."
+        )
     else:
-        goes_obj = GOES16(product_type=prod_type, channel=ch).fetch(time_selected)
+        goesdata = GOES16(product_type=prod_type, channel=ch).fetch(
+            time_selected
+        )
 
-    img = goes_obj.CMI.to_numpy()
-
+    img = goesdata.CMI.to_numpy()
     # Normalize data
     if norm:
-        mini = np.amin(img[img != np.nan])  # min
-        dif = np.amax(img[img != np.nan]) - mini  # max - min
+        x = img[~np.isnan(img)]  # tarda 6.3 sec
+        mini = np.amin(x)  # min
+        dif = np.amax(x) - mini  # max - min
         img = (img - mini) / dif
 
-    # armar las tuplas
+    # TODO: Cortar cloudsat mas alla de los 10-15 min del time selected
+    # TODO: Cortar algo de goes alrededor del cloudsat
+    # t:(lat,lon) -> (col,row)
     scanx, scany = coord_change.latlon2scan(
         csat_data.lat.to_numpy(), csat_data.lon.to_numpy()
     )
     cols, rows = coord_change.scan2colfil(scanx, scany)
 
     # Merge
-    da = xa.apply_ufunc(gen_vect, cols, rows, img)
-    ds = xa.Dataset(
-        data_vars=dict(da),
-        coords=dict(
-            lat=csat_data.lat,
-            lon=csat_data.lon,
-            time=csat_data.time,
-        ),
-        attrs=dict(description="Merged Dataset"),
-    )
+    imlist = []
+    for i in range(len(cols)):
+        imlist.append(gen_vect(cols[i], rows[i], img))
 
-    return ds
+    _TRACE = np.arange(36950, dtype=np.int32)
+    goes_ds = xa.Dataset(
+        data_vars={"gdata": (["size", "cloudsat_trace"], imlist)},
+        coords={"size": (3, 3), "cloudsat_trace": _TRACE.copy},
+    )
+    merged_ds = xa.merge([csat_data, goes_ds])
+
+    return merged_ds

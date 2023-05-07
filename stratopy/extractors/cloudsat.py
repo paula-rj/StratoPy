@@ -76,7 +76,9 @@ def read_hdf4(path):
     start = parser.parse("1993-01-01") + dt.timedelta(seconds=TAI)
     # A profile is taken every 0.16 s
     offsets = [dt.timedelta(seconds=sec) for sec in profile_seconds]
-    profile_time = np.array([start + offset for offset in offsets])
+    profile_time = np.array([start + offset for offset in offsets]).astype(
+        dt.datetime
+    )
 
     # Important attributes, one number only
     vd_UTCstart = vs.attach("UTC_start")
@@ -136,7 +138,11 @@ def read_hdf4(path):
                 land_sea_flag,
             ),
         },
-        attrs={"UTCstart": UTCstart, "bin_size": vertical_Binsize},
+        attrs={
+            "TAIstart": TAI,
+            "UTCstart": UTCstart,
+            "bin_size": vertical_Binsize,
+        },
     )
 
     return ds

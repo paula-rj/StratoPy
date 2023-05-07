@@ -50,7 +50,9 @@ def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     mask = x.mask
 
     H = Re + h  # satellite orbital radius
-    a = np.sin(x) ** 2 + np.cos(x) ** 2 * (np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2)
+    a = np.sin(x) ** 2 + np.cos(x) ** 2 * (
+        np.cos(y) ** 2 + (np.sin(y) * Re / Rp) ** 2
+    )
     b = -2 * H * np.cos(x) * np.cos(y)
     c = H**2 - Re**2
 
@@ -71,7 +73,9 @@ def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     return sx, sy, sz
 
 
-def sat2latlon(sx, sy, sz, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
+def sat2latlon(
+    sx, sy, sz, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
+):
     """Convert satellite to geographic coordinates.
 
     Transforms cartesian coordinates with origin
@@ -107,12 +111,17 @@ def sat2latlon(sx, sy, sz, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=3578602
     H = Re + h
     gr2rad = np.pi / 180
 
-    lat = np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy**2)) / gr2rad
+    lat = (
+        np.arctan((Re / Rp) ** 2 * sz / np.sqrt((H - sx) ** 2 + sy**2))
+        / gr2rad
+    )
     lon = lon0 - np.arctan(sy / (H - sx)) / gr2rad
     return lat, lon
 
 
-def latlon2scan(lat, lon, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
+def latlon2scan(
+    lat, lon, lon0=-75.0, Re=6378137.0, Rp=6356752.31414, h=35786023.0
+):
     """Convert geographical to scan coordinates.
 
     Transform latitud/longitud coordinates
