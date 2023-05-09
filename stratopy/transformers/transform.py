@@ -9,7 +9,7 @@ r"""Contains methods to perform transformation operations on loaded images."""
 # =============================================================================
 # IMPORTS
 # =============================================================================
-from dateutil import parser, tz
+from dateutil import parser
 
 import numpy as np
 
@@ -27,7 +27,7 @@ from ..extractors.goes import GOES16
 # =============================================================================
 # Collocations
 # =============================================================================
-def gen_vect(col, row, image):
+def gen_vect(col, row, image, trim_shape):
     """For a given (col,row) coordinate, generates a matrix of size 3x3xN.
 
     The central pixel is the one located in (col, fil) coordinate.
@@ -37,10 +37,14 @@ def gen_vect(col, row, image):
 
     Parameters
     ----------
-    col_row : tuple
-        Column and row coordinates given as (col, row).
-    band_dict : dict
-        Dictionary where bands are defined.
+    col : int
+        Column coordinate from ABI image related to CloudSat footprint.
+    row : int
+        Row coordinate from ABI image related to CloudSat footprint.
+    img : ``numpy.array``
+        ABI image as np.array.
+    trim_size: tuple
+        Shape of trim size arround central pixel at (row,col).
 
     Returns
     -------
@@ -54,10 +58,12 @@ def gen_vect(col, row, image):
         raise ValueError("Input column or row larger than image size")
     # band_vec = np.zeros((3, 3, N))
 
+    rsize = int(trim_shape[0] / 2)
+    csize = int(trim_shape[1] / 2)
     # cut
     band_vec = image[
-        row - 1 : row + 2,
-        col - 1 : col + 2,
+        row - rsize : row + rsize + 1,
+        col - csize : col + csize + 1,
     ].copy()
 
     return band_vec
@@ -66,8 +72,9 @@ def gen_vect(col, row, image):
 def merge(
     csat_data,
     time_selected,
-    prod_type,
-    ch,
+    goes_prod_type,
+    band,
+    trim_size=(3, 3),
     norm=True,
 ):
     """Merge data from Cloudsat with co-located data from GOES-16.
@@ -77,16 +84,21 @@ def merge(
     csat_data: ``extractors.cloudsat.CloudSat``
         Stratopy CloudSat fetched file.
 
-    time_selected = str
+    time_selected : str
         Time selected for downloading GOES16 object.
         It must be withing the range of the cloudsat granule start-end.
         Not inclute time zone within the str.
 
-    prod_type:str
+    goes_prod_type: str
         Type of product to download from GOES16.
+        See the available list in goes_obj._PROD_PARSER.
 
-    ch: int
-        Channel for downloading GOES16 file.
+    band: int
+        Band or channel you want to download from ABI (1-16).
+
+    trim_size: tuple
+        Size of the 2D image to be trimmed around the central pixel.
+        Default = (3,3)
 
     norm: bool
         If True, normalizes all GOES channels [0,1].
@@ -96,27 +108,38 @@ def merge(
     -------
     Xarray.Dataset
         Dataset containing merged data.
+
+    Notes
+    -----
+    The maximum extention for img_size, ie, for how many pixels of an ABI image
+    (around the central pixel) is a CPR classificatcan a CloudSat CPR
+    classification accurate. However, in current works, the image size is
+    squared and with a shape = (3,3).
     """
-    dt_selected = parser.parse(time_selected).astimezone(tz.UTC)
+    time_zone = "UTC"
+    usr_date = parser.parse(time_selected)
+    zone = pytz.timezone(time_zone)
+    date_in_zone = zone.localize(usr_date)
+    dt_selected = date_in_zone.astimezone(pytz.UTC)
 
     # Checks if selected time is within cloudsat pass range
     first_time = (
         Timestamp(csat_data.time.to_numpy()[0])
         .to_pydatetime()
-        .replace(tzinfo=pytz.UTC)
+        .replace(tzinfo=pytz.UTC)  # noqa
     )
     last_time = (
         Timestamp(csat_data.time.to_numpy()[-1])
         .to_pydatetime()
-        .replace(tzinfo=pytz.UTC)
+        .replace(tzinfo=pytz.UTC)  # noqa
     )
 
     if dt_selected < first_time or dt_selected > last_time:
         raise NothingHereError(
-            f"{dt_selected} out of range for this CloudSat track."
+            f"{dt_selected} out of range for this CloudSat track [{first_time}: {last_time}]."  # noqa
         )
     else:
-        goesdata = GOES16(product_type=prod_type, channel=ch).fetch(
+        goesdata = GOES16(product_type=goes_prod_type, channel=band).fetch(
             time_selected
         )
 
@@ -139,13 +162,19 @@ def merge(
     # Merge
     imlist = []
     for i in range(len(cols)):
-        imlist.append(gen_vect(cols[i], rows[i], img))
+        imlist.append(gen_vect(cols[i], rows[i], img, trim_size))
 
     _TRACE = np.arange(36950, dtype=np.int32)
-    goes_ds = xa.Dataset(
-        data_vars={"gdata": (["size", "cloudsat_trace"], imlist)},
-        coords={"size": (3, 3), "cloudsat_trace": _TRACE.copy},
+    da = xa.DataArray(
+        imlist,
+        dims=("cloudsat_trace", "ancho", "alto"),
+        coords={
+            "cloudsat_trace": _TRACE.copy(),
+            "ancho": np.arange(0, 3, 1),
+            "alto": np.arange(0, 3, 1),
+        },
     )
-    merged_ds = xa.merge([csat_data, goes_ds])
+    goes_ds = xa.Dataset({"goes": da})
+    merged_ds = csat_data.merge(goes_ds)
 
     return merged_ds
