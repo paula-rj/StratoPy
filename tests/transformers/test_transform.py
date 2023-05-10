@@ -60,7 +60,7 @@ def test_transform():
     cldsat = cloudsat.read_hdf4(CSAT_PATH)
     result = transform.merge(
         cldsat,
-        time_selected="2019 jan 9 16:00",
+        time_selected="2019 jan 2 18:30",
         goes_prod_type="ABI-L2-CMIPF",
         band=9,
     )

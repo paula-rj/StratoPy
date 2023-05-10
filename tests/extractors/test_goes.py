@@ -49,7 +49,6 @@ def test_repr(prod_type):
 # tests with channel
 @mock.patch("s3fs.S3FileSystem.glob", return_value=FAKE_AVAILS_LIST)
 def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
-    # noqa
     buff = data_bytes(
         "GOES16",
         "OR_ABI-L2-CMIPF-M3C03_G16_s20190040600363_e20190040611130_c20190040611199.nc",  # noqa
@@ -81,7 +80,7 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
 
 
 # tests without channel
-@mock.patch("s3fs.S3FileSystem.glob", return_value=FAKE_AVAILS_LIST)
+@mock.patch("s3fs.S3FileSystem.glob", return_value=FAKE_AVAILS_LIST_noCH)
 def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
     # noqa
     buff = data_bytes(

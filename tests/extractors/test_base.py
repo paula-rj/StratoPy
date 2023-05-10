@@ -137,7 +137,7 @@ def test_S3mixin_FileNotFoundError():
     with mock.patch("s3fs.S3FileSystem.glob", return_value=[]) as mglob:
         with pytest.raises(FileNotFoundError):
             conn.fetch("27 jul 1981", tzone="UTC")
-    mglob.assert_called_once_with("1981-07-27T00:00:00+00:00")
+    mglob.assert_called_once_with("1981-07-27T00:00:00+00:00*")
 
 
 # ---------------------------------------------------

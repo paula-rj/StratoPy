@@ -131,10 +131,10 @@ def merge(
     last_time = (
         Timestamp(csat_data.time.to_numpy()[-1])
         .to_pydatetime()
-        .replace(tzinfo=pytz.UTC)  # noqa
+        .replace(tzinfo=pytz.UTC)
     )
 
-    if dt_selected < first_time or dt_selected > last_time:
+    if (dt_selected < first_time) or (dt_selected > last_time):
         raise NothingHereError(
             f"{dt_selected} out of range for this CloudSat track [{first_time}: {last_time}]."  # noqa
         )
