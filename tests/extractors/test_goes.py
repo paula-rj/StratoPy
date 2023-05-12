@@ -23,6 +23,10 @@ FAKE_AVAILS_LIST_noCH = [
     "noaa-goes16/ABI-L2-ACHTF/2010/176/00/OR_ABI-L2-ACHTF-M3_G16_s20101760000363_e20190040611130_c20190040611199.nc",  # noqa
 ]
 
+PROD_TYPES_LIST = [ "ABI-L1b-RadF", "ABI-L2-CMIPF",
+        "ABI-L2-ACHA2KMF", "ABI-L2-ACHAF", "ABI-L2-ACHTF", "ABI-L2-ACMF",  
+        "ABI-L2-ADPF", "ABI-L2-AODF", "ABI-L2-BRFF",
+        "ABI-L2-CODF","ABI-L2-CPSF","ABI-L2-CTPF","ABI-L2-MCMIPF"]
 
 @pytest.mark.parametrize("ptype", goes.GOES16._PRODUCT_TYPES_PARSERS)
 def test_GOES_get_endpoint(ptype):
@@ -38,7 +42,7 @@ def test_wrong_product():
 @pytest.mark.parametrize("prod_type", goes.GOES16._PRODUCT_TYPES_PARSERS)
 def test_repr(prod_type):
     goes_obj = goes.GOES16(prod_type, channel=13)
-    if prod_type == "ABI-L2-MCMIPF" or prod_type == "ABI-L2-ACHTF":
+    if prod_type in PROD_TYPES_LIST[2:]:
         expected = f"<GOES16 product_type={prod_type!r}, ch=None>"
         assert repr(goes_obj) == expected
     else:
