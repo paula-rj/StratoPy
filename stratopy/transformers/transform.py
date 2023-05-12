@@ -71,9 +71,9 @@ def gen_vect(col, row, image, trim_shape):
 
 def merge(
     csat_data,
-    time_selected,
     goes_prod_type,
     band,
+    time_selected,
     trim_size=(3, 3),
     norm=True,
 ):
@@ -94,7 +94,7 @@ def merge(
         See the available list in goes_obj._PROD_PARSER.
 
     band: int
-        Band or channel you want to download from ABI (1-16).
+        Band you want to download from ABI (1-16).
 
     trim_size: tuple
         Size of the 2D image to be trimmed around the central pixel.

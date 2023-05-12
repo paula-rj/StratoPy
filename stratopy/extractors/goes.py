@@ -120,10 +120,19 @@ class GOES16(base.S3Mixin, base.ConnectorABC):
     """
 
     _PRODUCT_TYPES_PARSERS = {
-        "ABI-L1b-RadF": _with_channel_parser,
-        "ABI-L2-CMIPF": _with_channel_parser,
-        "ABI-L2-MCMIPF": _whithout_channel_parser,
+        "ABI-L1b-RadF": _with_channel_parser,  # Radiances
+        "ABI-L2-CMIPF": _with_channel_parser,  # Cloud & Moisture
+        "ABI-L2-ACHA2KMF": _whithout_channel_parser,  # Clouds Height
+        "ABI-L2-ACHAF": _whithout_channel_parser,  # Clouds Height
         "ABI-L2-ACHTF": _whithout_channel_parser,
+        "ABI-L2-ACMF": _whithout_channel_parser,  # Clear sky mask
+        "ABI-L2-ADPF": _whithout_channel_parser,  # Aerosol Detection
+        "ABI-L2-AODF": _whithout_channel_parser,  # Aerosol
+        "ABI-L2-BRFF": _whithout_channel_parser,  # Bidir. Reflactance Factor
+        "ABI-L2-CODF": _whithout_channel_parser,  # Cloud Optical Depth
+        "ABI-L2-CPSF": _whithout_channel_parser,  # Cloud Particle Size
+        "ABI-L2-CTPF": _whithout_channel_parser,  # CLoud Top Pressure
+        "ABI-L2-MCMIPF": _whithout_channel_parser,  # Cloud & Moist. Multiband
     }
 
     PRODUCT_TYPES = tuple(_PRODUCT_TYPES_PARSERS)
