@@ -1,9 +1,9 @@
-.. _base_module:
+.. _ebase_module:
 
-:mod:`stratopy.extractors.base`
+:mod:`stratopy.extractors.ebase`
 --------------------------------
 
-.. automodule:: stratopy.extractors.base
+.. automodule:: stratopy.extractors.ebase
   
   .. autoclass:: ConnectorABC
     :members: parse_date, fetch

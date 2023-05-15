@@ -18,7 +18,7 @@ import pytz
 
 import xarray as xa
 
-from . import base
+from . import ebase
 
 # =============================================================================
 # CONSTANTS
@@ -93,7 +93,7 @@ def _whithout_channel_parser(ptype, dtime, channel, mode):
 # =============================================================================
 
 
-class GOES16(base.S3Mixin, base.ConnectorABC):
+class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
     """
     Creates a connection with GOES16 AWS server.
 

@@ -7,9 +7,9 @@ import numpy as np
 
 import pytest
 
-from stratopy.extractors import base
+from stratopy.extractors import ebase
 from stratopy.extractors import cloudsat
-from stratopy.transformers import transform
+from stratopy.transformers import mergers
 
 import xarray as xa
 
@@ -30,19 +30,19 @@ def test_larger_img():
     wrong = 11234
     ok = 5000
     with pytest.raises(ValueError):
-        transform.gen_vect(wrong, ok, FAKE_GOES, (3, 3))
+        mergers.gen_vect(wrong, ok, FAKE_GOES, (3, 3))
     with pytest.raises(ValueError):
-        transform.gen_vect(wrong, ok, FAKE_GOES, (3, 3))
+        mergers.gen_vect(wrong, ok, FAKE_GOES, (3, 3))
 
 
 # Raise error if time selected out of range for csat track
 def test_time_out():
     csat_data = cloudsat.read_hdf4(CSAT_PATH)
-    with pytest.raises(base.NothingHereError):
-        transform.merge(
-            csat_data=csat_data,
+    with pytest.raises(ebase.NothingHereError):
+        mergers.merge(
+            csat_obj=csat_data,
             time_selected="2019 jan 2 17:00",
-            goes_prod_type="any",
+            goes_obj="any",
             band=13,
         )
 
@@ -50,18 +50,18 @@ def test_time_out():
 def test_gen_vect():
     iexpected_shape = (3, 3)
     pexpected_shape = (7, 7)
-    result_impar = transform.gen_vect(2500, 2500, FAKE_GOES, (3, 3))
-    result_par = transform.gen_vect(2500, 2500, FAKE_GOES, (6, 6))
+    result_impar = mergers.gen_vect(2500, 2500, FAKE_GOES, (3, 3))
+    result_par = mergers.gen_vect(2500, 2500, FAKE_GOES, (6, 6))
     assert result_impar.shape == iexpected_shape
     assert result_par.shape == pexpected_shape
 
 
 def test_transform():
     cldsat = cloudsat.read_hdf4(CSAT_PATH)
-    result = transform.merge(
+    result = mergers.merge(
         cldsat,
         time_selected="2019 jan 2 18:30",
-        goes_prod_type="ABI-L2-CMIPF",
+        goes_obj="ABI-L2-CMIPF",
         band=9,
     )
     # Check trace dim

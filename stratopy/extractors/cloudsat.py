@@ -28,7 +28,7 @@ from pyhdf.VS import VS
 
 import xarray as xa
 
-from . import base
+from . import ebase
 from ..utils import nearest_date
 
 _TRACE = np.arange(36950, dtype=np.int32)
@@ -148,7 +148,7 @@ def read_hdf4(path):
     return ds
 
 
-class CloudSat(base.SFTPMixin, base.ConnectorABC):
+class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
     """
     Establishes a connection with the CloudSat DPC.
 

@@ -8,14 +8,14 @@ from unittest import mock
 
 import pytest
 
-from stratopy.extractors import base
+from stratopy.extractors import ebase
 
 
 # ----------------------------------
 # General tests
 # -----------------------------------
 def test_ConnectorABC():
-    class FakeConnector(base.ConnectorABC):
+    class FakeConnector(ebase.ConnectorABC):
         @classmethod
         def get_endpoint(cls):
             return []
@@ -45,7 +45,7 @@ def test_ConnectorABC():
 
 
 def test_ConnectorABC_get_endpoint_not_implementhed():
-    class Fake1Connector(base.ConnectorABC):
+    class Fake1Connector(ebase.ConnectorABC):
         def get_endpoint(self):
             return super().get_endpoint()
 
@@ -63,7 +63,7 @@ def test_ConnectorABC_get_endpoint_not_implementhed():
 
 
 def test_ConnectorABC_makequery_not_implementhed():
-    class Fake2Connector(base.ConnectorABC):
+    class Fake2Connector(ebase.ConnectorABC):
         def get_endpoint(self):
             return None
 
@@ -81,7 +81,7 @@ def test_ConnectorABC_makequery_not_implementhed():
 
 
 def test_ConnectorABC_download_not_implementhed():
-    class Fake3Connector(base.ConnectorABC):
+    class Fake3Connector(ebase.ConnectorABC):
         def get_endpoint(self):
             return None
 
@@ -99,7 +99,7 @@ def test_ConnectorABC_download_not_implementhed():
 
 
 def test_ConnectorABC_parse_result_not_implementhed():
-    class Fake4Connector(base.ConnectorABC):
+    class Fake4Connector(ebase.ConnectorABC):
         def get_endpoint(self):
             return None
 
@@ -122,7 +122,7 @@ def test_ConnectorABC_parse_result_not_implementhed():
 
 
 def test_S3mixin_FileNotFoundError():
-    class TestFileNotFoundError(base.S3Mixin, base.ConnectorABC):
+    class TestFileNotFoundError(ebase.S3Mixin, ebase.ConnectorABC):
         def get_endpoint(cls):
             return None
 
@@ -149,7 +149,7 @@ def test_S3mixin_FileNotFoundError():
 @mock.patch("paramiko.SSHClient.connect")
 @mock.patch("paramiko.RSAKey.from_private_key_file", return_value="pkey")
 def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
-    class TestSFTP(base.SFTPMixin, base.ConnectorABC):
+    class TestSFTP(ebase.SFTPMixin, ebase.ConnectorABC):
         def get_endpoint(cls):
             return "endpoint"
 
