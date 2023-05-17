@@ -40,9 +40,9 @@ class Min_Max_Normalize(tbase.UnaryTransformerABC):
             norm_image: numpy array
                 Normalized image.
         """
-        shape = self.image.shape
         # x = self.image[~np.isnan(self.image)]  # tarda 6.3 sec
-        mini = np.nanmin(self.image)  # min
-        dif = np.nanamax(self.image) - mini  # max - min
-        norm_image = (self.image - mini) / dif
+        mini = np.nanmin(self.image, axis=(2, 1), keepdims=True)  # min
+        dif = np.nanmax(self.image, axis=(2, 1), keepdims=True) - mini  # max - min
+        nimg = self.image - mini
+        norm_image = np.divide(nimg, dif)
         return norm_image

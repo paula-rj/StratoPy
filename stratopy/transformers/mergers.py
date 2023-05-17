@@ -71,7 +71,7 @@ def gen_vect(col, row, image, trim_shape):
     array-like
         Band vector.
     """
-    brows, bcols = image.shape
+    nbands, brows, bcols = image.shape
 
     if col > bcols or row > brows:
         raise ValueError("Input column or row larger than image size")
@@ -210,7 +210,7 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
 
         # Normalize data
         if self.norm:
-            img = scalers.min_max_norm(img)
+            img = scalers.Min_Max_Normalize(img).transformer(sat0="goes16")
 
         # TODO: Cortar cloudsat mas alla de los 10-15 min del time selected
 
