@@ -244,6 +244,12 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         return "/".join(["Data", self.product_type])
 
     def get_orbit_type(self):
+        """Gets the type of orbit.
+
+        Returns
+        -------
+            str:CLoudsat is a POES sunsynchronous satellite.
+        """
         return POLAR
 
     def _makequery(self, endpoint, date_time):

@@ -5,6 +5,7 @@
 # All rights reserved.
 import numpy as np
 import numpy.ma as ma
+import pytest
 
 from stratopy.transformers import coord_change
 
@@ -39,3 +40,5 @@ def test_scan2colfil():
     assert isinstance(col_fl, float)
     assert isinstance(row_fl, float)
     np.testing.assert_equal((2712, 2712), coord_change.scan2colfil(0.0, 0.0))
+    with pytest.raises(TypeError):
+        coord_change.scan2colfil(0.0, 0.0, tipo=2)

@@ -18,9 +18,8 @@ import pytz
 
 import xarray as xa
 
-from ..constants import GEOSTATIONARY
 from . import ebase
-
+from ..constants import GEOSTATIONARY
 
 # =============================================================================
 # CONSTANTS
@@ -178,6 +177,12 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         return "/".join(["s3:/", "noaa-goes16", self.product_type])
 
     def get_orbit_type(self):
+        """Gets the type of orbit.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
         return GEOSTATIONARY
 
     def _makequery(self, endpoint, dt):

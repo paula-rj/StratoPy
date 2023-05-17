@@ -7,8 +7,8 @@ import numpy as np
 
 import pytest
 
-from stratopy.extractors import ebase
 from stratopy.extractors import cloudsat
+from stratopy.extractors import ebase
 from stratopy.transformers import mergers
 
 import xarray as xa

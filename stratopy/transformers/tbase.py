@@ -43,7 +43,7 @@ class TransformerABC(abc.ABC):
             if diff:
                 cls_name = cls.__name__
                 raise TypeError(
-                    f"'{cls_name}.transformer() has an unexpected parameter/s: {diff}"
+                    f"'{cls_name}.transformer() has an unexpected parameter/s: {diff}"  # noqa
                 )
 
     @abc.abstractmethod

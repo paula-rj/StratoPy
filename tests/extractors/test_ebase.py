@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from stratopy.constants import POLAR, GEOSTATIONARY, STRATOPY_METADATA_KEY
+from stratopy.constants import GEOSTATIONARY, POLAR, STRATOPY_METADATA_KEY
 from stratopy.extractors import ebase
 
 

@@ -98,7 +98,6 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
 # tests without channel
 @mock.patch("s3fs.S3FileSystem.glob", return_value=FAKE_AVAILS_LIST_noCH)
 def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
-    # noqa
     buff = data_bytes(
         "GOES16",
         "OR_ABI-L2-ACHTF-M6_G16_s20200091200211_e20200091209519_c20200091211458.nc",  # noqa

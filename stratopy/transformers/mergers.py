@@ -21,8 +21,8 @@ import xarray as xa
 
 from . import coord_change
 from . import scalers
-from ..extractors.ebase import NothingHereError
 from . import tbase
+from ..extractors.ebase import NothingHereError
 
 CH_LIST = [
     "CMI_C01",
@@ -190,8 +190,8 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
 
         Notes
         -----
-        The maximum extention for img_size, ie, for how many pixels of an ABI image
-        (around the central pixel) is a CPR classificatcan a CloudSat CPR
+        The maximum extention for img_size, ie, for how many pixels of an ABI
+        image (around the central pixel) is a CPR classificatcan a CloudSat CPR
         classification accurate. However, in current works, the image size is
         squared and with a shape = (3,3).
         """

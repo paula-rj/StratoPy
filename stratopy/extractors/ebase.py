@@ -17,11 +17,11 @@ are also implemenmted in the base module.
 
 import abc
 import atexit
+import dataclasses as dcs
 import fnmatch
 import io
 import os
 import tempfile
-import dataclasses as dcs
 
 
 import dateutil.parser
@@ -32,7 +32,7 @@ import pytz
 
 import s3fs
 
-from ..constants import STRATOPY_METADATA_KEY, ORBIT_TYPES
+from ..constants import ORBIT_TYPES, STRATOPY_METADATA_KEY
 from ..utils import from_cache, get_default_cache, nearest_date
 
 
@@ -55,12 +55,25 @@ class NothingHereError(FileNotFoundError):
 
 @dcs.dataclass(frozen=True)
 class Metadata:
+    """Class that ensures the description of a satellite's orbit.
+
+    Raises
+    ------
+        ValueError: If satellite extractor has not descripted its orbit.
+    """
+
     orbit_type: str = dcs.field(repr=True)
 
     def __post_init__(self):
+        """Initialie field value orbit type.
+
+        Raises
+        ------
+            ValueError: If satellite extractor has not descripted its orbit.
+        """
         if self.orbit_type not in ORBIT_TYPES:
             raise ValueError(
-                f"'orbit type' must be one of {ORBIT_TYPES}. Found: {self.orbit_type!r}"
+                f"'orbit type' must be one of {ORBIT_TYPES}. Found: {self.orbit_type!r}"  # noqa
             )
 
 
@@ -91,8 +104,9 @@ class ConnectorABC(abc.ABC):
 
     @abc.abstractmethod
     def get_orbit_type(self):
-        """Returns the type of orbit (polar/geostationary) of the satellite \
-        that generated the data for this extractor.
+        """Returns the type of orbit of the satellite (polar/geostationary).
+
+        That generated the data for this extractor.
 
         """
         raise NotImplementedError()

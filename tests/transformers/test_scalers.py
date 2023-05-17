@@ -4,6 +4,7 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 import numpy as np
+
 from stratopy.transformers import scalers
 
 FAKE_IMG = np.random.randint(0, 255, size=(16, 3, 3))
