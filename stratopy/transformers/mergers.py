@@ -22,6 +22,7 @@ import xarray as xa
 from . import coord_change
 from . import scalers
 from . import tbase
+from ..constants import STRATOPY_METADATA_KEY
 from ..extractors.ebase import NothingHereError
 
 CH_LIST = [
@@ -91,7 +92,7 @@ def gen_vect(col, row, image, trim_shape):
 
 
 class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
-    """.
+    """
 
     Args
     ----
@@ -102,6 +103,31 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
 
         time_zone : str
             Time zone.
+            
+                time_selected : str
+            Time selected for downloading GOES16 object.
+            It must be withing the range of the cloudsat granule start-end.
+            Not inclute time zone within the str.
+
+        trim_size: tuple
+            Size of the 2D image to be trimmed around the central pixel.
+            Default = (3,3)
+
+        norm: bool
+            If True, normalizes all GOES channels [0,1].
+            Default:True
+
+        Returns
+        -------
+        Xarray.Dataset
+            Dataset containing merged data.
+
+        Notes
+        -----
+        The maximum extention for img_size, ie, for how many pixels of an ABI
+        image (around the central pixel) is a CPR classificatcan a CloudSat CPR
+        classification accurate. However, in current works, the image size is
+        squared and with a shape = (3,3).
 
     Methods
     -------
@@ -167,42 +193,22 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
 
         Parameters
         ----------
-        sat0: ``extractors.cloudsat.CloudSat``
-            Stratopy CloudSat fetched file.
+        sat0: ``xarray DataArray``
+            DataArray of a file from satellite 0.
 
-        time_selected : str
-            Time selected for downloading GOES16 object.
-            It must be withing the range of the cloudsat granule start-end.
-            Not inclute time zone within the str.
-
-        trim_size: tuple
-            Size of the 2D image to be trimmed around the central pixel.
-            Default = (3,3)
-
-        norm: bool
-            If True, normalizes all GOES channels [0,1].
-            Default:True
-
-        Returns
-        -------
-        Xarray.Dataset
-            Dataset containing merged data.
-
-        Notes
-        -----
-        The maximum extention for img_size, ie, for how many pixels of an ABI
-        image (around the central pixel) is a CPR classificatcan a CloudSat CPR
-        classification accurate. However, in current works, the image size is
-        squared and with a shape = (3,3).
+        sat1: ``xarray DataArray``
+            DataArray of a file from satellite 1.
         """
         # Determines if collocation is possible
-        csat_data = sat0.fetch(self.time_selected)
+        # Check type of orbit
+        sat0.attrs[STRATOPY_METADATA_KEY].orbit_type 
+        sat1.attrs[STRATOPY_METADATA_KEY].orbit_type 
 
         # Check if temporal collocation possible
-        check0 = self.check_time(csat_data)
-        if check0:
-            goesdata = sat1.fetch(self.time_selected)
-
+        name1 = sat0.name
+        name2 = sat1.name
+        if self.check_time(self.time_selected, name1, name2):
+        
         # Esto va en goes
         if sat1.product_type == "ABI-L2-MCMIPF":
             img = goesdata[CH_LIST].to_array().to_numpy()
