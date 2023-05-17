@@ -21,6 +21,7 @@ import fnmatch
 import io
 import os
 import tempfile
+import dataclasses as dcs
 
 
 import dateutil.parser
@@ -31,7 +32,9 @@ import pytz
 
 import s3fs
 
+from ..constants import STRATOPY_METADATA_KEY, ORBIT_TYPES
 from ..utils import from_cache, get_default_cache, nearest_date
+
 
 # =============================================================================
 # EXCEPTIONS
@@ -44,7 +47,22 @@ class NothingHereError(FileNotFoundError):
     Only one file, or nothing, can be downloaded.
     """
 
-    pass
+
+# =============================================================================
+# METADATA
+# =============================================================================
+
+
+@dcs.dataclass(frozen=True, slots=True, kw_only=True)
+class Metadata:
+
+    orbit_type: str = dcs.field(repr=True)
+
+    def __post_init__(self):
+        if self.orbit_type not in ORBIT_TYPES:
+            raise ValueError(
+                f"'orbit type' must be one of {ORBIT_TYPES}. Found: {self.orbit_type!r}"
+            )
 
 
 # =============================================================================
@@ -69,6 +87,14 @@ class ConnectorABC(abc.ABC):
 
         For example, AWS, SFTP, HTTP.
         Raises NotImplementedError if not implemented in an extractor class.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_orbit_type(self):
+        """Returns the type of orbit (polar/geostationary) of the satellite \
+        that generated the data for this extractor.
+
         """
         raise NotImplementedError()
 
@@ -186,6 +212,12 @@ class ConnectorABC(abc.ABC):
 
         # convierte a xarray
         result_as_xr = self._parse_result(fp)
+
+        # add metadata
+        orbit_type = self.get_orbit_type()
+
+        metadata = Metadata(orbit_type=orbit_type)
+        result_as_xr.attrs.update({STRATOPY_METADATA_KEY: metadata})
 
         return result_as_xr
 

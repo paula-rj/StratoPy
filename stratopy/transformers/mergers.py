@@ -109,7 +109,9 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         Merges sat 0 = cloudsat obj + sat 1 = goes obj.
     """
 
-    def __init__(self, time_selected, time_zone="UTC", trim_size=(3, 3), norm=True):
+    def __init__(
+        self, time_selected, time_zone="UTC", trim_size=(3, 3), norm=True
+    ):
         self.time_selected = time_selected
         self.time_zone = time_zone
         self.trim_size = trim_size

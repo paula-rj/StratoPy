@@ -37,7 +37,9 @@ class TransformerABC(abc.ABC):
         if cls.transformer is not TransformerABC.transformer:
             original_signature = cls._transformers_params
             new_signature = inspect.signature(cls.transformer)
-            diff = original_signature.symmetric_difference(new_signature.parameters)
+            diff = original_signature.symmetric_difference(
+                new_signature.parameters
+            )
             if diff:
                 cls_name = cls.__name__
                 raise TypeError(

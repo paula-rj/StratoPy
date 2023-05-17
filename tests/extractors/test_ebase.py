@@ -8,17 +8,37 @@ from unittest import mock
 
 import pytest
 
+from stratopy.constants import POLAR, GEOSTATIONARY, STRATOPY_METADATA_KEY
 from stratopy.extractors import ebase
+
+
+class _WithAttrs:
+    def __init__(self, obj, attrs=None):
+        self.obj = obj
+        self.attrs = dict(attrs) if attrs else {}
+
+    def __getitem__(self, k):
+        return self.obj[k]
+
+    def __setitem__(self, k, v):
+        self.obj[k] = v
+
+    def __getattr__(self, a):
+        return getattr(self.obj, a)
 
 
 # ----------------------------------
 # General tests
 # -----------------------------------
-def test_ConnectorABC():
+def test_ConnectorABC_xx():
     class FakeConnector(ebase.ConnectorABC):
         @classmethod
         def get_endpoint(cls):
             return []
+
+        @classmethod
+        def get_orbit_type(cls):
+            return POLAR
 
         def _makequery(self, endpoint, pdate):
             # noqa
@@ -31,17 +51,20 @@ def test_ConnectorABC():
 
         def _parse_result(self, response):
             response.append("_parse_result")
-            return response
+            return _WithAttrs(response)
 
     conn = FakeConnector()
     result = conn.fetch("june 25th 2022 18:00", tzone="UTC")
 
-    expected = [
+    expected_obj = [
         ("_makequery", "2022-06-25T18:00:00+00:00"),
         "_download",
         "_parse_result",
     ]
-    assert result == expected
+    expected_attrs = {STRATOPY_METADATA_KEY: ebase.Metadata(orbit_type=POLAR)}
+
+    assert result.obj == expected_obj
+    assert result.attrs == expected_attrs
 
 
 def test_ConnectorABC_get_endpoint_not_implementhed():

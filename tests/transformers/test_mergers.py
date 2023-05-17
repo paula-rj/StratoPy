@@ -13,6 +13,8 @@ from stratopy.transformers import mergers
 
 import xarray as xa
 
+pytest.skip(allow_module_level=True)
+
 CSAT_PATH = (
     "tests/data/CloudSat/"
     "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"

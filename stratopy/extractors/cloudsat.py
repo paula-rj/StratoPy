@@ -29,6 +29,7 @@ from pyhdf.VS import VS
 import xarray as xa
 
 from . import ebase
+from ..constants import POLAR
 from ..utils import nearest_date
 
 _TRACE = np.arange(36950, dtype=np.int32)
@@ -241,6 +242,9 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         Returns the URL as str.
         """
         return "/".join(["Data", self.product_type])
+
+    def get_orbit_type(self):
+        return POLAR
 
     def _makequery(self, endpoint, date_time):
         """Builds the whole query needed to download the product from DPC.

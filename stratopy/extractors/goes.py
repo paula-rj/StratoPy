@@ -18,7 +18,9 @@ import pytz
 
 import xarray as xa
 
+from ..constants import GEOSTATIONARY
 from . import ebase
+
 
 # =============================================================================
 # CONSTANTS
@@ -174,6 +176,9 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         Returns the URL as str.
         """
         return "/".join(["s3:/", "noaa-goes16", self.product_type])
+
+    def get_orbit_type(self):
+        return GEOSTATIONARY
 
     def _makequery(self, endpoint, dt):
         """Builds the whole query needed to download the product from s3.
