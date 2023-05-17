@@ -91,7 +91,7 @@ def gen_vect(col, row, image, trim_shape):
 
 
 class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
-    """Merger.
+    """.
 
     Args
     ----
@@ -109,18 +109,58 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         Merges sat 0 = cloudsat obj + sat 1 = goes obj.
     """
 
-    def __init__(self, time_selected, time_zone="UTC"):
-        usr_date = parser.parse(time_selected)
-        zone = pytz.timezone(time_zone)
+    def __init__(self, time_selected, time_zone="UTC", trim_size=(3, 3), norm=True):
+        self.time_selected = time_selected
+        self.time_zone = time_zone
+        self.trim_size = trim_size
+        self.norm = norm
+
+    def __repr__(self):
+        """Representation for merged object."""
+        return f"Cloudsat - GOES merged for {self.time_selected}"
+
+    def check_time(self, sat_data):
+        """Checks if selected time is in cloudsat track range.
+
+        Parameters
+        ----------
+        sat_data: xarray.DataArray
+            Cloudsat data as a DataArray.
+            To generate it: csat_obj.read_hdf4() or
+            csat_obj.fetch("date and time")
+
+        Returns
+        -------
+        bool
+
+        Raise
+        -----
+        NothingHereError
+        """
+        usr_date = parser.parse(self.time_selected)
+        zone = pytz.timezone(self.time_zone)
         date_in_zone = zone.localize(usr_date)
         dt_selected = date_in_zone.astimezone(pytz.UTC)
-        self.dt_selected = dt_selected
 
-    def __repr__(self) -> str:
-        """Representation for merged object."""
-        return super().__repr__()
+        first_time = (
+            Timestamp(sat_data.time.to_numpy()[0])
+            .to_pydatetime()
+            .replace(tzinfo=pytz.UTC)
+        )
+        last_time = (
+            Timestamp(sat_data.time.to_numpy()[-1])
+            .to_pydatetime()
+            .replace(tzinfo=pytz.UTC)
+        )
 
-    def transformer(self, sat0, sat1, trim_size=(3, 3), norm=True):
+        if (dt_selected < first_time) or (dt_selected > last_time):
+            raise NothingHereError(
+                f"{self.time_selected} out of range for this CloudSat track [{first_time}: {last_time}]."  # noqa
+            )
+        else:
+            return True
+
+    def transformer(self, sat0, sat1):
         """Merge data from Cloudsat with co-located data from GOES-16.
 
         Parameters
@@ -153,40 +193,27 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         classification accurate. However, in current works, the image size is
         squared and with a shape = (3,3).
         """
-        csat_data = sat0.fetch(self.dt_selected)
+        # Determines if collocation is possible
+        csat_data = sat0.fetch(self.time_selected)
 
-        # Checks if selected time is within cloudsat track range
-        first_time = (
-            Timestamp(csat_data.time.to_numpy()[0])
-            .to_pydatetime()
-            .replace(tzinfo=pytz.UTC)
-        )
-        last_time = (
-            Timestamp(csat_data.time.to_numpy()[-1])
-            .to_pydatetime()
-            .replace(tzinfo=pytz.UTC)
-        )
+        # Check if temporal collocation possible
+        check0 = self.check_time(csat_data)
+        if check0:
+            goesdata = sat1.fetch(self.time_selected)
 
-        if (self.dt_selected < first_time) or (self.dt_selected > last_time):
-            raise NothingHereError(
-                f"{self.dt_selected} out of range for this CloudSat track [{first_time}: {last_time}]."  # noqa
-            )
-        else:
-            goesdata = sat1.fetch(self.dt_selected)
-
+        # Esto va en goes
         if sat1.product_type == "ABI-L2-MCMIPF":
             img = goesdata[CH_LIST].to_array().to_numpy()
         else:
-            img = goesdata.CMI.to_numpy().reshape(
-                1, img.shape[0], img.shape[1]
-            )
+            img = goesdata.CMI.to_numpy()
+            img = img.reshape(1, img.shape[0], img.shape[1])
 
         # Normalize data
-        if norm:
+        if self.norm:
             img = scalers.min_max_norm(img)
 
         # TODO: Cortar cloudsat mas alla de los 10-15 min del time selected
-        # TODO: Cortar algo de goes alrededor del cloudsat
+
         # t:(lat,lon) -> (col,row)
         scanx, scany = coord_change.latlon2scan(
             csat_data.lat.to_numpy(), csat_data.lon.to_numpy()
@@ -196,7 +223,7 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         # Merge
         imlist = []
         for i in range(len(cols)):
-            imlist.append(gen_vect(cols[i], rows[i], img, trim_size))
+            imlist.append(gen_vect(cols[i], rows[i], img, self.trim_size))
 
         _TRACE = np.arange(36950, dtype=np.int32)
         da = xa.DataArray(
@@ -204,8 +231,8 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
             dims=("cloudsat_trace", "ancho", "alto"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "ancho": np.arange(0, 3, 1),
-                "alto": np.arange(0, 3, 1),
+                "img_wide": np.arange(0, 3, 1),  # ancho
+                "img_height": np.arange(0, 3, 1),  # alto
             },
         )
         goes_ds = xa.Dataset({"goes": da})

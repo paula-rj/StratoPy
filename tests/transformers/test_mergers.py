@@ -56,6 +56,13 @@ def test_gen_vect():
     assert result_par.shape == pexpected_shape
 
 
+def test_wrong_check_time():
+    sat0_data = cloudsat.read_hdf4(CSAT_PATH)
+    merged_obj = mergers.Merge_Cloudsat_GOES("2019 jan 2 22:30")
+    with pytest.raises(ebase.NothingHereError):
+        merged_obj.check_time(sat0_data)
+
+
 def test_transform():
     cldsat = cloudsat.read_hdf4(CSAT_PATH)
     result = mergers.merge(

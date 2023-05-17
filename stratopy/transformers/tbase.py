@@ -3,7 +3,11 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-r"""Basic implementations needed to implement a transformer."""
+r"""Module that defines the basic implementation for each transformer."""
+
+# =============================================================================
+# IMPORTS
+# =============================================================================
 
 import abc
 import inspect
@@ -33,9 +37,7 @@ class TransformerABC(abc.ABC):
         if cls.transformer is not TransformerABC.transformer:
             original_signature = cls._transformers_params
             new_signature = inspect.signature(cls.transformer)
-            diff = original_signature.symmetric_difference(
-                new_signature.parameters
-            )
+            diff = original_signature.symmetric_difference(new_signature.parameters)
             if diff:
                 cls_name = cls.__name__
                 raise TypeError(
