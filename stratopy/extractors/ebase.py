@@ -53,9 +53,8 @@ class NothingHereError(FileNotFoundError):
 # =============================================================================
 
 
-@dcs.dataclass(frozen=True, slots=True, kw_only=True)
+@dcs.dataclass(frozen=True)
 class Metadata:
-
     orbit_type: str = dcs.field(repr=True)
 
     def __post_init__(self):

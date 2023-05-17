@@ -27,9 +27,9 @@ class _WithAttrs:
         return getattr(self.obj, a)
 
 
-# ----------------------------------
+# -----------------------------------------------------------------------------
 # General tests
-# -----------------------------------
+# -----------------------------------------------------------------------------
 def test_ConnectorABC_xx():
     class FakeConnector(ebase.ConnectorABC):
         @classmethod
@@ -72,6 +72,10 @@ def test_ConnectorABC_get_endpoint_not_implementhed():
         def get_endpoint(self):
             return super().get_endpoint()
 
+        @classmethod
+        def get_orbit_type(cls):
+            return POLAR
+
         def _makequery(self, endpoint, pdate):
             return None
 
@@ -89,6 +93,9 @@ def test_ConnectorABC_makequery_not_implementhed():
     class Fake2Connector(ebase.ConnectorABC):
         def get_endpoint(self):
             return None
+
+        def get_orbit_type(cls):
+            return POLAR
 
         def _makequery(self, endpoint, pdate):
             return super()._makequery(endpoint, pdate)
@@ -108,6 +115,9 @@ def test_ConnectorABC_download_not_implementhed():
         def get_endpoint(self):
             return None
 
+        def get_orbit_type(cls):
+            return POLAR
+
         def _makequery(self, endpoint, pdate):
             return None
 
@@ -125,6 +135,9 @@ def test_ConnectorABC_parse_result_not_implementhed():
     class Fake4Connector(ebase.ConnectorABC):
         def get_endpoint(self):
             return None
+
+        def get_orbit_type(cls):
+            return POLAR
 
         def _makequery(self, endpoint, pdate):
             return None
@@ -149,6 +162,9 @@ def test_S3mixin_FileNotFoundError():
         def get_endpoint(cls):
             return None
 
+        def get_orbit_type(cls):
+            return GEOSTATIONARY
+
         def _makequery(self, endpoint, pdate):
             return pdate.isoformat()
 
@@ -163,9 +179,9 @@ def test_S3mixin_FileNotFoundError():
     mglob.assert_called_once_with("1981-07-27T00:00:00+00:00*")
 
 
-# ---------------------------------------------------
+# -----------------------------------------------------------------------------
 # SFTPMixin
-# ---------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 @mock.patch("paramiko.SSHClient.open_sftp")
@@ -176,11 +192,15 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
         def get_endpoint(cls):
             return "endpoint"
 
+        def get_orbit_type(cls):
+            return POLAR
+
         def _makequery(self, endpoint, pdate):
             return "dir/pattern.*"
 
         def _parse_result(self, response):
-            return response
+            response.append("_parse_result")
+            return _WithAttrs(response)
 
     conn = TestSFTP("host", "port", "zaraza@coso.com", keyfile="algo")
 
