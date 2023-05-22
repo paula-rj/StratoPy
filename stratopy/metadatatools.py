@@ -58,7 +58,7 @@ class Metadata:
     prod_key: str
     instrument_type: str
 
-    def _validate_in(field, value, options):
+    def _validate_in(self, field, value, options):
         if value not in options:
             raise ValueError(
                 f"{field!r} must be one of {options}. Found: {value!r}"  # noqa
