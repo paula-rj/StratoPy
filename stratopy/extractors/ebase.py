@@ -32,7 +32,12 @@ import pytz
 
 import s3fs
 
-from ..constants import ORBIT_TYPES, STRATOPY_METADATA_KEY
+from .. import metadatatools
+from ..metadatatools import (
+    ORBIT_TYPES,
+    STRATOPY_METADATA_KEY,
+    INSTRUMENTS_TYPES,
+)
 from ..utils import from_cache, get_default_cache, nearest_date
 
 
@@ -46,43 +51,6 @@ class NothingHereError(FileNotFoundError):
 
     Only one file, or nothing, can be downloaded.
     """
-
-
-# =============================================================================
-# METADATA
-# =============================================================================
-
-
-@dcs.dataclass(frozen=True)
-class Metadata:
-    """Class that ensures the description of a satellite's orbit.
-
-    Raises
-    ------
-        ValueError: If satellite extractor has not descripted its orbit.
-    """
-
-    orbit_type: str
-    prod_key: str
-    instrument_type: str
-
-    def _validate_in(field, value, options):
-        if value not in options:
-            raise ValueError(
-                f"{field!r} must be one of {options}. Found: {value!r}"  # noqa
-            )
-
-    def __post_init__(self):
-        """Initialie field value orbit type.
-
-        Raises
-        ------
-            ValueError: If satellite extractor has not descripted its orbit.
-        """
-        self._validate_in("orbit_type", self.orbit_type, ORBIT_TYPES)
-        self._validate_in(
-            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES
-        )
 
 
 # =============================================================================
@@ -246,8 +214,11 @@ class ConnectorABC(abc.ABC):
         # add metadata
         orbit_type = self.get_orbit_type()
         prod_key = self.get_product_type()
+        inst_type = self.get_instrument_type()
 
-        metadata = Metadata(orbit_type=orbit_type, prod_key=prod_key)
+        metadata = metadatatools.Metadata(
+            orbit_type=orbit_type, prod_key=prod_key, instrument_type=inst_type
+        )
         result_as_xr.attrs.update({STRATOPY_METADATA_KEY: metadata})
 
         return result_as_xr

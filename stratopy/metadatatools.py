@@ -36,6 +36,10 @@ POLAR = "polar"
 #: Types of satellite orbits available
 ORBIT_TYPES = (GEOSTATIONARY, POLAR)
 
+INSTRUMENTS_TYPES = ("a", "b")
+
+RADIOMETERS = ("ABI", "MODIS")
+
 # =============================================================================
 # CLASS
 # =============================================================================

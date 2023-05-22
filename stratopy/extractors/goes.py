@@ -19,13 +19,15 @@ import pytz
 import xarray as xa
 
 from . import ebase
-from ..constants import GEOSTATIONARY, DATA_GOES
+from ..metadatatools import GEOSTATIONARY, RADIOMETERS
 
 # =============================================================================
 # CONSTANTS
 # =============================================================================
 
-MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(pytz.UTC)
+MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(
+    pytz.UTC
+)
 
 # =============================================================================
 # QUERY PARSERS
@@ -150,16 +152,22 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         self.product_type = product_type
         self._ptype_parser = self._PRODUCT_TYPES_PARSERS[product_type]
         self.channel = (
-            int(channel) if self._ptype_parser is _with_channel_parser else None
+            int(channel)
+            if self._ptype_parser is _with_channel_parser
+            else None
         )
 
     def __repr__(self):
         """Representation for a GOOES16 object as chosen product type, band."""
-        return f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
+        return (
+            f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
+        )
 
     def _repr_html_(self):
         """Representation for a G OES16 object as chosen product type, band."""
-        return f"<GOES16 product_type={self.product_type!r}  , ch={self.channel}>"
+        return (
+            f"<GOES16 product_type={self.product_type!r}  , ch={self.channel}>"
+        )
 
     def get_endpoint(self):
         """Gets the URL direction where all the GOES16 files are stored.
@@ -184,7 +192,16 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         -------
             str: GOES satellites are geostationary.
         """
-        return DATA_GOES[self.product_type]
+        return self.product_type
+
+    def get_instrument_type(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return self.product_type
 
     def _makequery(self, endpoint, dt):
         """Builds the whole query needed to download the product from s3.
