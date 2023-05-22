@@ -29,7 +29,7 @@ from pyhdf.VS import VS
 import xarray as xa
 
 from . import ebase
-from ..constants import POLAR
+from ..constants import POLAR, DATA_CLOUDSAT
 from ..utils import nearest_date
 
 _TRACE = np.arange(36950, dtype=np.int32)
@@ -77,9 +77,7 @@ def read_hdf4(path):
     start = parser.parse("1993-01-01") + dt.timedelta(seconds=TAI)
     # A profile is taken every 0.16 s
     offsets = [dt.timedelta(seconds=sec) for sec in profile_seconds]
-    profile_time = np.array([start + offset for offset in offsets]).astype(
-        dt.datetime
-    )
+    profile_time = np.array([start + offset for offset in offsets]).astype(dt.datetime)
 
     # Important attributes, one number only
     vd_UTCstart = vs.attach("UTC_start")
@@ -143,6 +141,7 @@ def read_hdf4(path):
             "TAIstart": TAI,
             "UTCstart": UTCstart,
             "bin_size": vertical_Binsize,
+            "platform_ID": "CloudSat",
         },
     )
 
@@ -252,6 +251,15 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         """
         return POLAR
 
+    def get_product_type(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return DATA_CLOUDSAT[self.product_type]
+
     def _makequery(self, endpoint, date_time):
         """Builds the whole query needed to download the product from DPC.
 
@@ -303,9 +311,7 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
 
             # Temporary container
             cls_name = type(self).__name__
-            _, tmp_path = tempfile.mkstemp(
-                suffix=".hdf", prefix=f"stpy_{cls_name}_"
-            )
+            _, tmp_path = tempfile.mkstemp(suffix=".hdf", prefix=f"stpy_{cls_name}_")
             atexit.register(os.remove, tmp_path)
 
             # Downloads file from full and copies into tmp

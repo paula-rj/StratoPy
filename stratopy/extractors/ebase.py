@@ -63,6 +63,7 @@ class Metadata:
     """
 
     orbit_type: str = dcs.field(repr=True)
+    prod_key: str = dcs.field(repr=True)
 
     def __post_init__(self):
         """Initialie field value orbit type.
@@ -104,6 +105,15 @@ class ConnectorABC(abc.ABC):
 
     @abc.abstractmethod
     def get_orbit_type(self):
+        """Returns the type of orbit of the satellite (polar/geostationary).
+
+        That generated the data for this extractor.
+
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_product_type(self):
         """Returns the type of orbit of the satellite (polar/geostationary).
 
         That generated the data for this extractor.
@@ -228,8 +238,9 @@ class ConnectorABC(abc.ABC):
 
         # add metadata
         orbit_type = self.get_orbit_type()
+        prod_key = self.get_product_type()
 
-        metadata = Metadata(orbit_type=orbit_type)
+        metadata = Metadata(orbit_type=orbit_type, prod_key=prod_key)
         result_as_xr.attrs.update({STRATOPY_METADATA_KEY: metadata})
 
         return result_as_xr
