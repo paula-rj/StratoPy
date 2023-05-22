@@ -62,8 +62,15 @@ class Metadata:
         ValueError: If satellite extractor has not descripted its orbit.
     """
 
-    orbit_type: str = dcs.field(repr=True)
-    prod_key: str = dcs.field(repr=True)
+    orbit_type: str
+    prod_key: str
+    instrument_type: str
+
+    def _validate_in(field, value, options):
+        if value not in options:
+            raise ValueError(
+                f"{field!r} must be one of {options}. Found: {value!r}"  # noqa
+            )
 
     def __post_init__(self):
         """Initialie field value orbit type.
@@ -72,10 +79,10 @@ class Metadata:
         ------
             ValueError: If satellite extractor has not descripted its orbit.
         """
-        if self.orbit_type not in ORBIT_TYPES:
-            raise ValueError(
-                f"'orbit type' must be one of {ORBIT_TYPES}. Found: {self.orbit_type!r}"  # noqa
-            )
+        self._validate_in("orbit_type", self.orbit_type, ORBIT_TYPES)
+        self._validate_in(
+            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES
+        )
 
 
 # =============================================================================
