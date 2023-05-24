@@ -37,6 +37,7 @@ from ..metadatatools import (
     ORBIT_TYPES,
     STRATOPY_METADATA_KEY,
     INSTRUMENTS_TYPES,
+    PLATFORMS,
 )
 from ..utils import from_cache, get_default_cache, nearest_date
 
@@ -79,24 +80,6 @@ class ConnectorABC(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_orbit_type(self):
-        """Returns the type of orbit of the satellite (polar/geostationary).
-
-        That generated the data for this extractor.
-
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_product_type(self):
-        """Returns the type of orbit of the satellite (polar/geostationary).
-
-        That generated the data for this extractor.
-
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
     def _makequery(self, endpoint, date):
         """Builds the whole query needed to downloading the product.
 
@@ -123,6 +106,33 @@ class ConnectorABC(abc.ABC):
         ----------
         query: str
             The query needed to download a product.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_orbit_type(self):
+        """Returns the type of orbit of the satellite (polar/geostationary).
+
+        That generated the data for this extractor.
+
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_product_type_key(self):
+        """Returns the type of orbit of the satellite (polar/geostationary).
+
+        That generated the data for this extractor.
+
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_platform(self):
+        """Returns the type of orbit of the satellite (polar/geostationary).
+
+        That generated the data for this extractor.
+
         """
         raise NotImplementedError()
 
@@ -213,11 +223,15 @@ class ConnectorABC(abc.ABC):
 
         # add metadata
         orbit_type = self.get_orbit_type()
-        prod_key = self.get_product_type()
+        platform = self.get_platform()
         inst_type = self.get_instrument_type()
+        prod_key = self.get_product_type_key()
 
         metadata = metadatatools.Metadata(
-            orbit_type=orbit_type, prod_key=prod_key, instrument_type=inst_type
+            orbit_type=orbit_type,
+            platform=platform,
+            instrument_type=inst_type,
+            product_key=prod_key,
         )
         result_as_xr.attrs.update({STRATOPY_METADATA_KEY: metadata})
 

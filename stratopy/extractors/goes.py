@@ -19,15 +19,13 @@ import pytz
 import xarray as xa
 
 from . import ebase
-from ..metadatatools import GEOSTATIONARY, RADIOMETERS
+from ..metadatatools import GEOSTATIONARY, GOES, RADIOMETERS
 
 # =============================================================================
 # CONSTANTS
 # =============================================================================
 
-MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(
-    pytz.UTC
-)
+MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(pytz.UTC)
 
 # =============================================================================
 # QUERY PARSERS
@@ -152,22 +150,16 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         self.product_type = product_type
         self._ptype_parser = self._PRODUCT_TYPES_PARSERS[product_type]
         self.channel = (
-            int(channel)
-            if self._ptype_parser is _with_channel_parser
-            else None
+            int(channel) if self._ptype_parser is _with_channel_parser else None
         )
 
     def __repr__(self):
         """Representation for a GOOES16 object as chosen product type, band."""
-        return (
-            f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
-        )
+        return f"<GOES16 product_type={self.product_type!r}, ch={self.channel}>"
 
     def _repr_html_(self):
         """Representation for a G OES16 object as chosen product type, band."""
-        return (
-            f"<GOES16 product_type={self.product_type!r}  , ch={self.channel}>"
-        )
+        return f"<GOES16 product_type={self.product_type!r}  , ch={self.channel}>"
 
     def get_endpoint(self):
         """Gets the URL direction where all the GOES16 files are stored.
@@ -175,33 +167,6 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         Returns the URL as str.
         """
         return "/".join(["s3:/", "noaa-goes16", self.product_type])
-
-    def get_orbit_type(self):
-        """Gets the type of orbit.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return GEOSTATIONARY
-
-    def get_product_type(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return self.product_type
-
-    def get_instrument_type(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return self.product_type
 
     def _makequery(self, endpoint, dt):
         """Builds the whole query needed to download the product from s3.
@@ -235,6 +200,77 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         )
         query = "/".join([endpoint, date_dir, file_glob])
         return query
+
+    def get_orbit_type(self):
+        """Gets the type of orbit.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return GEOSTATIONARY
+
+    def get_product_type_key(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        #: GOES ch list
+        CH_LIST = [
+            "CMI_C01",
+            "CMI_C02",
+            "CMI_C03",
+            "CMI_C04",
+            "CMI_C05",
+            "CMI_C06",
+            "CMI_C07",
+            "CMI_C08",
+            "CMI_C09",
+            "CMI_C10",
+            "CMI_C11",
+            "CMI_C12",
+            "CMI_C13",
+            "CMI_C14",
+            "CMI_C15",
+            "CMI_C16",
+        ]
+        #: data for goes products
+        DATA_GOES = {
+            "ABI-L1b-RadF": "Rad",  # Radiances
+            "ABI-L2-CMIPF": "CMI",  # Cloud & Moisture
+            "ABI-L2-ACHA2KMF": "",  # Clouds Height
+            "ABI-L2-ACHAF": "",  # Clouds Height
+            "ABI-L2-ACHTF": "",
+            "ABI-L2-ACMF": "",  # Clear sky mask
+            "ABI-L2-ADPF": "",  # Aerosol Detection
+            "ABI-L2-AODF": "",  # Aerosol
+            "ABI-L2-BRFF": "",  # Bidir. Reflactance Factor
+            "ABI-L2-CODF": "",  # Cloud Optical Depth
+            "ABI-L2-CPSF": "",  # Cloud Particle Size
+            "ABI-L2-CTPF": "",  # CLoud Top Pressure
+            "ABI-L2-MCMIPF": CH_LIST,  # Cloud & Moist. Multiband
+        }
+        return self.product_type, DATA_GOES[self.product_type]
+
+    def get_instrument_type(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return "Radiometer"
+
+    def get_platform(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return GOES
 
     def _parse_result(self, result):
         """Converts the downloaded netcdf file-like into xarray object.

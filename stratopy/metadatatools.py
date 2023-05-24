@@ -36,9 +36,20 @@ POLAR = "polar"
 #: Types of satellite orbits available
 ORBIT_TYPES = (GEOSTATIONARY, POLAR)
 
-INSTRUMENTS_TYPES = ("a", "b")
+# Satellites available ========================================================
+GOES = "G16"
+CLOUDSAT = "CloudSat"
+
+PLATFORMS = (GOES, CLOUDSAT)
+
+# instruments =================================================================
 
 RADIOMETERS = ("ABI", "MODIS")
+
+RADARS = ("CPR",)
+
+INSTRUMENTS_TYPES = {"Radiometer": RADIOMETERS, "Radar": RADARS}
+
 
 # =============================================================================
 # CLASS
@@ -55,8 +66,9 @@ class Metadata:
     """
 
     orbit_type: str
-    prod_key: str
+    platform: str
     instrument_type: str
+    product_key: str
 
     def _validate_in(self, field, value, options):
         if value not in options:
@@ -72,9 +84,11 @@ class Metadata:
             ValueError: If satellite extractor has not descripted its orbit.
         """
         self._validate_in("orbit_type", self.orbit_type, ORBIT_TYPES)
+        self._validate_in("platform", self.platform, PLATFORMS)
         self._validate_in(
-            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES
+            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES.keys
         )
+        self._validate_in("product_key", self.product_key, "a")
 
 
 # =============================================================================
@@ -92,9 +106,13 @@ def orbit_type(da):
     return da.attrs[STRATOPY_METADATA_KEY].orbit_type
 
 
-def product_key(da):
-    return da.attrs[STRATOPY_METADATA_KEY].product_key
+def platform(da):
+    return da.attrs[STRATOPY_METADATA_KEY].platform
 
 
 def instrument_type(da):
     return da.attrs[STRATOPY_METADATA_KEY].instrument_type
+
+
+def instrument_type(da):
+    return da.attrs[STRATOPY_METADATA_KEY].product_key
