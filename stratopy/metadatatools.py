@@ -50,7 +50,6 @@ RADARS = ("CPR",)
 
 INSTRUMENTS_TYPES = {"Radiometer": RADIOMETERS, "Radar": RADARS}
 
-
 # =============================================================================
 # CLASS
 # =============================================================================
@@ -86,9 +85,9 @@ class Metadata:
         self._validate_in("orbit_type", self.orbit_type, ORBIT_TYPES)
         self._validate_in("platform", self.platform, PLATFORMS)
         self._validate_in(
-            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES.keys
+            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES.keys()
         )
-        self._validate_in("product_key", self.product_key, "a")
+        # self._validate_in("product_key", self.product_key, )
 
 
 # =============================================================================
@@ -114,5 +113,5 @@ def instrument_type(da):
     return da.attrs[STRATOPY_METADATA_KEY].instrument_type
 
 
-def instrument_type(da):
+def product_and_key(da):
     return da.attrs[STRATOPY_METADATA_KEY].product_key

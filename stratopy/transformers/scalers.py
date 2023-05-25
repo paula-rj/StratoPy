@@ -40,12 +40,12 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         """
         # x = self.image[~np.isnan(self.image)]  # tarda 6.3 sec
 
-        sat = sat0.platform_ID
-        if sat not in list(metadatatools.RADIOMETERS.keys()):
+        imager = sat0._STRATOPY_.instrument_type
+        if imager != "Radiometer":
             raise ValueError("Not an image")
 
         # Gets image as numpy array
-        image = self.sat_xarray[self.sat_xarray._STRATOPY_.prod_key].to_numpy()
+        image = sat0[sat0._STRATOPY_.product_key].to_numpy()
 
         # Shape must be 3D (for generalization)
         if len(image.shape) < 3:

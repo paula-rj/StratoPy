@@ -252,7 +252,7 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
             "ABI-L2-CTPF": "",  # CLoud Top Pressure
             "ABI-L2-MCMIPF": CH_LIST,  # Cloud & Moist. Multiband
         }
-        return self.product_type, DATA_GOES[self.product_type]
+        return DATA_GOES.get(self.product_type)
 
     def get_instrument_type(self):
         """Gets the type of product.
