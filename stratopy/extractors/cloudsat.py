@@ -29,7 +29,7 @@ from pyhdf.VS import VS
 import xarray as xa
 
 from . import ebase
-from ..constants import POLAR, DATA_CLOUDSAT
+from ..metadatatools import POLAR, CLOUDSAT
 from ..utils import nearest_date
 
 _TRACE = np.arange(36950, dtype=np.int32)
@@ -242,24 +242,6 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         """
         return "/".join(["Data", self.product_type])
 
-    def get_orbit_type(self):
-        """Gets the type of orbit.
-
-        Returns
-        -------
-            str:CLoudsat is a POES sunsynchronous satellite.
-        """
-        return POLAR
-
-    def get_product_type(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return DATA_CLOUDSAT[self.product_type]
-
     def _makequery(self, endpoint, date_time):
         """Builds the whole query needed to download the product from DPC.
 
@@ -276,6 +258,55 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         parsed_date = date_time.strftime("%Y%j%H%M%S")
         query = "/".join([endpoint, date_dir, parsed_date])
         return query
+
+    def get_orbit_type(self):
+        """Gets the type of orbit.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return POLAR
+
+    def get_product_type_key(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        #: GOES ch list
+
+        #: data for goes products
+
+        DATA_CLOUDSAT = {
+            "2B-CLDCLASS.P1_R05": "cloud_scenario",
+            "2B-CLDCLASS.P_R04": "cloud_scenario",
+            "2B-CLDCLASS-LIDAR.P_R04": [
+                "cloud_layer_type",
+                "cloud_layer_base",
+                "cloud_layer_top",
+            ],
+        }
+        return self.product_type
+
+    def get_instrument_type(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return "Radar"
+
+    def get_platform(self):
+        """Gets the type of product.
+
+        Returns
+        -------
+            str: GOES satellites are geostationary.
+        """
+        return CLOUDSAT
 
     def _parse_result(self, result):
         """Converts the downloaded HDF file into Xarray Dataset.

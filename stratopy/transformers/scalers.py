@@ -8,7 +8,6 @@ r"""Contains functions to normalize images."""
 import numpy as np
 
 from . import tbase
-from .. import metadatatools
 
 
 # class L1_norm - ver si esta en satpy
