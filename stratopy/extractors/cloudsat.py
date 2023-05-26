@@ -17,6 +17,7 @@ import atexit
 import datetime as dt
 import os
 import tempfile
+import pytz
 
 from dateutil import parser
 
@@ -78,6 +79,10 @@ def read_hdf4(path):
     # A profile is taken every 0.16 s
     offsets = [dt.timedelta(seconds=sec) for sec in profile_seconds]
     profile_time = np.array([start + offset for offset in offsets]).astype(dt.datetime)
+
+    # First time and last time
+    first_time = profile_time[0].replace(tzinfo=pytz.UTC).isoformat()
+    last_time = profile_time[-1].replace(tzinfo=pytz.UTC).isoformat()
 
     # Important attributes, one number only
     vd_UTCstart = vs.attach("UTC_start")
@@ -141,6 +146,8 @@ def read_hdf4(path):
             "TAIstart": TAI,
             "UTCstart": UTCstart,
             "bin_size": vertical_Binsize,
+            "time_coverage_start": first_time,
+            "time_coverage_end": last_time,
             "platform_ID": "CloudSat",
         },
     )
@@ -288,7 +295,7 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
                 "cloud_layer_top",
             ],
         }
-        return self.product_type
+        return DATA_CLOUDSAT.get(self.product_type)
 
     def get_instrument_type(self):
         """Gets the type of product.

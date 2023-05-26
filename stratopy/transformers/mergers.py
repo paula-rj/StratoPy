@@ -118,8 +118,6 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
 
     def __init__(
         self,
-        sat_xarr_0,
-        sat_xarr_1,
         time_selected,
         time_zone="UTC",
         trim_size=(3, 3),
@@ -129,15 +127,12 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         self.time_zone = time_zone
         self.trim_size = trim_size
         self.norm = norm
-        self.sat_xarr0 = sat_xarr_0
-        self.sat_xarr1 = sat_xarr_1
 
     def __repr__(self):
         """Representation for merged object."""
-        return f"{self.sat_xarr0.platform_ID}-{self.sat_xarr1.platform_ID} merged \
-            for {self.time_selected}"
+        return f"Mergin for {self.time_selected} at {self.time_zone}."
 
-    def check_time(self, sat_data):
+    def check_time(self, sat):
         """Checks if selected time is in cloudsat track range.
 
         Parameters
@@ -160,16 +155,8 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         date_in_zone = zone.localize(usr_date)
         dt_selected = date_in_zone.astimezone(pytz.UTC)
 
-        first_time = (
-            Timestamp(sat_data.time.to_numpy()[0])
-            .to_pydatetime()
-            .replace(tzinfo=pytz.UTC)
-        )
-        last_time = (
-            Timestamp(sat_data.time.to_numpy()[-1])
-            .to_pydatetime()
-            .replace(tzinfo=pytz.UTC)
-        )
+        first_time = parser.parse(sat.time_coverage_start)
+        last_time = parser.parse(sat.time_coverage_end)
 
         if (dt_selected < first_time) or (dt_selected > last_time):
             raise NothingHereError(
@@ -189,34 +176,32 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         sat1: ``xarray DataArray``
             DataArray of a file from satellite 1.
         """
-        # Determines if collocation is possible
         # Check type of orbit
-        orb0 = self.sat_xarr0.attrs[STRATOPY_METADATA_KEY].orbit_type
-        orb1 = self.sat_xarr1.attrs[STRATOPY_METADATA_KEY].orbit_type
+        orb0 = sat0._STRATOPY_.orbit_type
+        orb1 = sat1._STRATOPY_.orbit_type
 
-        # Check if temporal collocation possible
-
-        # Esto va en goes
-        # if sat1.product_type == "ABI-L2-MCMIPF":
-        #    img = goesdata[CH_LIST].to_array().to_numpy()
-        # else:
-        #    img = goesdata.CMI.to_numpy()
-        #    img = img.reshape(1, img.shape[0], img.shape[1])
+        if orb0 == "polar" and orb1 == "geostationary":
+            # Checks if temporal collocation is possible for usr time
+            if self.check_time(sat0):
+                # Products to collocate
+                prodPolar = sat0
+        elif orb0 == "geostationary" and orb1 == "polar":
+            if self.check_time(sat0):
+                prodPolar = sat1
+        else:
+            raise ValueError("This transformer is for geos and polar orbits.")
 
         # Normalize data
         if self.norm:
-            img = scalers.Min_Max_Normalize(self.sat_xarr1).transformer(sat0="a")
+            img = scalers.MinMaxNormalize().transformer(sat1)
         else:
-            img = self.sat_xarray[self.sat_xarr1._STRATOPY_.prod_key].to_numpy()
-
-        # Products to collocate
-        prod0 = self.sat_xarray[self.sat_xarr0._STRATOPY_.prod_key].to_numpy()
+            img = sat1[sat1._STRATOPY_.product_key].to_numpy()
 
         # TODO: Cortar cloudsat mas alla de los 10-15 min del time selected
 
         # t:(lat,lon) -> (col,row)
         scanx, scany = coord_change.latlon2scan(
-            prod0.lat.to_numpy(), prod0.lon.to_numpy()
+            prodPolar.lat.to_numpy(), prodPolar.lon.to_numpy()
         )
         cols, rows = coord_change.scan2colfil(scanx, scany)
 
@@ -236,6 +221,6 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
             },
         )
         goes_ds = xa.Dataset({"goes": da})
-        merged_ds = prod0.merge(goes_ds)
+        merged_ds = prodPolar.merge(goes_ds)
 
         return merged_ds
