@@ -5,6 +5,7 @@
 # All rights reserved.
 import numpy as np
 import numpy.ma as ma
+
 import pytest
 
 from stratopy.transformers import coord_change

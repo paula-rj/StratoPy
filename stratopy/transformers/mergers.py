@@ -3,7 +3,6 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-
 r"""Contains methods to perform transformation operations on loaded images."""
 
 # =============================================================================
@@ -13,8 +12,6 @@ from dateutil import parser
 
 import numpy as np
 
-from pandas import Timestamp
-
 import pytz
 
 import xarray as xa
@@ -22,7 +19,6 @@ import xarray as xa
 from . import coord_change
 from . import scalers
 from . import tbase
-from ..constants import STRATOPY_METADATA_KEY
 from ..extractors.ebase import NothingHereError
 
 
@@ -64,7 +60,8 @@ def gen_vect(col, row, image, trim_shape):
 
     # Trim
     # for i in range(image.shape[0])
-    band_vec = image[  # i,
+    band_vec = image[
+        :,
         row - rsize : row + rsize + 1,
         col - csize : col + csize + 1,
     ].copy()
@@ -72,39 +69,30 @@ def gen_vect(col, row, image, trim_shape):
     return band_vec
 
 
-class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
+class MergePolarGeos(tbase.BinaryTransformerABC):
     """
+    Merges product from Polar satellite with product from a Geostationary one.
 
     Args
     ----
         time_selected : str
-            Time selected for downloading GOES16 object.
-            It must be withing the range of the cloudsat granule start-end.
-            Not inclute time zone within the str.
+            Time selected for mergin products.
+            It must be withing the range of aquisition of both instruments.
 
         time_zone : str
-            Time zone.
-
-                time_selected : str
-            Time selected for downloading GOES16 object.
-            It must be withing the range of the cloudsat granule start-end.
-            Not inclute time zone within the str.
+            Time zone for time selected.
+            Default: UTC.
 
         trim_size: tuple
             Size of the 2D image to be trimmed around the central pixel.
-            Default = (3,3)
+            Default: (3,3)
 
         norm: bool
             If True, normalizes all GOES channels [0,1].
             Default:True
 
-        Returns
-        -------
-        Xarray.Dataset
-            Dataset containing merged data.
-
-        Notes
-        -----
+    Notes
+    -----
         The maximum extention for img_size, ie, for how many pixels of an ABI
         image (around the central pixel) is a CPR classificatcan a CloudSat CPR
         classification accurate. However, in current works, the image size is
@@ -149,6 +137,7 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         Raise
         -----
         NothingHereError
+        If selected time for merging is out of bounds for Polar satellite data.
         """
         usr_date = parser.parse(self.time_selected)
         zone = pytz.timezone(self.time_zone)
@@ -213,11 +202,18 @@ class Merge_Cloudsat_GOES(tbase.BinaryTransformerABC):
         _TRACE = np.arange(36950, dtype=np.int32)
         da = xa.DataArray(
             imlist,
-            dims=("cloudsat_trace", "ancho", "alto"),
+            dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "img_wide": np.arange(0, 3, 1),  # ancho
-                "img_height": np.arange(0, 3, 1),  # alto
+                "nbands": np.arange(
+                    1, imlist[0].shape[0] + 1, 1, dtype=np.int8
+                ),
+                "img_wide": np.arange(
+                    1, imlist[0].shape[1] + 1, 1, dtype=np.int8
+                ),
+                "img_height": np.arange(
+                    1, imlist[0].shape[2] + 1, 1, dtype=np.int8
+                ),
             },
         )
         goes_ds = xa.Dataset({"goes": da})

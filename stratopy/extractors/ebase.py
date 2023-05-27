@@ -17,7 +17,6 @@ are also implemenmted in the base module.
 
 import abc
 import atexit
-import dataclasses as dcs
 import fnmatch
 import io
 import os
@@ -34,10 +33,7 @@ import s3fs
 
 from .. import metadatatools
 from ..metadatatools import (
-    ORBIT_TYPES,
     STRATOPY_METADATA_KEY,
-    INSTRUMENTS_TYPES,
-    PLATFORMS,
 )
 from ..utils import from_cache, get_default_cache, nearest_date
 

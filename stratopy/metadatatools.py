@@ -87,7 +87,6 @@ class Metadata:
         self._validate_in(
             "instrument_type", self.instrument_type, INSTRUMENTS_TYPES.keys()
         )
-        # self._validate_in("product_key", self.product_key, )
 
 
 # =============================================================================
@@ -96,22 +95,92 @@ class Metadata:
 
 
 def add_metadata(da, **kwargs):
+    """Adds mandatory metadata as attrs.
+
+    Parameters
+    ----------
+    da: ``xarray.DataArray``
+        DataArray to which the metadata will be added.
+
+    Returns
+    -------
+    da:  ``xarray.DataArray``
+        The same DataArray but with the metadata added as attrs.
+    """
     metadata = Metadata(**kwargs)
     da.attrs.update({STRATOPY_METADATA_KEY: metadata})
     return da
 
 
 def orbit_type(da):
+    """Adds data about the orbit type of the platform.
+
+    It could be POLAR or GEOSTATIONARY.
+
+    Parameters
+    ----------
+    da: ``xarray.DataArray``
+        DataArray to which the metadata will be added.
+
+    Returns
+    -------
+    da:  ``xarray.DataArray``
+        The same DataArray but with the orbit type added as attrs \
+            under the key 'orbit_type'.
+    """
     return da.attrs[STRATOPY_METADATA_KEY].orbit_type
 
 
 def platform(da):
+    """Adds data about the name of the satellite.
+
+    Parameters
+    ----------
+    da: ``xarray.DataArray``
+        DataArray to which the metadata will be added.
+
+    Returns
+    -------
+    da:  ``xarray.DataArray``
+        The same DataArray but with the metadata added as attrs.
+    """
     return da.attrs[STRATOPY_METADATA_KEY].platform
 
 
 def instrument_type(da):
+    """Adds data about the instrument type that generated the products.
+
+    It could be RADIOMETER or RADAR.
+
+    Parameters
+    ----------
+    da: ``xarray.DataArray``
+        DataArray to which the metadata will be added.
+
+    Returns
+    -------
+    da:  ``xarray.DataArray``
+        The same DataArray but with the metadata added as attrs \
+            under the key 'instrument_type'.
+    """
     return da.attrs[STRATOPY_METADATA_KEY].instrument_type
 
 
 def product_and_key(da):
+    """Adds data abouname of the field of the product that can be merged.
+
+    When fetched, products are retrieved as xarrays.Datasets.
+    Each data_var has a key name. Most products have many data vars.
+    When merging two products, we usually only need one field to work with.
+
+    Parameters
+    ----------
+    da: ``xarray.DataArray``
+        DataArray to which the metadata will be added.
+
+    Returns
+    -------
+    da:  ``xarray.DataArray``
+        The same DataArray but with the metadata added as attrs.
+    """
     return da.attrs[STRATOPY_METADATA_KEY].product_key

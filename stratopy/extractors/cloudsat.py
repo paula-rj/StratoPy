@@ -17,7 +17,6 @@ import atexit
 import datetime as dt
 import os
 import tempfile
-import pytz
 
 from dateutil import parser
 
@@ -27,10 +26,12 @@ from pyhdf.HDF import HC, HDF
 from pyhdf.SD import SD, SDC
 from pyhdf.VS import VS
 
+import pytz
+
 import xarray as xa
 
 from . import ebase
-from ..metadatatools import POLAR, CLOUDSAT
+from ..metadatatools import CLOUDSAT, POLAR
 from ..utils import nearest_date
 
 _TRACE = np.arange(36950, dtype=np.int32)
@@ -78,7 +79,9 @@ def read_hdf4(path):
     start = parser.parse("1993-01-01") + dt.timedelta(seconds=TAI)
     # A profile is taken every 0.16 s
     offsets = [dt.timedelta(seconds=sec) for sec in profile_seconds]
-    profile_time = np.array([start + offset for offset in offsets]).astype(dt.datetime)
+    profile_time = np.array([start + offset for offset in offsets]).astype(
+        dt.datetime
+    )
 
     # First time and last time
     first_time = profile_time[0].replace(tzinfo=pytz.UTC).isoformat()
@@ -349,7 +352,9 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
 
             # Temporary container
             cls_name = type(self).__name__
-            _, tmp_path = tempfile.mkstemp(suffix=".hdf", prefix=f"stpy_{cls_name}_")
+            _, tmp_path = tempfile.mkstemp(
+                suffix=".hdf", prefix=f"stpy_{cls_name}_"
+            )
             atexit.register(os.remove, tmp_path)
 
             # Downloads file from full and copies into tmp
