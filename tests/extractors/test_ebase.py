@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from stratopy.constants import GEOSTATIONARY, POLAR, STRATOPY_METADATA_KEY
+from stratopy import metadatatools
 from stratopy.extractors import ebase
 
 
@@ -36,10 +36,6 @@ def test_ConnectorABC_xx():
         def get_endpoint(cls):
             return []
 
-        @classmethod
-        def get_orbit_type(cls):
-            return POLAR
-
         def _makequery(self, endpoint, pdate):
             # noqa
             endpoint.extend([("_makequery", pdate.isoformat())])
@@ -53,6 +49,19 @@ def test_ConnectorABC_xx():
             response.append("_parse_result")
             return _WithAttrs(response)
 
+        @classmethod
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_instrument_type(self):
+            return metadatatools.RADARS
+
+        def get_platform(self):
+            return "G16"
+
+        def get_product_type_key(self):
+            return "some product"
+
     conn = FakeConnector()
     result = conn.fetch("june 25th 2022 18:00", tzone="UTC")
 
@@ -61,7 +70,14 @@ def test_ConnectorABC_xx():
         "_download",
         "_parse_result",
     ]
-    expected_attrs = {STRATOPY_METADATA_KEY: ebase.Metadata(orbit_type=POLAR)}
+    expected_attrs = {
+        metadatatools.STRATOPY_METADATA_KEY: metadatatools.Metadata(
+            orbit_type=metadatatools.POLAR,
+            platform=metadatatools.GOES,
+            instrument_type=metadatatools.RADARS,
+            product_key="some product",
+        )
+    }
 
     assert result.obj == expected_obj
     assert result.attrs == expected_attrs
@@ -72,10 +88,6 @@ def test_ConnectorABC_get_endpoint_not_implementhed():
         def get_endpoint(self):
             return super().get_endpoint()
 
-        @classmethod
-        def get_orbit_type(cls):
-            return POLAR
-
         def _makequery(self, endpoint, pdate):
             return None
 
@@ -84,6 +96,16 @@ def test_ConnectorABC_get_endpoint_not_implementhed():
 
         def _parse_result(self, response):
             return None
+
+        @classmethod
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_platform(self):
+            return super().get_platform()
+
+        def get_product_type_key(self):
+            return "some product"
 
     with pytest.raises(NotImplementedError):
         Fake1Connector().fetch("27 jul 1981", tzone="UTC")
@@ -94,9 +116,6 @@ def test_ConnectorABC_makequery_not_implementhed():
         def get_endpoint(self):
             return None
 
-        def get_orbit_type(cls):
-            return POLAR
-
         def _makequery(self, endpoint, pdate):
             return super()._makequery(endpoint, pdate)
 
@@ -105,6 +124,19 @@ def test_ConnectorABC_makequery_not_implementhed():
 
         def _parse_result(self, response):
             return None
+
+        @classmethod
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_platform(self):
+            return super().get_platform()
+
+        def get_instrument_type(self):
+            return metadatatools.RADARS
+
+        def get_product_type_key(self):
+            return "some product"
 
     with pytest.raises(NotImplementedError):
         Fake2Connector().fetch("27 jul 1981", tzone="UTC")
@@ -115,9 +147,6 @@ def test_ConnectorABC_download_not_implementhed():
         def get_endpoint(self):
             return None
 
-        def get_orbit_type(cls):
-            return POLAR
-
         def _makequery(self, endpoint, pdate):
             return None
 
@@ -126,6 +155,16 @@ def test_ConnectorABC_download_not_implementhed():
 
         def _parse_result(self, response):
             return None
+
+        @classmethod
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_platform(self):
+            return metadatatools.RADARS
+
+        def get_product_type_key(self):
+            return "some product"
 
     with pytest.raises(NotImplementedError):
         Fake3Connector().fetch("27 jul 1981", tzone="UTC")
@@ -136,9 +175,6 @@ def test_ConnectorABC_parse_result_not_implementhed():
         def get_endpoint(self):
             return None
 
-        def get_orbit_type(cls):
-            return POLAR
-
         def _makequery(self, endpoint, pdate):
             return None
 
@@ -147,6 +183,16 @@ def test_ConnectorABC_parse_result_not_implementhed():
 
         def _parse_result(self, response):
             return super()._parse_result(response)
+
+        @classmethod
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_platform(self):
+            return super().get_platform()
+
+        def get_product_type_key(self):
+            return "some product"
 
     with pytest.raises(NotImplementedError):
         Fake4Connector().fetch("27 jul 1981", tzone="UTC")
@@ -162,14 +208,21 @@ def test_S3mixin_FileNotFoundError():
         def get_endpoint(cls):
             return None
 
-        def get_orbit_type(cls):
-            return GEOSTATIONARY
-
         def _makequery(self, endpoint, pdate):
             return pdate.isoformat()
 
         def _parse_result(self, response):
             return None
+
+        @classmethod
+        def get_orbit_type(cls):
+            return metadatatools.GEOSTATIONARY
+
+        def get_platform(self):
+            return super().get_platform()
+
+        def get_product_type_key(self):
+            return "some product"
 
     conn = TestFileNotFoundError()
 
@@ -192,15 +245,25 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
         def get_endpoint(cls):
             return "endpoint"
 
-        def get_orbit_type(cls):
-            return POLAR
-
         def _makequery(self, endpoint, pdate):
             return "dir/pattern.*"
 
         def _parse_result(self, response):
-            response.append("_parse_result")
-            return _WithAttrs(response)
+            # response.append("_parse_result")
+            return response
+
+        @classmethod
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_platform(self):
+            return metadatatools.GOES
+
+        def get_instrument_type(self):
+            return metadatatools.RADARS
+
+        def get_product_type_key(self):
+            return "some product"
 
     conn = TestSFTP("host", "port", "zaraza@coso.com", keyfile="algo")
 
@@ -214,7 +277,7 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
     listdir.return_value = ["pattern.ext"]
 
     get = open_sftp.return_value.__enter__.return_value.get
-    get.return_value = "value"
+    get.return_value = ["value"]
 
     response = conn.fetch("27/07/1981", force=True)
 

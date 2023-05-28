@@ -115,7 +115,7 @@ class ConnectorABC(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_product_type_key(self):
+    def get_platform(self):
         """Returns the type of orbit of the satellite (polar/geostationary).
 
         That generated the data for this extractor.
@@ -124,7 +124,7 @@ class ConnectorABC(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_platform(self):
+    def get_product_type_key(self):
         """Returns the type of orbit of the satellite (polar/geostationary).
 
         That generated the data for this extractor.
