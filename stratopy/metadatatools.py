@@ -44,11 +44,11 @@ PLATFORMS = (GOES, CLOUDSAT)
 
 # instruments =================================================================
 
-RADIOMETERS = ("ABI", "MODIS")
+RADIOMETERS = "Radiometer"
 
-RADARS = ("CPR",)
+RADARS = "Radar"
 
-INSTRUMENTS_TYPES = {"Radiometer": RADIOMETERS, "Radar": RADARS}
+INSTRUMENTS_TYPES = (RADIOMETERS, RADARS)
 
 # =============================================================================
 # CLASS
@@ -84,9 +84,7 @@ class Metadata:
         """
         self._validate_in("orbit_type", self.orbit_type, ORBIT_TYPES)
         self._validate_in("platform", self.platform, PLATFORMS)
-        self._validate_in(
-            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES.keys()
-        )
+        self._validate_in("instrument_type", self.instrument_type, INSTRUMENTS_TYPES)
 
 
 # =============================================================================
