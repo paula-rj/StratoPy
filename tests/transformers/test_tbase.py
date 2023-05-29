@@ -13,6 +13,14 @@ def test_raises():
         tbase.TransformerABC()
 
 
+def test_transformer_notimp():
+    class FakeTransformer(tbase.TransformerABC):
+        pass
+
+    with pytest.raises(TypeError):  # no deberia ser not implemented?
+        inst = FakeTransformer()
+
+
 def test_BinaryTransformer():
     class FakeBinTransform(tbase.BinaryTransformerABC):
         def transformer(self, sat0, sat1):

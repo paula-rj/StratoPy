@@ -295,8 +295,8 @@ def test_ConnectorABC_productkey_not_implementhed():
         def get_platform(self):
             return "G16"
 
-        def get_platform(self):
-            return super().get_platform()
+        def get_instrument_type(self):
+            return metadatatools.RADARS
 
     with pytest.raises(TypeError):
         Fake8Connector().fetch("27 jul 1981", tzone="UTC")
