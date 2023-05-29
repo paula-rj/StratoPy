@@ -8,6 +8,7 @@ r"""Contains functions to normalize images."""
 import numpy as np
 
 from . import tbase
+from .. import constants
 
 
 # class L1_norm - ver si esta en satpy
@@ -25,7 +26,13 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         Transforms.
     """
 
-    def transformer(self, sat0):
+    def __init__(self, sat_xarray):  # sat0 deberia ir acá
+        self.sat_xarray = sat_xarray
+        sat = self.sat_xarray.platform_ID
+        if sat not in constants.RADIOMETERS:
+            raise ValueError("NOT AN IMAGE")
+
+    def transform(self, sat0):
         """Transforms image to normalized [0,1] image.
 
         Args
@@ -38,15 +45,7 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
                 Normalized image.
         """
         # x = self.image[~np.isnan(self.image)]  # tarda 6.3 sec
-
-        imager = sat0._STRATOPY_.instrument_type
-        if imager != "Radiometer":
-            raise ValueError("Not an image")
-
-        # Gets image as numpy array
-        image = sat0[sat0._STRATOPY_.product_key].to_numpy()
-
-        # Shape must be 3D (for generalization)
+        image = self.sat_xarray[self.sat_xarray._STRATOPY_.prod_key].to_numpy()
         if len(image.shape) < 3:
             image = image.reshape(1, image.shape[0], image.shape[1])
         mini = np.nanmin(image, axis=(2, 1), keepdims=True)  # min

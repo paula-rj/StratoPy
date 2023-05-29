@@ -31,7 +31,7 @@ FAKE_DS_WITHATTRS = metadatatools.add_metadata(
 
 
 def test_min_max_normalize():
-    result = scalers.MinMaxNormalize().transformer(sat0=FAKE_DS_WITHATTRS)
+    result = scalers.MinMaxNormalize().transform(sat0=FAKE_DS_WITHATTRS)
     np.testing.assert_array_less(result, 1.1)
 
 
@@ -46,5 +46,5 @@ FAKE_DS_radar = metadatatools.add_metadata(
 
 def test_raise_err():
     with pytest.raises(ValueError):
-        result0 = scalers.MinMaxNormalize().transformer(sat0=FAKE_DS_radar)
+        result0 = scalers.MinMaxNormalize().transform(sat0=FAKE_DS_radar)
         print(result0)

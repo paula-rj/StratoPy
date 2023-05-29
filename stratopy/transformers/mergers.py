@@ -22,6 +22,8 @@ from . import tbase
 from ..extractors.ebase import NothingHereError
 
 
+_TRACE = np.arange(36950, dtype=np.int32)
+
 # =============================================================================
 # Collocations
 # =============================================================================
@@ -154,7 +156,7 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         else:
             return True
 
-    def transformer(self, sat0, sat1):
+    def transform(self, sat0, sat1):
         """Merge data from Cloudsat with co-located data from GOES-16.
 
         Parameters
@@ -166,8 +168,8 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             DataArray of a file from satellite 1.
         """
         # Check type of orbit
-        orb0 = sat0._STRATOPY_.orbit_type
-        orb1 = sat1._STRATOPY_.orbit_type
+        orb0 = mtdtools.orbit_type(sat0)
+        orb1 = mtdtools.orbit_type(sat1)
 
         if orb0 == "polar" and orb1 == "geostationary":
             # Checks if temporal collocation is possible for usr time
@@ -182,7 +184,7 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
 
         # Normalize data
         if self.norm:
-            img = scalers.MinMaxNormalize().transformer(sat1)
+            img = scalers.MinMaxNormalize().transform(sat1)
         else:
             img = sat1[sat1._STRATOPY_.product_key].to_numpy()
 
@@ -199,7 +201,7 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         for i in range(len(cols)):
             imlist.append(gen_vect(cols[i], rows[i], img, self.trim_size))
 
-        _TRACE = np.arange(36950, dtype=np.int32)
+
         da = xa.DataArray(
             imlist,
             dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),

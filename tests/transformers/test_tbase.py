@@ -23,20 +23,20 @@ def test_transformer_notimp():
 
 def test_BinaryTransformer():
     class FakeBinTransform(tbase.BinaryTransformerABC):
-        def transformer(self, sat0, sat1):
+        def transform(self, sat0, sat1):
             return [sat0, sat1]
 
     tobj = FakeBinTransform()
-    response = tobj.transformer(sat0="a", sat1="b")
+    response = tobj.transform(sat0="a", sat1="b")
     assert response[0] == "a"
     assert response[1] == "b"
 
 
 def test_UnaryTransformer():
     class FakeUnaryTransform(tbase.UnaryTransformerABC):
-        def transformer(self, sat0):
+        def transform(self, sat0):
             return sat0
 
     tobj = FakeUnaryTransform()
-    response = tobj.transformer(sat0="c")
+    response = tobj.transform(sat0="c")
     assert response == "c"

@@ -34,9 +34,9 @@ class TransformerABC(abc.ABC):
         ------
             TypeError: If class dont have sats names or obj.
         """
-        if cls.transformer is not TransformerABC.transformer:
+        if cls.transform is not TransformerABC.transform:
             original_signature = cls._transformers_params
-            new_signature = inspect.signature(cls.transformer)
+            new_signature = inspect.signature(cls.transform)
             diff = original_signature.symmetric_difference(
                 new_signature.parameters
             )
@@ -47,7 +47,7 @@ class TransformerABC(abc.ABC):
                 )
 
     @abc.abstractmethod
-    def transformer(self):
+    def transform(self):
         """Abstract method to be implemented for any new transformer."""
         pass
 
