@@ -84,7 +84,9 @@ class Metadata:
         """
         self._validate_in("orbit_type", self.orbit_type, ORBIT_TYPES)
         self._validate_in("platform", self.platform, PLATFORMS)
-        self._validate_in("instrument_type", self.instrument_type, INSTRUMENTS_TYPES)
+        self._validate_in(
+            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES
+        )
 
 
 # =============================================================================

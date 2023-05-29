@@ -7,8 +7,8 @@ import numpy as np
 
 import pytest
 
-from stratopy.transformers import scalers
 from stratopy import metadatatools
+from stratopy.transformers import scalers
 
 import xarray as xa
 
@@ -29,6 +29,12 @@ FAKE_DS_WITHATTRS = metadatatools.add_metadata(
     product_key="the_img",
 )
 
+
+def test_min_max_normalize():
+    result = scalers.MinMaxNormalize().transformer(sat0=FAKE_DS_WITHATTRS)
+    np.testing.assert_array_less(result, 1.1)
+
+
 FAKE_DS_radar = metadatatools.add_metadata(
     FAKE_DS,
     orbit_type=metadatatools.POLAR,
@@ -41,8 +47,4 @@ FAKE_DS_radar = metadatatools.add_metadata(
 def test_raise_err():
     with pytest.raises(ValueError):
         result0 = scalers.MinMaxNormalize().transformer(sat0=FAKE_DS_radar)
-
-
-def test_min_max_normalize():
-    result = scalers.MinMaxNormalize().transformer(sat0=FAKE_DS_WITHATTRS)
-    np.testing.assert_array_less(result, 1.1)
+        print(result0)

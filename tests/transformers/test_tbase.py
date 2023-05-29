@@ -4,12 +4,13 @@
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
 import pytest
+
 from stratopy.transformers import tbase
 
 
 def test_raises():
     with pytest.raises(TypeError):
-        tobj = tbase.TransformerABC()
+        tbase.TransformerABC()
 
 
 def test_BinaryTransformer():

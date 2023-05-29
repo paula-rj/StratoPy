@@ -49,7 +49,6 @@ def test_ConnectorABC_xx():
             response.append("_parse_result")
             return _WithAttrs(response)
 
-        @classmethod
         def get_orbit_type(cls):
             return metadatatools.POLAR
 
@@ -196,6 +195,111 @@ def test_ConnectorABC_parse_result_not_implementhed():
 
     with pytest.raises(NotImplementedError):
         Fake4Connector().fetch("27 jul 1981", tzone="UTC")
+
+
+def test_ConnectorABC_orbitype_not_implementhed():
+    class Fake5Connector(ebase.ConnectorABC):
+        def get_endpoint(self):
+            return super().get_endpoint()
+
+        def _makequery(self, endpoint, pdate):
+            return None
+
+        def _download(self, query):
+            return None
+
+        def _parse_result(self, response):
+            return None
+
+        def get_platform(self):
+            return super().get_platform()
+
+        def get_product_type_key(self):
+            return "some product"
+
+    with pytest.raises(TypeError):
+        Fake5Connector().fetch("27 jul 1981", tzone="UTC")
+
+
+def test_ConnectorABC_platform_not_implementhed():
+    class Fake6Connector(ebase.ConnectorABC):
+        def get_endpoint(self):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return super()._makequery(endpoint, pdate)
+
+        def _download(self, query):
+            return None
+
+        def _parse_result(self, response):
+            return None
+
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_instrument_type(self):
+            return metadatatools.RADARS
+
+        def get_product_type_key(self):
+            return "some product"
+
+    with pytest.raises(TypeError):
+        Fake6Connector().fetch("27 jul 1981", tzone="UTC")
+
+
+def test_ConnectorABC_instrumentype_not_implementhed():
+    class Fake7Connector(ebase.ConnectorABC):
+        def get_endpoint(self):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return super()._makequery(endpoint, pdate)
+
+        def _download(self, query):
+            return None
+
+        def _parse_result(self, response):
+            return None
+
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_platform(self):
+            return super().get_platform()
+
+        def get_product_type_key(self):
+            return "some product"
+
+    with pytest.raises(TypeError):  # salta el make query
+        Fake7Connector().fetch("27 jul 1981", tzone="UTC")
+
+
+def test_ConnectorABC_productkey_not_implementhed():
+    class Fake8Connector(ebase.ConnectorABC):
+        def get_endpoint(self):
+            return None
+
+        def _makequery(self, endpoint, pdate):
+            return super()._makequery(endpoint, pdate)
+
+        def _download(self, query):
+            return None
+
+        def _parse_result(self, response):
+            return None
+
+        def get_orbit_type(cls):
+            return metadatatools.POLAR
+
+        def get_platform(self):
+            return "G16"
+
+        def get_platform(self):
+            return super().get_platform()
+
+    with pytest.raises(TypeError):
+        Fake8Connector().fetch("27 jul 1981", tzone="UTC")
 
 
 # --------------------------------------------------------------
