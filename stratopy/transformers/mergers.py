@@ -17,12 +17,12 @@ import pytz
 import xarray as xa
 
 from . import coord_change
-from . import scalers
 from . import tbase
 from ..extractors.ebase import NothingHereError
-
+from stratopy import metadatatools
 
 _TRACE = np.arange(36950, dtype=np.int32)
+
 
 # =============================================================================
 # Collocations
@@ -111,12 +111,10 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         time_selected,
         time_zone="UTC",
         trim_size=(3, 3),
-        norm=True,
     ):
         self.time_selected = time_selected
         self.time_zone = time_zone
         self.trim_size = trim_size
-        self.norm = norm
 
     def __repr__(self):
         """Representation for merged object."""
@@ -168,25 +166,21 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             DataArray of a file from satellite 1.
         """
         # Check type of orbit
-        orb0 = mtdtools.orbit_type(sat0)
-        orb1 = mtdtools.orbit_type(sat1)
+        orb0 = metadatatools.orbit_type(sat0)
+        orb1 = metadatatools.orbit_type(sat1)
 
         if orb0 == "polar" and orb1 == "geostationary":
             # Checks if temporal collocation is possible for usr time
             if self.check_time(sat0):
                 # Products to collocate
                 prodPolar = sat0
+                img = sat1[metadatatools.product_key].to_numpy()
         elif orb0 == "geostationary" and orb1 == "polar":
             if self.check_time(sat0):
                 prodPolar = sat1
+                img = sat0[metadatatools.product_key].to_numpy()
         else:
             raise ValueError("This transformer is for geos and polar orbits.")
-
-        # Normalize data
-        if self.norm:
-            img = scalers.MinMaxNormalize().transform(sat1)
-        else:
-            img = sat1[sat1._STRATOPY_.product_key].to_numpy()
 
         # TODO: Cortar cloudsat mas alla de los 10-15 min del time selected
 
@@ -200,7 +194,6 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         imlist = []
         for i in range(len(cols)):
             imlist.append(gen_vect(cols[i], rows[i], img, self.trim_size))
-
 
         da = xa.DataArray(
             imlist,
@@ -218,7 +211,7 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
                 ),
             },
         )
-        goes_ds = xa.Dataset({"goes": da})
-        merged_ds = prodPolar.merge(goes_ds)
+        geos_ds = xa.Dataset({"geos": da})
+        merged_ds = prodPolar.merge(geos_ds)
 
         return merged_ds

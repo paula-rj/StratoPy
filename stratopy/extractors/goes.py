@@ -246,8 +246,8 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         ]
         #: data for goes products
         DATA_GOES = {
-            "ABI-L1b-RadF": "Rad",  # Radiances
-            "ABI-L2-CMIPF": "CMI",  # Cloud & Moisture
+            "ABI-L1b-RadF": ["Rad"],  # Radiances
+            "ABI-L2-CMIPF": ["CMI"],  # Cloud & Moisture
             "ABI-L2-ACHA2KMF": "",  # Clouds Height
             "ABI-L2-ACHAF": "",  # Clouds Height
             "ABI-L2-ACHTF": "",
