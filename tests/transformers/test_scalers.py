@@ -21,30 +21,27 @@ FAKE_DS = xa.Dataset(
         alto=("alto", np.arange(1, 4, 1)),
     ),
 )
-FAKE_DS_WITHATTRS = metadatatools.add_metadata(
-    FAKE_DS,
-    orbit_type=metadatatools.POLAR,
-    platform=metadatatools.CLOUDSAT,
-    instrument_type=metadatatools.RADIOMETERS,
-    product_key="the_img",
-)
 
 
 def test_min_max_normalize():
+    FAKE_DS_WITHATTRS = metadatatools.add_metadata(
+        FAKE_DS,
+        orbit_type=metadatatools.POLAR,
+        platform=metadatatools.CLOUDSAT,
+        instrument_type=metadatatools.RADIOMETERS,
+        product_key="the_img",
+    )
     result = scalers.MinMaxNormalize().transform(sat0=FAKE_DS_WITHATTRS)
     np.testing.assert_array_less(result, 1.1)
 
 
-FAKE_DS_radar = metadatatools.add_metadata(
-    FAKE_DS,
-    orbit_type=metadatatools.POLAR,
-    platform=metadatatools.CLOUDSAT,
-    instrument_type=metadatatools.RADARS,
-    product_key="the_img",
-)
-
-
 def test_raise_err():
+    FAKE_DS_radar = metadatatools.add_metadata(
+        FAKE_DS,
+        orbit_type=metadatatools.POLAR,
+        platform=metadatatools.CLOUDSAT,
+        instrument_type=metadatatools.RADARS,
+        product_key="the_img",
+    )
     with pytest.raises(ValueError):
         result0 = scalers.MinMaxNormalize().transform(sat0=FAKE_DS_radar)
-        print(result0)

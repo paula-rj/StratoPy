@@ -10,6 +10,8 @@ import numpy as np
 from . import tbase
 from stratopy import metadatatools
 
+import xarray as xa
+
 
 class MinMaxNormalize(tbase.UnaryTransformerABC):
     """Normalizes image as min max.
@@ -40,20 +42,28 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         # Gets data
         bands = metadatatools.product_and_key(sat0)
         image_ds = sat0[bands]
-        image = image_ds.to_array().to_numpy()
+
+        if type(image_ds) == xa.core.dataarray.DataArray:
+            image = image_ds.to_numpy()
+        elif type(image_ds) == xa.core.dataset.Dataset:
+            image = image_ds.to_array().to_numpy()
+        else:
+            raise TypeError("Shoud be xarray DataArray or Dataset")
 
         # Shape must be 3D (for generalization)
-        if len(bands) < 3:
-            # It's data array
+        if len(image.shape) < 3:
             image = image.reshape(1, image.shape[0], image.shape[1])
+            sat0[bands] = sat0[bands].expand_dims(
+                nbands=np.arange(1, image.shape[0] + 1)
+            )
 
         mini = np.nanmin(image, axis=(2, 1), keepdims=True)  # min
         dif = np.nanmax(image, axis=(2, 1), keepdims=True) - mini  # max - min
         nimg = image - mini
         norm_image = np.divide(nimg, dif)
 
-        sat0[bands] = sat0[bands].expand_dims(
-            nbands=np.arange(1, image.shape[0] + 1)
-        )
+        dimslist = [x for x in sat0.dims]
 
-        return sat0.update(bands=dict((image_ds.dims, norm_image)))
+        da = xa.DataArray(norm_image, dims=dimslist)
+
+        return sat0.update({bands: da})
