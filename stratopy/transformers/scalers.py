@@ -48,7 +48,7 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         elif type(image_ds) == xa.core.dataset.Dataset:
             image = image_ds.to_array().to_numpy()
         else:
-            raise TypeError("Shoud be xarray DataArray or Dataset")
+            raise TypeError("Shoud be Dataset or DataArray")
 
         # Shape must be 3D (for generalization)
         if len(image.shape) < 3:

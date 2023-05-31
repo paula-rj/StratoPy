@@ -32,7 +32,8 @@ def test_min_max_normalize():
         product_key="the_img",
     )
     result = scalers.MinMaxNormalize().transform(sat0=FAKE_DS_WITHATTRS)
-    np.testing.assert_array_less(result, 1.1)
+    img_result = result.the_img.to_numpy()
+    np.testing.assert_array_less(img_result, 1.1)
 
 
 def test_raise_err():
