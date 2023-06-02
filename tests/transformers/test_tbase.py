@@ -21,6 +21,18 @@ def test_transformer_notimp():
         FakeTransformer()
 
 
+def test_wrong_parameters():
+    class FakeNewTransform(tbase.TransformerABC):
+        _transformers_params = {"self", "param0"}
+
+        def transform(self, param0):
+            return param0
+
+    tobj = FakeNewTransform()
+    with pytest.raises(TypeError):
+        tobj.transform()
+
+
 def test_BinaryTransformer():
     class FakeBinTransform(tbase.BinaryTransformerABC):
         def transform(self, sat0, sat1):
