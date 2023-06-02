@@ -53,19 +53,20 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         else:
             raise TypeError("Shoud be Dataset or DataArray")
 
+        dimslist = [x for x in image_ds.dims]
         # Shape must be 3D (for generalization)
         if len(image.shape) < 3:
             image = image.reshape(1, image.shape[0], image.shape[1])
+        if len(dimslist) < len(image.shape):
             sat0[bands] = sat0[bands].expand_dims(
                 nbands=np.arange(1, image.shape[0] + 1)
             )
+            dimslist = ["nbands"] + dimslist
 
         mini = np.nanmin(image, axis=(2, 1), keepdims=True)  # min
         dif = np.nanmax(image, axis=(2, 1), keepdims=True) - mini  # max - min
         nimg = image - mini
         norm_image = np.divide(nimg, dif)
-
-        dimslist = [x for x in sat0.dims]
 
         da = xa.DataArray(norm_image, dims=dimslist)
 

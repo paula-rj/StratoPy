@@ -92,10 +92,6 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             Size of the 2D image to be trimmed around the central pixel.
             Default: (3,3)
 
-        norm: bool
-            If True, normalizes all GOES channels [0,1].
-            Default:True
-
     Notes
     -----
         The maximum extention for img_size, ie, for how many pixels of an ABI
@@ -106,7 +102,7 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
     Methods
     -------
     transformer
-        Merges sat 0 = cloudsat obj + sat 1 = goes obj.
+        Merges sat 0 = cloudsat obj with sat 1 = goes obj.
     """
 
     def __init__(
@@ -177,11 +173,11 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             if self.check_time(sat0):
                 # Products to collocate
                 prodPolar = sat0
-                img = sat1[metadatatools.product_key].to_numpy()
+                img = sat1[metadatatools.product_and_key(sat1)].to_numpy()
         elif orb0 == "geostationary" and orb1 == "polar":
             if self.check_time(sat0):
                 prodPolar = sat1
-                img = sat0[metadatatools.product_key].to_numpy()
+                img = sat0[metadatatools.product_and_key(sat0)].to_numpy()
         else:
             raise ValueError("This transformer is for geos and polar orbits.")
 
@@ -203,15 +199,9 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "nbands": np.arange(
-                    1, imlist[0].shape[0] + 1, 1, dtype=np.int8
-                ),
-                "img_wide": np.arange(
-                    1, imlist[0].shape[1] + 1, 1, dtype=np.int8
-                ),
-                "img_height": np.arange(
-                    1, imlist[0].shape[2] + 1, 1, dtype=np.int8
-                ),
+                "nbands": np.arange(1, imlist[0].shape[0] + 1, 1, dtype=np.int8),
+                "img_wide": np.arange(1, imlist[0].shape[1] + 1, 1, dtype=np.int8),
+                "img_height": np.arange(1, imlist[0].shape[2] + 1, 1, dtype=np.int8),
             },
         )
         geos_ds = xa.Dataset({"geos": da})
