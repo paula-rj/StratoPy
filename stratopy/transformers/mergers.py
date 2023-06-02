@@ -14,12 +14,15 @@ import numpy as np
 
 import pytz
 
+
+from stratopy import metadatatools
+
 import xarray as xa
 
 from . import coord_change
 from . import tbase
 from ..extractors.ebase import NothingHereError
-from stratopy import metadatatools
+
 
 _TRACE = np.arange(36950, dtype=np.int32)
 

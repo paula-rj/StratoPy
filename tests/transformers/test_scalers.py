@@ -45,4 +45,4 @@ def test_raise_err():
         product_key="the_img",
     )
     with pytest.raises(ValueError):
-        result0 = scalers.MinMaxNormalize().transform(sat0=FAKE_DS_radar)
+        scalers.MinMaxNormalize().transform(sat0=FAKE_DS_radar)

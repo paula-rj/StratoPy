@@ -18,7 +18,7 @@ def test_transformer_notimp():
         pass
 
     with pytest.raises(TypeError):  # no deberia ser not implemented?
-        inst = FakeTransformer()
+        FakeTransformer()
 
 
 def test_BinaryTransformer():

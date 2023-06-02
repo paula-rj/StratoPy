@@ -7,33 +7,36 @@ r"""Contains functions to normalize images."""
 
 import numpy as np
 
-from . import tbase
 from stratopy import metadatatools
 
 import xarray as xa
 
+from . import tbase
+
 
 class MinMaxNormalize(tbase.UnaryTransformerABC):
-    """Normalizes image as min max.
-    Args
-    ----
-        image: numpy array
-            Image as numpy array
+    """Normalizes image within an Xarray as min=0,  max=1.
+
     Methods
     -------
-    transformer
-        Transforms.
+    transformer:
+        Transforms Xarray image to normalized image returning same Xarray.
     """
 
     def transform(self, sat0):
-        """Transforms image to normalized [0,1] image.
-        Args
-        ----
-            sat0 (str): satellite name as str
+        """Transforms image within an xarray to normalized [0,1] image.
+
+        Parameters
+        ----------
+            sat0: ``Xarray.Dataset``
+                Dataset containig an image and mandatory Metadata.
+
         Returns
         -------
-            norm_image: numpy array
-                Normalized image.
+            norm_image: ``Xarray.Dataset``
+                The same Dataset containig the Normalized image.
+
+                It also adds a new dimension "bands".
         """
         imager = metadatatools.instrument_type(sat0)
         if imager != "Radiometer":
