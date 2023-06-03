@@ -54,22 +54,30 @@ def gen_vect(col, row, image, trim_shape):
     array-like
         Band vector.
     """
-    nbands, brows, bcols = image.shape
-
-    if col > bcols or row > brows:
-        raise ValueError("Input column or row larger than image size")
-
     # Size of tile
     rsize = int(trim_shape[0] / 2)
     csize = int(trim_shape[1] / 2)
 
+    if len(image.shape) == 2:
+        brows, bcols = image.shape
+    else:
+        nbands, brows, bcols = image.shape
+
+    if col > bcols or row > brows:
+        raise ValueError("Input column or row larger than image size")
+
     # Trim
-    # for i in range(image.shape[0])
-    band_vec = image[
-        :,
-        row - rsize : row + rsize + 1,
-        col - csize : col + csize + 1,
-    ].copy()
+    if len(image.shape) == 2:
+        band_vec = image[
+            row - rsize : row + rsize + 1,
+            col - csize : col + csize + 1,
+        ].copy()
+    else:
+        band_vec = image[
+            :,
+            row - rsize : row + rsize + 1,
+            col - csize : col + csize + 1,
+        ].copy()
 
     return band_vec
 
@@ -154,7 +162,7 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             return True
 
     def transform(self, sat0, sat1):
-        """Merge data from Cloudsat with co-located data from GOES-16.
+        """Merge data from a Polar sat with co-located data from Geos sat.
 
         Parameters
         ----------

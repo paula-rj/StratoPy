@@ -7,13 +7,14 @@ import numpy as np
 
 import pytest
 
+from stratopy import metadatatools
 from stratopy.extractors import cloudsat
 from stratopy.extractors import ebase
-from stratopy.transformers import mergers
+from stratopy.transformers import mergers, scalers
 
 import xarray as xa
 
-pytest.skip(allow_module_level=True)
+# pytest.skip(allow_module_level=True)
 
 CSAT_PATH = (
     "tests/data/CloudSat/"
@@ -26,6 +27,13 @@ GOES_PATH = (
 )
 
 FAKE_GOES = np.random.randn(5424, 5424)
+FAKE_DS = xa.Dataset(
+    data_vars=dict(CMI=(["ancho", "alto"], FAKE_GOES)),
+    coords=dict(
+        ancho=("ancho", np.arange(5424)),
+        alto=("alto", np.arange(5424)),
+    ),
+)
 
 
 def test_larger_img():
@@ -38,15 +46,17 @@ def test_larger_img():
 
 
 # Raise error if time selected out of range for csat track
-def test_time_out():
+def test_check_time():
     csat_data = cloudsat.read_hdf4(CSAT_PATH)
+    mobj = mergers.MergePolarGeos("2019 jan 2 18:30")
+    assert mobj.check_time(csat_data) == True
+
+
+def test_wrong_check_time():
+    sat0_data = cloudsat.read_hdf4(CSAT_PATH)
+    merged_obj = mergers.MergePolarGeos("2019 jan 2 22:30")
     with pytest.raises(ebase.NothingHereError):
-        mergers.merge(
-            csat_obj=csat_data,
-            time_selected="2019 jan 2 17:00",
-            goes_obj="any",
-            band=13,
-        )
+        merged_obj.check_time(sat0_data)
 
 
 def test_gen_vect():
@@ -58,20 +68,49 @@ def test_gen_vect():
     assert result_par.shape == pexpected_shape
 
 
-def test_wrong_check_time():
-    sat0_data = cloudsat.read_hdf4(CSAT_PATH)
-    merged_obj = mergers.Merge_Cloudsat_GOES("2019 jan 2 22:30")
-    with pytest.raises(ebase.NothingHereError):
-        merged_obj.check_time(sat0_data)
+def test_gen_vec_larger():
+    with pytest.raises(ValueError):
+        mergers.gen_vect(6000, 6000, FAKE_GOES, (3, 3))
+
+
+def test_wrong_orbit():
+    cldsat = cloudsat.read_hdf4(CSAT_PATH)
+    csat_data = metadatatools.add_metadata(
+        cldsat,
+        orbit_type=metadatatools.POLAR,
+        platform=metadatatools.CLOUDSAT,
+        instrument_type=metadatatools.RADARS,
+        product_key="some",
+    )
+    GOES_DS_WITHATRRS = metadatatools.add_metadata(
+        FAKE_DS,
+        orbit_type=metadatatools.POLAR,
+        platform=metadatatools.GOES,
+        instrument_type=metadatatools.RADIOMETERS,
+        product_key="CMI",
+    )
+    mobj = mergers.MergePolarGeos("2019 jan 2 18:25")
+    with pytest.raises(ValueError):
+        mobj.transform(csat_data, GOES_DS_WITHATRRS)
 
 
 def test_transform():
     cldsat = cloudsat.read_hdf4(CSAT_PATH)
-    result = mergers.merge(
+    csat_data = metadatatools.add_metadata(
         cldsat,
-        time_selected="2019 jan 2 18:30",
-        goes_obj="ABI-L2-CMIPF",
-        band=9,
+        orbit_type=metadatatools.POLAR,
+        platform=metadatatools.CLOUDSAT,
+        instrument_type=metadatatools.RADARS,
+        product_key="2B-CLDCLASS.P1_R05",
     )
+    GOES_DS_WITHATRRS = metadatatools.add_metadata(
+        FAKE_DS,
+        orbit_type=metadatatools.GEOSTATIONARY,
+        platform=metadatatools.GOES,
+        instrument_type=metadatatools.RADIOMETERS,
+        product_key="CMI",
+    )
+    mobj = mergers.MergePolarGeos("2019 jan 2 18:30")
+    result = mobj.transform(csat_data, GOES_DS_WITHATRRS)
     # Check trace dim
     assert isinstance(result, xa.Dataset)
