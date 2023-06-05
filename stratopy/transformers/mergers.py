@@ -14,12 +14,11 @@ import numpy as np
 
 import pytz
 
-from stratopy.utils import util_funcs
 from stratopy import metadatatools
+from stratopy.utils import util_funcs
 
 import xarray as xa
 
-from . import coord_change
 from . import tbase
 from ..extractors.ebase import NothingHereError
 

@@ -42,12 +42,11 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         if imager != "Radiometer":
             raise ValueError("Not an image in Xarray")
 
-        # Gets data
         bands = metadatatools.product_and_key(sat0)
-        image_ds = sat0[bands]
+        image_ds = sat0[bands]  # Gets product data
 
         if type(image_ds) == xa.core.dataarray.DataArray:
-            image = image_ds.to_numpy()
+            image = image_ds.variable.to_numpy()
         elif type(image_ds) == xa.core.dataset.Dataset:
             image = image_ds.to_array().to_numpy()
 
