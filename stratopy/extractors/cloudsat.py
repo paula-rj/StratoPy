@@ -32,7 +32,7 @@ import xarray as xa
 
 from . import ebase
 from ..metadatatools import CLOUDSAT, POLAR
-from ..utils import nearest_date
+from ..utils import util_funcs
 
 _TRACE = np.arange(36950, dtype=np.int32)
 _LAYERS = np.arange(10, dtype=np.int8)
@@ -345,7 +345,7 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
             # Raises FileNotFoundError if file not found
             candidates = sftp.listdir(store_dir)
             # List of files for selected date
-            filename_idx = nearest_date.closest_datetime(candidates, pattern)
+            filename_idx = util_funcs.closest_datetime(candidates, pattern)
             filename = candidates[filename_idx]
 
             full_path = "/".join([store_dir, filename])

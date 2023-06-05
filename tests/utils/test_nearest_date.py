@@ -9,7 +9,7 @@
 # =============================================================================
 import dateutil
 
-from stratopy.utils import nearest_date
+from stratopy.utils import util_funcs
 
 
 DATE = dateutil.parser.parse("2019 jan 09 16:00")
@@ -23,5 +23,5 @@ fake_files_list = [
 
 def test_closest_datetime():
     pattern_to_search = DATE.strftime("%Y%j%H%M")
-    tested = nearest_date.closest_datetime(fake_files_list, pattern_to_search)
+    tested = util_funcs.closest_datetime(fake_files_list, pattern_to_search)
     assert tested == 0

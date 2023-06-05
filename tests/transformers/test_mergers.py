@@ -10,7 +10,7 @@ import pytest
 from stratopy import metadatatools
 from stratopy.extractors import cloudsat
 from stratopy.extractors import ebase
-from stratopy.transformers import mergers, scalers
+from stratopy.transformers import mergers
 
 import xarray as xa
 
@@ -50,7 +50,7 @@ def test_larger_img():
 # Raise error if time selected out of range for csat track
 def test_check_time():
     mobj = mergers.MergePolarGeos("2019 jan 2 18:30")
-    assert mobj.check_time(csat_data) == True
+    assert mobj.check_time(csat_data) == True  # noqa
 
 
 def test_wrong_check_time():
@@ -96,8 +96,9 @@ def test_transform():
         instrument_type=metadatatools.RADARS,
         product_key="2B-CLDCLASS.P1_R05",
     )
+
     GOES_DS_WITHATRRS = metadatatools.add_metadata(
-        FAKE_GOES_MULTI,
+        FAKE_DS,
         orbit_type=metadatatools.GEOSTATIONARY,
         platform=metadatatools.GOES,
         instrument_type=metadatatools.RADIOMETERS,

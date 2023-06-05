@@ -3,13 +3,53 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-r"""Contains methods to perform transformation operations on loaded images."""
+r"""Module that implements usefull functions, common to some extractors."""
+
+# =============================================================================
+# IMPORTS
+# =============================================================================
+import datetime
 
 import numpy as np
 
 
+def closest_datetime(files_array, to_search):
+    """Retrieves the nearest available date to the one given as input in fetch.
+
+    Parameters
+    ----------
+    arr: list or numpy array
+        List or array of all the available dates.
+    to_search: str
+        Date given as input.
+
+    Returns
+    -------
+    nearest_date: datetime object
+        Nearest date to the one given as input.
+
+    Notes
+    -----
+    Presicion: seconds
+    """
+    # Transforms the whole file name into the date only
+    dates_list = [file[:13] for file in files_array]
+    dt_list = np.array(
+        [datetime.datetime.strptime(date, "%Y%j%H%M%S") for date in dates_list]
+    )
+    # Transforms the searched date into the correct format
+    dt_to_search = datetime.datetime.strptime(to_search, "%Y%j%H%M%S")
+    # Difference
+    diff_abs = np.abs(dt_list - dt_to_search)
+    diff_abs_seconds = [
+        datetime.timedelta.total_seconds(da) for da in diff_abs
+    ]
+    # Returns index of element with min time difference
+    return np.argmin(diff_abs_seconds)
+
+
 # =============================================================================
-# Transformation functions (coords)
+# Coordinate change
 # =============================================================================
 def scan2sat(x, y, Re=6378137.0, Rp=6356752.31414, h=35786023.0):
     """Convert scan to satellite coordinates.

@@ -35,7 +35,7 @@ from .. import metadatatools
 from ..metadatatools import (
     STRATOPY_METADATA_KEY,
 )
-from ..utils import from_cache, get_default_cache, nearest_date
+from ..utils import from_cache, get_default_cache, util_funcs
 
 
 # =============================================================================
@@ -271,7 +271,7 @@ class S3Mixin:
         candidates = [av.rsplit("_s")[1] for av in avails]
 
         # Pattern without *
-        filename_idx = nearest_date.closest_datetime(candidates, pattern)
+        filename_idx = util_funcs.closest_datetime(candidates, pattern)
 
         filepath = avails[filename_idx]
 

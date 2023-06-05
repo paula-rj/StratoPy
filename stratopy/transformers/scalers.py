@@ -40,7 +40,7 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         """
         imager = metadatatools.instrument_type(sat0)
         if imager != "Radiometer":
-            raise ValueError("Not an image")
+            raise ValueError("Not an image in Xarray")
 
         # Gets data
         bands = metadatatools.product_and_key(sat0)
@@ -50,8 +50,6 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
             image = image_ds.to_numpy()
         elif type(image_ds) == xa.core.dataset.Dataset:
             image = image_ds.to_array().to_numpy()
-        else:
-            raise TypeError("Shoud be Dataset or DataArray")
 
         dimslist = [x for x in image_ds.dims]
         # Shape must be 3D (for generalization)

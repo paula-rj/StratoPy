@@ -23,7 +23,7 @@ FAKE_DS = xa.Dataset(
 )
 
 
-def test_min_max_normalize():
+def test_min_max_normalize_ds():
     FAKE_DS_WITHATTRS = metadatatools.add_metadata(
         FAKE_DS,
         orbit_type=metadatatools.POLAR,
@@ -32,6 +32,19 @@ def test_min_max_normalize():
         product_key="the_img",
     )
     result = scalers.MinMaxNormalize().transform(sat0=FAKE_DS_WITHATTRS)
+    img_result = result.the_img.to_numpy()
+    np.testing.assert_array_less(img_result, 1.1)
+
+
+def test_min_max_normalize_da():
+    FAKE_DA_WITHATTRS = metadatatools.add_metadata(
+        FAKE_DS,
+        orbit_type=metadatatools.POLAR,
+        platform=metadatatools.CLOUDSAT,
+        instrument_type=metadatatools.RADIOMETERS,
+        product_key="the_img",
+    ).to_array()
+    result = scalers.MinMaxNormalize().transform(sat0=FAKE_DA_WITHATTRS)
     img_result = result.the_img.to_numpy()
     np.testing.assert_array_less(img_result, 1.1)
 

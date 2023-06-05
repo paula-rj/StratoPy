@@ -14,7 +14,7 @@ import numpy as np
 
 import pytz
 
-
+from stratopy.utils import util_funcs
 from stratopy import metadatatools
 
 import xarray as xa
@@ -192,10 +192,10 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         # TODO: Cortar cloudsat mas alla de los 10-15 min del time selected
 
         # t:(lat,lon) -> (col,row)
-        scanx, scany = coord_change.latlon2scan(
+        scanx, scany = util_funcs.latlon2scan(
             prodPolar.lat.to_numpy(), prodPolar.lon.to_numpy()
         )
-        cols, rows = coord_change.scan2colfil(scanx, scany)
+        cols, rows = util_funcs.scan2colfil(scanx, scany)
 
         # Merge
         imlist = []
@@ -207,9 +207,15 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "nbands": np.arange(1, imlist[0].shape[0] + 1, 1, dtype=np.int8),
-                "img_wide": np.arange(1, imlist[0].shape[1] + 1, 1, dtype=np.int8),
-                "img_height": np.arange(1, imlist[0].shape[2] + 1, 1, dtype=np.int8),
+                "nbands": np.arange(
+                    1, imlist[0].shape[0] + 1, 1, dtype=np.int8
+                ),
+                "img_wide": np.arange(
+                    1, imlist[0].shape[1] + 1, 1, dtype=np.int8
+                ),
+                "img_height": np.arange(
+                    1, imlist[0].shape[2] + 1, 1, dtype=np.int8
+                ),
             },
         )
         geos_ds = xa.Dataset({"geos": da})
