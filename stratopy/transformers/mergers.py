@@ -180,11 +180,19 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             if self.check_time(sat0):
                 # Products to collocate
                 prodPolar = sat0
-                img = sat1[metadatatools.product_and_key(sat1)].to_numpy()
+                img = sat1[metadatatools.product_and_key(sat1)]
+                if type(img) == xa.core.dataarray.DataArray:
+                    img = img.variable.to_numpy()
+                elif type(img) == xa.core.dataset.Dataset:
+                    img = img.to_array().to_numpy()
         elif orb0 == "geostationary" and orb1 == "polar":
             if self.check_time(sat0):
                 prodPolar = sat1
-                img = sat0[metadatatools.product_and_key(sat0)].to_numpy()
+                img = sat0[metadatatools.product_and_key(sat0)]
+                if type(img) == xa.core.dataarray.DataArray:
+                    img = img.variable.to_numpy()
+                elif type(img) == xa.core.dataset.Dataset:
+                    img = img.to_array().to_numpy()
         else:
             raise ValueError("This transformer is for geos and polar orbits.")
 
@@ -206,15 +214,9 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "nbands": np.arange(
-                    1, imlist[0].shape[0] + 1, 1, dtype=np.int8
-                ),
-                "img_wide": np.arange(
-                    1, imlist[0].shape[1] + 1, 1, dtype=np.int8
-                ),
-                "img_height": np.arange(
-                    1, imlist[0].shape[2] + 1, 1, dtype=np.int8
-                ),
+                "nbands": np.arange(1, imlist[0].shape[0] + 1, 1, dtype=np.int8),
+                "img_wide": np.arange(1, imlist[0].shape[1] + 1, 1, dtype=np.int8),
+                "img_height": np.arange(1, imlist[0].shape[2] + 1, 1, dtype=np.int8),
             },
         )
         geos_ds = xa.Dataset({"geos": da})

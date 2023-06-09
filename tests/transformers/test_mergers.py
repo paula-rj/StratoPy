@@ -10,7 +10,7 @@ import pytest
 from stratopy import metadatatools
 from stratopy.extractors import cloudsat
 from stratopy.extractors import ebase
-from stratopy.transformers import mergers
+from stratopy.transformers import mergers, scalers
 
 import xarray as xa
 
@@ -19,6 +19,11 @@ cldsat = cloudsat.read_hdf4(
     "tests/data/CloudSat/"
     "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
 )
+GOES_PATH = (
+    "tests/data/GOES16/"
+    "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_c20190040611220.nc"
+)
+
 csat_data = metadatatools.add_metadata(
     cldsat,
     orbit_type=metadatatools.POLAR,
@@ -26,6 +31,8 @@ csat_data = metadatatools.add_metadata(
     instrument_type=metadatatools.RADARS,
     product_key="some",
 )
+
+GOES_DS = xa.open_dataset(GOES_PATH, engine="h5netcdf")
 
 FAKE_GOES = np.random.randn(5424, 5424)
 FAKE_GOES_MULTI = np.random.randn(1, 5424, 5424)
@@ -98,16 +105,18 @@ def test_transform():
     )
 
     GOES_DS_WITHATRRS = metadatatools.add_metadata(
-        FAKE_DS,
+        GOES_DS,
         orbit_type=metadatatools.GEOSTATIONARY,
         platform=metadatatools.GOES,
         instrument_type=metadatatools.RADIOMETERS,
         product_key="CMI",
     )
 
+    goesnorm = scalers.MinMaxNormalize().transform(GOES_DS_WITHATRRS)
+
     mobj = mergers.MergePolarGeos("2019 jan 2 18:30")
-    result1 = mobj.transform(csat_data, GOES_DS_WITHATRRS)
-    result2 = mobj.transform(GOES_DS_WITHATRRS, csat_data)
+    result1 = mobj.transform(csat_data, goesnorm)
+    result2 = mobj.transform(goesnorm, csat_data)
     # Check trace dim
     assert isinstance(result1, xa.Dataset)
     assert isinstance(result2, xa.Dataset)
