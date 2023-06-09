@@ -67,4 +67,10 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
 
         da = xa.DataArray(norm_image, dims=dimslist)
 
-        return sat0.update({bands: da})
+        if type(bands) == list:
+            for i in range(len(bands)):
+                sat0.update({bands[i]: da[i, :, :]})
+        else:
+            sat0.update({bands: da})
+
+        return sat0

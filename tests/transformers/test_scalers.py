@@ -14,24 +14,7 @@ import xarray as xa
 
 GOES_PATH = "tests/data/GOES16/\
 OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_c20190040611220.nc"
-CH_LIST = [
-    "CMI_C01",
-    "CMI_C02",
-    "CMI_C03",
-    "CMI_C04",
-    "CMI_C05",
-    "CMI_C06",
-    "CMI_C07",
-    "CMI_C08",
-    "CMI_C09",
-    "CMI_C10",
-    "CMI_C11",
-    "CMI_C12",
-    "CMI_C13",
-    "CMI_C14",
-    "CMI_C15",
-    "CMI_C16",
-]
+
 
 GOES_DS = xa.open_dataset(GOES_PATH, engine="h5netcdf")
 
