@@ -152,13 +152,30 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
 
         first_time = parser.parse(sat.time_coverage_start)
         last_time = parser.parse(sat.time_coverage_end)
-
         if (dt_selected < first_time) or (dt_selected > last_time):
             raise NothingHereError(
                 f"{self.time_selected} out of range for this CloudSat track [{first_time}: {last_time}]."  # noqa
             )
         else:
             return True
+
+    def get_image(self, sat):
+        """Gets an image from a satellite Xarray based on the key provided.
+
+        Parameters
+        ---------
+        sat: Xarray DataArray or Dataset
+
+        Returns
+        -------
+        img: numpy Array
+        """
+        img = sat[metadatatools.product_and_key(sat)]
+        if type(img) == xa.core.dataarray.DataArray:
+            img = img.variable.to_numpy()
+        elif type(img) == xa.core.dataset.Dataset:
+            img = img.to_array().to_numpy()
+        return img
 
     def transform(self, sat0, sat1):
         """Merge data from a Polar sat with co-located data from Geos sat.
@@ -180,19 +197,11 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             if self.check_time(sat0):
                 # Products to collocate
                 prodPolar = sat0
-                img = sat1[metadatatools.product_and_key(sat1)]
-                if type(img) == xa.core.dataarray.DataArray:
-                    img = img.variable.to_numpy()
-                elif type(img) == xa.core.dataset.Dataset:
-                    img = img.to_array().to_numpy()
+                img = self.get_image(sat1)
         elif orb0 == "geostationary" and orb1 == "polar":
-            if self.check_time(sat0):
+            if self.check_time(sat1):
                 prodPolar = sat1
-                img = sat0[metadatatools.product_and_key(sat0)]
-                if type(img) == xa.core.dataarray.DataArray:
-                    img = img.variable.to_numpy()
-                elif type(img) == xa.core.dataset.Dataset:
-                    img = img.to_array().to_numpy()
+                img = self.get_image(sat0)
         else:
             raise ValueError("This transformer is for geos and polar orbits.")
 
@@ -214,9 +223,15 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "nbands": np.arange(1, imlist[0].shape[0] + 1, 1, dtype=np.int8),
-                "img_wide": np.arange(1, imlist[0].shape[1] + 1, 1, dtype=np.int8),
-                "img_height": np.arange(1, imlist[0].shape[2] + 1, 1, dtype=np.int8),
+                "nbands": np.arange(
+                    1, imlist[0].shape[0] + 1, 1, dtype=np.int8
+                ),
+                "img_wide": np.arange(
+                    1, imlist[0].shape[1] + 1, 1, dtype=np.int8
+                ),
+                "img_height": np.arange(
+                    1, imlist[0].shape[2] + 1, 1, dtype=np.int8
+                ),
             },
         )
         geos_ds = xa.Dataset({"geos": da})

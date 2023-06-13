@@ -21,7 +21,7 @@ cldsat = cloudsat.read_hdf4(
 )
 GOES_PATH = (
     "tests/data/GOES16/"
-    "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_c20190040611220.nc"
+    "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_c20190040611220.nc"  # noqa
 )
 
 csat_data = metadatatools.add_metadata(
@@ -93,6 +93,10 @@ def test_wrong_orbit():
     mobj = mergers.MergePolarGeos("2019 jan 2 18:25")
     with pytest.raises(ValueError):
         mobj.transform(csat_data, GOES_DS_WITHATRRS)
+
+
+def test_get_image():
+    pass
 
 
 def test_transform():
