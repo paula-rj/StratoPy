@@ -96,7 +96,16 @@ def test_wrong_orbit():
 
 
 def test_get_image():
-    pass
+    GOES_DS_WITHATRRS = metadatatools.add_metadata(
+        FAKE_DS,
+        orbit_type=metadatatools.GEOSTATIONARY,
+        platform=metadatatools.GOES,
+        instrument_type=metadatatools.RADARS,
+        product_key="CMI",
+    )
+    mobj = mergers.MergePolarGeos("2019 jan 2 18:25")
+    with pytest.raises(ValueError):
+        mobj.get_image(GOES_DS_WITHATRRS)
 
 
 def test_transform():

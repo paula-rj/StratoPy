@@ -163,19 +163,25 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         """Gets an image from a satellite Xarray based on the key provided.
 
         Parameters
-        ---------
+        ----------
         sat: Xarray DataArray or Dataset
 
         Returns
         -------
         img: numpy Array
         """
-        img = sat[metadatatools.product_and_key(sat)]
-        if type(img) == xa.core.dataarray.DataArray:
-            img = img.variable.to_numpy()
-        elif type(img) == xa.core.dataset.Dataset:
-            img = img.to_array().to_numpy()
-        return img
+        if metadatatools.instrument_type(sat) == metadatatools.RADIOMETERS:
+            img = sat[metadatatools.product_and_key(sat)]
+            if type(img) == xa.core.dataarray.DataArray:
+                img = img.variable.to_numpy()
+            elif type(img) == xa.core.dataset.Dataset:
+                img = img.to_array().to_numpy()
+            return img
+        else:
+            raise ValueError(
+                "Satellite product is not a 2D image\
+                or satellite does not carry a Radiometer."
+            )
 
     def transform(self, sat0, sat1):
         """Merge data from a Polar sat with co-located data from Geos sat.
@@ -223,15 +229,9 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "nbands": np.arange(
-                    1, imlist[0].shape[0] + 1, 1, dtype=np.int8
-                ),
-                "img_wide": np.arange(
-                    1, imlist[0].shape[1] + 1, 1, dtype=np.int8
-                ),
-                "img_height": np.arange(
-                    1, imlist[0].shape[2] + 1, 1, dtype=np.int8
-                ),
+                "nbands": np.arange(1, imlist[0].shape[0] + 1, 1, dtype=np.int8),
+                "img_wide": np.arange(1, imlist[0].shape[1] + 1, 1, dtype=np.int8),
+                "img_height": np.arange(1, imlist[0].shape[2] + 1, 1, dtype=np.int8),
             },
         )
         geos_ds = xa.Dataset({"geos": da})
