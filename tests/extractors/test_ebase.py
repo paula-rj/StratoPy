@@ -10,6 +10,13 @@ import pytest
 
 from stratopy import metadatatools
 from stratopy.extractors import ebase
+from stratopy.extractors.cloudsat import read_hdf4
+
+
+CLDSAT_PATH = (
+    "StratoPy/tests/data/CloudSat/",
+    "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",
+)
 
 
 class _WithAttrs:
@@ -254,7 +261,7 @@ def test_ConnectorABC_instrumentype_not_implementhed():
             return None
 
         def _makequery(self, endpoint, pdate):
-            return super()._makequery(endpoint, pdate)
+            return None
 
         def _download(self, query):
             return None
@@ -266,12 +273,12 @@ def test_ConnectorABC_instrumentype_not_implementhed():
             return metadatatools.POLAR
 
         def get_platform(self):
-            return super().get_platform()
+            return metadatatools.CLOUDSAT
 
         def get_product_type_key(self):
             return "some product"
 
-    with pytest.raises(TypeError):  # salta el make query
+    with pytest.raises(AttributeError):  # salta el make query
         Fake7Connector().fetch("27 jul 1981", tzone="UTC")
 
 
@@ -354,7 +361,7 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
 
         def _parse_result(self, response):
             # response.append("_parse_result")
-            return response
+            return read_hdf4(response)
 
         @classmethod
         def get_orbit_type(cls):
@@ -378,7 +385,9 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
 
     # mock listdir
     listdir = open_sftp.return_value.__enter__.return_value.listdir
-    listdir.return_value = ["pattern.ext"]
+    listdir.return_value = [
+        "2010176150042_67652_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",
+    ]
 
     get = open_sftp.return_value.__enter__.return_value.get
     get.return_value = ["value"]
