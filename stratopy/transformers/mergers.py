@@ -229,9 +229,15 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             dims=("cloudsat_trace", "nbands", "img_wide", "img_height"),
             coords={
                 "cloudsat_trace": _TRACE.copy(),
-                "nbands": np.arange(1, imlist[0].shape[0] + 1, 1, dtype=np.int8),
-                "img_wide": np.arange(1, imlist[0].shape[1] + 1, 1, dtype=np.int8),
-                "img_height": np.arange(1, imlist[0].shape[2] + 1, 1, dtype=np.int8),
+                "nbands": np.arange(
+                    1, imlist[0].shape[0] + 1, 1, dtype=np.int8
+                ),
+                "img_wide": np.arange(
+                    1, imlist[0].shape[1] + 1, 1, dtype=np.int8
+                ),
+                "img_height": np.arange(
+                    1, imlist[0].shape[2] + 1, 1, dtype=np.int8
+                ),
             },
         )
         geos_ds = xa.Dataset({"geos": da})
