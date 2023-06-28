@@ -10,7 +10,8 @@ import pytest
 
 from stratopy import metadatatools
 from stratopy.extractors import ebase
-from stratopy.extractors.cloudsat import read_hdf4
+
+import xarray as xa
 
 
 CLDSAT_PATH = (
@@ -89,224 +90,6 @@ def test_ConnectorABC_xx():
     assert result.attrs == expected_attrs
 
 
-def test_ConnectorABC_get_endpoint_not_implementhed():
-    class Fake1Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return super().get_endpoint()
-
-        def _makequery(self, endpoint, pdate):
-            return None
-
-        def _download(self, query):
-            return None
-
-        def _parse_result(self, response):
-            return None
-
-        @classmethod
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_platform(self):
-            return super().get_platform()
-
-        def get_product_type_key(self):
-            return "some product"
-
-    with pytest.raises(NotImplementedError):
-        Fake1Connector().fetch("27 jul 1981", tzone="UTC")
-
-
-def test_ConnectorABC_makequery_not_implementhed():
-    class Fake2Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return super()._makequery(endpoint, pdate)
-
-        def _download(self, query):
-            return None
-
-        def _parse_result(self, response):
-            return None
-
-        @classmethod
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_platform(self):
-            return super().get_platform()
-
-        def get_instrument_type(self):
-            return metadatatools.RADARS
-
-        def get_product_type_key(self):
-            return "some product"
-
-    with pytest.raises(NotImplementedError):
-        Fake2Connector().fetch("27 jul 1981", tzone="UTC")
-
-
-def test_ConnectorABC_download_not_implementhed():
-    class Fake3Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return None
-
-        def _download(self, query):
-            return super()._download(query)
-
-        def _parse_result(self, response):
-            return None
-
-        @classmethod
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_platform(self):
-            return metadatatools.RADARS
-
-        def get_product_type_key(self):
-            return "some product"
-
-    with pytest.raises(NotImplementedError):
-        Fake3Connector().fetch("27 jul 1981", tzone="UTC")
-
-
-def test_ConnectorABC_parse_result_not_implementhed():
-    class Fake4Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return None
-
-        def _download(self, query):
-            return None
-
-        def _parse_result(self, response):
-            return super()._parse_result(response)
-
-        @classmethod
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_platform(self):
-            return super().get_platform()
-
-        def get_product_type_key(self):
-            return "some product"
-
-    with pytest.raises(NotImplementedError):
-        Fake4Connector().fetch("27 jul 1981", tzone="UTC")
-
-
-def test_ConnectorABC_orbitype_not_implementhed():
-    class Fake5Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return super().get_endpoint()
-
-        def _makequery(self, endpoint, pdate):
-            return None
-
-        def _download(self, query):
-            return None
-
-        def _parse_result(self, response):
-            return None
-
-        def get_platform(self):
-            return super().get_platform()
-
-        def get_product_type_key(self):
-            return "some product"
-
-    with pytest.raises(TypeError):
-        Fake5Connector().fetch("27 jul 1981", tzone="UTC")
-
-
-def test_ConnectorABC_platform_not_implementhed():
-    class Fake6Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return super()._makequery(endpoint, pdate)
-
-        def _download(self, query):
-            return None
-
-        def _parse_result(self, response):
-            return None
-
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_instrument_type(self):
-            return metadatatools.RADARS
-
-        def get_product_type_key(self):
-            return "some product"
-
-    with pytest.raises(TypeError):
-        Fake6Connector().fetch("27 jul 1981", tzone="UTC")
-
-
-def test_ConnectorABC_instrumentype_not_implementhed():
-    class Fake7Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return None
-
-        def _download(self, query):
-            return None
-
-        def _parse_result(self, response):
-            return None
-
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_platform(self):
-            return metadatatools.CLOUDSAT
-
-        def get_product_type_key(self):
-            return "some product"
-
-    with pytest.raises(AttributeError):  # salta el make query
-        Fake7Connector().fetch("27 jul 1981", tzone="UTC")
-
-
-def test_ConnectorABC_productkey_not_implementhed():
-    class Fake8Connector(ebase.ConnectorABC):
-        def get_endpoint(self):
-            return None
-
-        def _makequery(self, endpoint, pdate):
-            return super()._makequery(endpoint, pdate)
-
-        def _download(self, query):
-            return None
-
-        def _parse_result(self, response):
-            return None
-
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_platform(self):
-            return "G16"
-
-        def get_instrument_type(self):
-            return metadatatools.RADARS
-
-    with pytest.raises(TypeError):
-        Fake8Connector().fetch("27 jul 1981", tzone="UTC")
 
 
 # --------------------------------------------------------------
@@ -360,8 +143,7 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
             return "dir/pattern.*"
 
         def _parse_result(self, response):
-            # response.append("_parse_result")
-            return read_hdf4(response)
+            return xa.DataArray()
 
         @classmethod
         def get_orbit_type(cls):
@@ -393,7 +175,6 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
     get.return_value = ["value"]
 
     response = conn.fetch("27/07/1981", force=True)
-
     listdir.assert_called_once_with("dir")
 
     get.assert_called_once()

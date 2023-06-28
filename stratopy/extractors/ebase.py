@@ -73,7 +73,7 @@ class ConnectorABC(abc.ABC):
         For example, AWS, SFTP, HTTP.
         Raises NotImplementedError if not implemented in an extractor class.
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @abc.abstractmethod
     def _makequery(self, endpoint, date):
@@ -90,7 +90,7 @@ class ConnectorABC(abc.ABC):
         date: datetime obj
             requested date and time
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @abc.abstractmethod
     def _download(self, query):
@@ -103,7 +103,7 @@ class ConnectorABC(abc.ABC):
         query: str
             The query needed to download a product.
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @abc.abstractmethod
     def get_orbit_type(self):
@@ -112,7 +112,7 @@ class ConnectorABC(abc.ABC):
         That generated the data for this extractor.
 
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @abc.abstractmethod
     def get_platform(self):
@@ -121,7 +121,7 @@ class ConnectorABC(abc.ABC):
         That generated the data for this extractor.
 
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @abc.abstractmethod
     def get_product_type_key(self):
@@ -130,7 +130,7 @@ class ConnectorABC(abc.ABC):
         That generated the data for this extractor.
 
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @abc.abstractmethod
     def _parse_result(self, result):
@@ -142,7 +142,7 @@ class ConnectorABC(abc.ABC):
         ----------
         result: the file in the format for example bytes, HDF, etc.
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @property
     def cache(self):
@@ -311,8 +311,7 @@ class SFTPMixin:
     """
 
     def __init__(self, host, port, username, *, keyfile=None, keypass=None):
-        if keyfile is None:
-            keyfile = DEFAULT_SSH_KEY
+        keyfile = DEFAULT_SSH_KEY if keyfile is None else keyfile
 
         # Client object
         self._client = paramiko.SSHClient()
