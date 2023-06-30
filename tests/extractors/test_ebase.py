@@ -3,7 +3,6 @@
 # License: MIT (https://tldrlegal.com/license/mit-license)
 # Copyright (c) 2022, Paula Romero Jure et al.
 # All rights reserved.
-import os
 from unittest import mock
 
 import pytest
@@ -88,8 +87,6 @@ def test_ConnectorABC_xx():
 
     assert result.obj == expected_obj
     assert result.attrs == expected_attrs
-
-
 
 
 # --------------------------------------------------------------
@@ -177,10 +174,5 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
     response = conn.fetch("27/07/1981", force=True)
     listdir.assert_called_once_with("dir")
 
-    get.assert_called_once()
-    get.call_args.kwargs["remotepath"] == "dir/pattern.ext"
-    # localpath is a randomstring
-
-    assert os.path.basename(response).startswith("stpy_")
-
+    assert isinstance(response, xa.DataArray)
     del conn  # to check coverage
