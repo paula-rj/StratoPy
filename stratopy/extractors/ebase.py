@@ -229,6 +229,7 @@ class ConnectorABC(abc.ABC):
             instrument_type=inst_type,
             product_key=prod_key,
         )
+        #result_as_xr.assign(ot=[])
         result_as_xr.attrs.update({STRATOPY_METADATA_KEY: metadata})
 
         return result_as_xr

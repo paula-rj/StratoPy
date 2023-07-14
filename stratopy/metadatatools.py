@@ -15,7 +15,8 @@
 # IMPORTS
 # =============================================================================
 
-import dataclasses as dcs
+import dataclasses as dcss
+import xarray as xa
 
 # =============================================================================
 # CONSTANTS
@@ -55,132 +56,30 @@ INSTRUMENTS_TYPES = (RADIOMETERS, RADARS)
 # =============================================================================
 
 
-@dcs.dataclass(frozen=True)
-class Metadata:
-    """Class that ensures the description of a satellite's orbit.
+AVAIL_ORBITS = ["Polar", "Goestationary"]
+AVAIL_SATS = ["GOES", "CloudSat", "Terra"]
+AVAIL_INSTRUMENTS = ["Radar", "Radiometer"]
 
-    Raises
-    ------
-        ValueError: If satellite extractor has not descripted its orbit.
-    """
 
-    orbit_type: str
-    platform: str
-    instrument_type: str
+@dcss.dataclass(frozen=True) 
+class SatelliteData:
+    """Defines new satellite data.""" 
+    
+    data: xa.Dataset
+    time_start: str
+    time_end: str
     product_key: str
-
-    def _validate_in(self, field, value, options):
-        if value not in options:
-            raise ValueError(
-                f"{field!r} must be one of {options}. Found: {value!r}"  # noqa
-            )
-
+    instrument_type: str
+    platform: str
+    orbit_type: str
+    
     def __post_init__(self):
-        """Initialie field value orbit type.
-
-        Raises
-        ------
-            ValueError: If satellite extractor has not descripted its orbit.
-        """
-        self._validate_in("orbit_type", self.orbit_type, ORBIT_TYPES)
-        self._validate_in("platform", self.platform, PLATFORMS)
-        self._validate_in(
-            "instrument_type", self.instrument_type, INSTRUMENTS_TYPES
-        )
-
-
-# =============================================================================
-# FUNCTIONS
-# =============================================================================
-
-
-def add_metadata(da, **kwargs):
-    """Adds mandatory metadata as attrs.
-
-    Parameters
-    ----------
-    da: ``xarray.DataArray``
-        DataArray to which the metadata will be added.
-
-    Returns
-    -------
-    da:  ``xarray.DataArray``
-        The same DataArray but with the metadata added as attrs.
-    """
-    metadata = Metadata(**kwargs)
-    da.attrs.update({STRATOPY_METADATA_KEY: metadata})
-    return da
-
-
-def orbit_type(da):
-    """Adds data about the orbit type of the platform.
-
-    It could be POLAR or GEOSTATIONARY.
-
-    Parameters
-    ----------
-    da: ``xarray.DataArray``
-        DataArray to which the metadata will be added.
-
-    Returns
-    -------
-    da:  ``xarray.DataArray``
-        The same DataArray but with the orbit type added as attrs \
-            under the key 'orbit_type'.
-    """
-    return da.attrs[STRATOPY_METADATA_KEY].orbit_type
-
-
-def platform(da):
-    """Adds data about the name of the satellite.
-
-    Parameters
-    ----------
-    da: ``xarray.DataArray``
-        DataArray to which the metadata will be added.
-
-    Returns
-    -------
-    da:  ``xarray.DataArray``
-        The same DataArray but with the metadata added as attrs.
-    """
-    return da.attrs[STRATOPY_METADATA_KEY].platform
-
-
-def instrument_type(da):
-    """Adds data about the instrument type that generated the products.
-
-    It could be RADIOMETER or RADAR.
-
-    Parameters
-    ----------
-    da: ``xarray.DataArray``
-        DataArray to which the metadata will be added.
-
-    Returns
-    -------
-    da:  ``xarray.DataArray``
-        The same DataArray but with the metadata added as attrs \
-            under the key 'instrument_type'.
-    """
-    return da.attrs[STRATOPY_METADATA_KEY].instrument_type
-
-
-def product_and_key(da):
-    """Adds data abouname of the field of the product that can be merged.
-
-    When fetched, products are retrieved as xarrays.Datasets.
-    Each data_var has a key name. Most products have many data vars.
-    When merging two products, we usually only need one field to work with.
-
-    Parameters
-    ----------
-    da: ``xarray.DataArray``
-        DataArray to which the metadata will be added.
-
-    Returns
-    -------
-    da:  ``xarray.DataArray``
-        The same DataArray but with the metadata added as attrs.
-    """
-    return da.attrs[STRATOPY_METADATA_KEY].product_key
+        if self.orbit_type not in AVAIL_ORBITS:
+            raise ValueError(f"Orbit type not valid or available. Must be one of {AVAIL_ORBITS}")
+        if self.platform not in AVAIL_SATS:
+            raise ValueError(f"Platform name not valid or not available. Must be one of {AVAIL_SATS}")
+        if self.instrument_type not in AVAIL_INSTRUMENTS:
+            raise ValueError(f"Instrument not valid or not available. Must be one of {AVAIL_INSTRUMENTS}")
+        
+    def to_dict(self):
+        return dcss.asdict(self) 
