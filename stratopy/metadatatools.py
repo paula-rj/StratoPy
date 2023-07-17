@@ -83,3 +83,12 @@ class SatelliteData:
         
     def to_dict(self):
         return dcss.asdict(self) 
+
+    def main_prop(self):
+        new_data = self.data.assign(time_start=self.time_start)
+        new_data = new_data.assign(time_end=self.time_end)
+        new_data = new_data = new_data.assign(product_key=self.product_key)
+        new_data = new_data.assign(instrument_type=self.instrument_type)
+        new_data = new_data.assign(platform=self.platform)
+        new_data = new_data.assign(orbit=self.orbit_type)
+        return new_data

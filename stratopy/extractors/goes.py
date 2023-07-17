@@ -209,15 +209,6 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         query = "/".join([endpoint, date_dir, file_glob])
         return query
 
-    def get_orbit_type(self):
-        """Gets the type of orbit.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return GEOSTATIONARY
-
     def get_product_type_key(self):
         """Gets the type of product.
 
@@ -293,4 +284,5 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
             Dataset containing the information from the original NetCDF file.
         """
         goes_ds = xa.open_dataset(result, engine="h5netcdf")
+        #metadatatools.SatelliteData(goes_ds, )
         return goes_ds

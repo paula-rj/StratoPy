@@ -223,14 +223,14 @@ class ConnectorABC(abc.ABC):
         inst_type = self.get_instrument_type()
         prod_key = self.get_product_type_key()
 
-        metadata = metadatatools.Metadata(
-            orbit_type=orbit_type,
-            platform=platform,
-            instrument_type=inst_type,
-            product_key=prod_key,
-        )
+        # metadata = metadatatools.Metadata(
+        #     orbit_type=orbit_type,
+        #     platform=platform,
+        #     instrument_type=inst_type,
+        #     product_key=prod_key,
+        # )
         #result_as_xr.assign(ot=[])
-        result_as_xr.attrs.update({STRATOPY_METADATA_KEY: metadata})
+        result_as_xr
 
         return result_as_xr
 
