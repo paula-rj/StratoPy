@@ -62,17 +62,17 @@ AVAIL_SATS = ["GOES", "CloudSat", "Terra"]
 AVAIL_INSTRUMENTS = ["Radar", "Radiometer"]
 
 
-@dcss.dataclass(frozen=True)
+@dcss.dataclass(frozen=True, repr=False)
 class SatelliteData:
     """Defines new satellite data."""
 
     data: xa.Dataset
-    time_start: str
-    time_end: str
     product_key: str
     instrument_type: str
     platform: str
     orbit_type: str
+    time_start: str
+    time_end: str
 
     def __post_init__(self):
         if self.orbit_type not in AVAIL_ORBITS:
@@ -85,14 +85,19 @@ class SatelliteData:
             raise ValueError(f"Instrument not valid or not available. \
                 Must be one of {AVAIL_INSTRUMENTS}")
 
+    def __repr__(self):
+        clsname = type(self).__name__
+        product_key = self.product_key
+        instrument_type = self.instrument_type
+        platform = self.platform
+        orbit_type = self.orbit_type
+        time_start = self.time_start
+        time_end = self.time_end
+        repr_str = (
+            f"<{clsname} "
+            f"{product_key=}, {instrument_type=}, {platform=}, "
+            f"{orbit_type=}, {time_start=}, {time_end=}>")
+        return repr_str
+
     def to_dict(self):
         return dcss.asdict(self)
-
-    def main_prop(self):
-        new_data = self.data.assign(time_start=self.time_start)
-        new_data = new_data.assign(time_end=self.time_end)
-        new_data = new_data = new_data.assign(product_key=self.product_key)
-        new_data = new_data.assign(instrument_type=self.instrument_type)
-        new_data = new_data.assign(platform=self.platform)
-        new_data = new_data.assign(orbit=self.orbit_type)
-        return new_data
