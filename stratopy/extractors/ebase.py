@@ -31,10 +31,6 @@ import pytz
 
 import s3fs
 
-from .. import metadatatools
-from ..metadatatools import (
-    STRATOPY_METADATA_KEY,
-)
 from ..utils import from_cache, get_default_cache, util_funcs
 
 
@@ -105,32 +101,32 @@ class ConnectorABC(abc.ABC):
         """
         raise NotImplementedError()  # pragma: no cover
 
-    @abc.abstractmethod
-    def get_orbit_type(self):
-        """Returns the type of orbit of the satellite (polar/geostationary).
+    # @abc.abstractmethod
+    # def get_orbit_type(self):
+    #     """Returns the type of orbit of the satellite (polar/geostationary).
 
-        That generated the data for this extractor.
+    #     That generated the data for this extractor.
 
-        """
-        raise NotImplementedError()  # pragma: no cover
+    #     """
+    #     raise NotImplementedError()  # pragma: no cover
 
-    @abc.abstractmethod
-    def get_platform(self):
-        """Returns the type of orbit of the satellite (polar/geostationary).
+    # @abc.abstractmethod
+    # def get_platform(self):
+    #     """Returns the type of orbit of the satellite (polar/geostationary).
 
-        That generated the data for this extractor.
+    #     That generated the data for this extractor.
 
-        """
-        raise NotImplementedError()  # pragma: no cover
+    #     """
+    #     raise NotImplementedError()  # pragma: no cover
 
-    @abc.abstractmethod
-    def get_product_type_key(self):
-        """Returns the type of orbit of the satellite (polar/geostationary).
+    # @abc.abstractmethod
+    # def get_product_type_key(self):
+    #     """Returns the type of orbit of the satellite (polar/geostationary).
 
-        That generated the data for this extractor.
+    #     That generated the data for this extractor.
 
-        """
-        raise NotImplementedError()  # pragma: no cover
+    #     """
+    #     raise NotImplementedError()  # pragma: no cover
 
     @abc.abstractmethod
     def _parse_result(self, result):
@@ -218,10 +214,10 @@ class ConnectorABC(abc.ABC):
         result_as_xr = self._parse_result(fp)
 
         # add metadata
-        orbit_type = self.get_orbit_type()
-        platform = self.get_platform()
-        inst_type = self.get_instrument_type()
-        prod_key = self.get_product_type_key()
+        # orbit_type = self.get_orbit_type()
+        # platform = self.get_platform()
+        # inst_type = self.get_instrument_type()
+        # prod_key = self.get_product_type_key()
 
         # metadata = metadatatools.Metadata(
         #     orbit_type=orbit_type,
@@ -229,7 +225,7 @@ class ConnectorABC(abc.ABC):
         #     instrument_type=inst_type,
         #     product_key=prod_key,
         # )
-        #result_as_xr.assign(ot=[])
+        # result_as_xr.assign(ot=[])
         result_as_xr
 
         return result_as_xr

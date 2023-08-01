@@ -19,7 +19,7 @@ import pytz
 import xarray as xa
 
 from . import ebase
-from ..metadatatools import GEOSTATIONARY, GOES
+from .. import metadatatools
 
 # =============================================================================
 # CONSTANTS
@@ -28,6 +28,39 @@ from ..metadatatools import GEOSTATIONARY, GOES
 MODE_CHANGE_DATE = dateutil.parser.parse("2019 feb 19 15:00 UTC").astimezone(
     pytz.UTC
 )
+
+DATA_GOES = {
+    "ABI-L1b-RadF": "Rad",  # Radiances
+    "ABI-L2-CMIPF": "CMI",  # Cloud & Moisture
+    "ABI-L2-ACHA2KMF": "",  # Clouds Height
+    "ABI-L2-ACHAF": "",  # Clouds Height
+    "ABI-L2-ACHTF": "",
+    "ABI-L2-ACMF": "",  # Clear sky mask
+    "ABI-L2-ADPF": "",  # Aerosol Detection
+    "ABI-L2-AODF": "",  # Aerosol
+    "ABI-L2-BRFF": "",  # Bidir. Reflactance Factor
+    "ABI-L2-CODF": "",  # Cloud Optical Depth
+    "ABI-L2-CPSF": "",  # Cloud Particle Size
+    "ABI-L2-CTPF": "",  # CLoud Top Pressure
+    "ABI-L2-MCMIPF": [
+        "CMI_C01",
+        "CMI_C02",
+        "CMI_C03",
+        "CMI_C04",
+        "CMI_C05",
+        "CMI_C06",
+        "CMI_C07",
+        "CMI_C08",
+        "CMI_C09",
+        "CMI_C10",
+        "CMI_C11",
+        "CMI_C12",
+        "CMI_C13",
+        "CMI_C14",
+        "CMI_C15",
+        "CMI_C16",
+    ],  # Cloud & Moist. Multiband
+}
 
 # =============================================================================
 # QUERY PARSERS
@@ -209,68 +242,6 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         query = "/".join([endpoint, date_dir, file_glob])
         return query
 
-    def get_product_type_key(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        #: GOES ch list
-        CH_LIST = [
-            "CMI_C01",
-            "CMI_C02",
-            "CMI_C03",
-            "CMI_C04",
-            "CMI_C05",
-            "CMI_C06",
-            "CMI_C07",
-            "CMI_C08",
-            "CMI_C09",
-            "CMI_C10",
-            "CMI_C11",
-            "CMI_C12",
-            "CMI_C13",
-            "CMI_C14",
-            "CMI_C15",
-            "CMI_C16",
-        ]
-        #: data for goes products
-        DATA_GOES = {
-            "ABI-L1b-RadF": "Rad",  # Radiances
-            "ABI-L2-CMIPF": "CMI",  # Cloud & Moisture
-            "ABI-L2-ACHA2KMF": "",  # Clouds Height
-            "ABI-L2-ACHAF": "",  # Clouds Height
-            "ABI-L2-ACHTF": "",
-            "ABI-L2-ACMF": "",  # Clear sky mask
-            "ABI-L2-ADPF": "",  # Aerosol Detection
-            "ABI-L2-AODF": "",  # Aerosol
-            "ABI-L2-BRFF": "",  # Bidir. Reflactance Factor
-            "ABI-L2-CODF": "",  # Cloud Optical Depth
-            "ABI-L2-CPSF": "",  # Cloud Particle Size
-            "ABI-L2-CTPF": "",  # CLoud Top Pressure
-            "ABI-L2-MCMIPF": CH_LIST,  # Cloud & Moist. Multiband
-        }
-        return DATA_GOES.get(self.product_type)
-
-    def get_instrument_type(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return "Radiometer"
-
-    def get_platform(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return GOES
-
     def _parse_result(self, result):
         """Converts the downloaded netcdf file-like into xarray object.
 
@@ -284,5 +255,14 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
             Dataset containing the information from the original NetCDF file.
         """
         goes_ds = xa.open_dataset(result, engine="h5netcdf")
-        #metadatatools.SatelliteData(goes_ds, )
-        return goes_ds
+
+        sat_goes_data = metadatatools.SatelliteData(
+            data=goes_ds,
+            time_start=goes_ds.time_coverage_start,
+            time_end=goes_ds.time_coverage_end,
+            product_key=DATA_GOES.get(self.product_type),
+            instrument_type="Radiometer",
+            platform="GOES",
+            orbit_type="Geostationary",
+        ).main_prop()
+        return sat_goes_data
