@@ -31,11 +31,22 @@ import pytz
 import xarray as xa
 
 from . import ebase
-from ..metadatatools import CLOUDSAT, POLAR
+from .. import metadatatools 
 from ..utils import util_funcs
 
 _TRACE = np.arange(36950, dtype=np.int32)
 _LAYERS = np.arange(10, dtype=np.int8)
+
+
+DATA_CLOUDSAT = {
+            "2B-CLDCLASS.P1_R05": "cloud_scenario",
+            "2B-CLDCLASS.P_R04": "cloud_scenario",
+            "2B-CLDCLASS-LIDAR.P_R04": [
+                "cloud_layer_type",
+                "cloud_layer_base",
+                "cloud_layer_top",
+            ],
+        }
 
 
 def read_hdf4(path):
@@ -269,55 +280,6 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         query = "/".join([endpoint, date_dir, parsed_date])
         return query
 
-    def get_orbit_type(self):
-        """Gets the type of orbit.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return POLAR
-
-    def get_product_type_key(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        #: GOES ch list
-
-        #: data for goes products
-
-        DATA_CLOUDSAT = {
-            "2B-CLDCLASS.P1_R05": "cloud_scenario",
-            "2B-CLDCLASS.P_R04": "cloud_scenario",
-            "2B-CLDCLASS-LIDAR.P_R04": [
-                "cloud_layer_type",
-                "cloud_layer_base",
-                "cloud_layer_top",
-            ],
-        }
-        return DATA_CLOUDSAT.get(self.product_type)
-
-    def get_instrument_type(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return "Radar"
-
-    def get_platform(self):
-        """Gets the type of product.
-
-        Returns
-        -------
-            str: GOES satellites are geostationary.
-        """
-        return CLOUDSAT
-
     def _parse_result(self, result):
         """Converts the downloaded HDF file into Xarray Dataset.
 
@@ -335,7 +297,17 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         -----
         Warning! Height is upside down, height[0] is highest.
         """
-        return read_hdf4(result)
+        csat_data = read_hdf4(result)
+        sat_csat_data = metadatatools.SatelliteData(
+            data=csat_data,
+            time_start=csat_data.time_coverage_start,
+            time_end=csat_data.time_coverage_end,
+            product_key=DATA_CLOUDSAT.get(self.product_type),
+            instrument_type=metadatatools.RADARS,
+            platform=metadatatools.CLOUDSAT,
+            orbit_type=metadatatools.POLAR
+        )
+        return sat_csat_data
 
     def _download(self, query):
         # splits full query to obtain date pattern YYYYdddHHMM*

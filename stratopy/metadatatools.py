@@ -30,16 +30,16 @@ STRATOPY_METADATA_KEY = "_STRATOPY_"
 # ORBITS ======================================================================
 
 #: For Geostationary satellites
-GEOSTATIONARY = "geostationary"
+GEOSTATIONARY = "Geostationary"
 
 #: For Polar orbiting satellites
-POLAR = "polar"
+POLAR = "Polar"
 
 #: Types of satellite orbits available
 ORBIT_TYPES = (GEOSTATIONARY, POLAR)
 
 # Satellites available ========================================================
-GOES = "G16"
+GOES = "GOES"
 CLOUDSAT = "CloudSat"
 
 PLATFORMS = (GOES, CLOUDSAT)

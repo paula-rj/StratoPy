@@ -261,8 +261,9 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
             time_start=goes_ds.time_coverage_start,
             time_end=goes_ds.time_coverage_end,
             product_key=DATA_GOES.get(self.product_type),
-            instrument_type="Radiometer",
-            platform="GOES",
-            orbit_type="Geostationary",
-        ).main_prop()
+            instrument_type=metadatatools.RADIOMETERS,
+            platform=metadatatools.GOES,
+            orbit_type=metadatatools.ORBIT_TYPES
+        )
+
         return sat_goes_data
