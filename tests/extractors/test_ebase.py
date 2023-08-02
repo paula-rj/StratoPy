@@ -56,18 +56,6 @@ def test_ConnectorABC_xx():
             response.append("_parse_result")
             return _WithAttrs(response)
 
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_instrument_type(self):
-            return metadatatools.RADARS
-
-        def get_platform(self):
-            return "G16"
-
-        def get_product_type_key(self):
-            return "some product"
-
     conn = FakeConnector()
     result = conn.fetch("june 25th 2022 18:00", tzone="UTC")
 
@@ -76,18 +64,9 @@ def test_ConnectorABC_xx():
         "_download",
         "_parse_result",
     ]
-    expected_attrs = {
-        metadatatools.STRATOPY_METADATA_KEY: metadatatools.Metadata(
-            orbit_type=metadatatools.POLAR,
-            platform=metadatatools.GOES,
-            instrument_type=metadatatools.RADARS,
-            product_key="some product",
-        )
-    }
 
     assert result.obj == expected_obj
-    assert result.attrs == expected_attrs
-
+   
 
 # --------------------------------------------------------------
 # S3Mixin
@@ -105,15 +84,6 @@ def test_S3mixin_FileNotFoundError():
         def _parse_result(self, response):
             return None
 
-        @classmethod
-        def get_orbit_type(cls):
-            return metadatatools.GEOSTATIONARY
-
-        def get_platform(self):
-            return super().get_platform()
-
-        def get_product_type_key(self):
-            return "some product"
 
     conn = TestFileNotFoundError()
 
@@ -142,18 +112,6 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
         def _parse_result(self, response):
             return xa.DataArray()
 
-        @classmethod
-        def get_orbit_type(cls):
-            return metadatatools.POLAR
-
-        def get_platform(self):
-            return metadatatools.GOES
-
-        def get_instrument_type(self):
-            return metadatatools.RADARS
-
-        def get_product_type_key(self):
-            return "some product"
 
     conn = TestSFTP("host", "port", "zaraza@coso.com", keyfile="algo")
 

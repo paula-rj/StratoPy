@@ -8,6 +8,7 @@ from unittest import mock
 
 import pytest
 
+from stratopy import metadatatools
 from stratopy.extractors import cloudsat
 
 import xarray as xa
@@ -68,12 +69,11 @@ def test_download(from_private_key_file, connect, open_sftp):
     assert mq == "Data/2B-CLDCLASS.P1_R05/2010/176/2010176180000"
 
     # tests read_hdf4()
-    expected = cloudsat.read_as_SatelliteData(CLOUDSAT_PATH,"2B-CLDCLASS.P1_R05" ).data
+    expected = cloudsat.read_as_SatelliteData(CLOUDSAT_PATH,"2B-CLDCLASS.P1_R05" )
     result = cs_obj._parse_result(CLOUDSAT_PATH)
     
-    import ipdb; ipdb.set_trace()
-    assert isinstance(expected, xa.Dataset)
-    xa.testing.assert_equal(expected, result)
+    assert isinstance(result, metadatatools.SatelliteData)
+    xa.testing.assert_equal(expected.data, result.data)
 
     # mock listdir
     listdir = open_sftp.return_value.__enter__.return_value.listdir

@@ -256,7 +256,7 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
         """
         goes_ds = xa.open_dataset(result, engine="h5netcdf")
 
-        sat_goes_data = metadatatools.SatelliteData(
+        sat_goes_data = metadatatools.SatelliteData.from_values(
             data=goes_ds,
             products_keys=DATA_GOES.get(self.product_type),
             instruments_types=metadatatools.RADIOMETERS,

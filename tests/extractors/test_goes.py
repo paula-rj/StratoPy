@@ -7,6 +7,7 @@ from unittest import mock
 
 import pytest
 
+from stratopy import metadatatools
 from stratopy.extractors import goes
 
 import xarray as xa
@@ -89,9 +90,10 @@ def test_GOES16_fetch_ch(mglob, data_bytes, dataset):
         "noaa-goes16/ABI-L1b-RadF/2010/176/00/OR_ABI-L1b-RadF-M3C03_G16_s20101760000363_e20190040611130_c20190040611199.nc",  # noqa
         "rb",
     )
-    xa.testing.assert_allclose(result, expected)
+    xa.testing.assert_allclose(result.data, expected)
 
-    assert isinstance(result, xa.Dataset)  # new
+    assert isinstance(result, metadatatools.SatelliteData)
+    assert isinstance(result.data, xa.Dataset)  # new
     assert buff.closed
 
 
@@ -123,7 +125,8 @@ def test_GOES16_fetch_noch(mglob, data_bytes, dataset):
         "rb",
     )
 
-    xa.testing.assert_allclose(result, expected)
+    xa.testing.assert_allclose(result.data, expected)
 
-    assert isinstance(result, xa.Dataset)  # new
+    assert isinstance(result, metadatatools.SatelliteData)
+    assert isinstance(result.data, xa.Dataset)  # new
     assert buff.closed

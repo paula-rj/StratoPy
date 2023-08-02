@@ -36,11 +36,11 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
 
                 It also adds a new dimension "bands".
         """
-        imager = sat0.instrument_type
-        if imager != "Radiometer":
+        imager = sat0.instruments_types
+        if "Radiometer" not in imager:
             raise ValueError("Not an image in Xarray")
 
-        bands = sat0.product_key
+        bands = sat0.products_keys[0]
         image_ds = sat0.data[bands]  # Gets product data
 
         if type(image_ds) == xa.core.dataarray.DataArray:

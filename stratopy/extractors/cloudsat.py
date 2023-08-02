@@ -174,7 +174,7 @@ def read_as_SatelliteData(path, product):
         raise ValueError(f"product should be one of {DATA_CLOUDSAT.keys()}")
 
     hdf4_as_xa = read_hdf4(path)
-    sat_cloudsat_data = metadatatools.SatelliteData(
+    sat_cloudsat_data = metadatatools.SatelliteData.from_values(
         data=hdf4_as_xa,
         products_keys=product,
         instruments_types=metadatatools.RADARS,
@@ -315,7 +315,7 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         Warning! Height is upside down, height[0] is highest.
         """
         csat_data = read_hdf4(result)
-        sat_csat_data = metadatatools.SatelliteData(
+        sat_csat_data = metadatatools.SatelliteData.from_values(
             data=csat_data,
             times_starts=csat_data.time_coverage_start,
             times_ends=csat_data.time_coverage_end,

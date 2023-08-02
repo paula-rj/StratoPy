@@ -150,8 +150,8 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         date_in_zone = zone.localize(usr_date)
         dt_selected = date_in_zone.astimezone(pytz.UTC)
 
-        first_time = parser.parse(sat.time_start)
-        last_time = parser.parse(sat.time_end)
+        first_time = parser.parse(sat.times_starts[0])
+        last_time = parser.parse(sat.times_ends[0])
         if (dt_selected < first_time) or (dt_selected > last_time):
             raise NothingHereError(
                 f"{self.time_selected} out of range for this CloudSat track [{first_time}: {last_time}]."  # noqa
@@ -170,8 +170,9 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
         -------
         img: numpy Array
         """
-        if sat.instrument_type == metadatatools.RADIOMETERS:
-            img = sat.data[sat.product_key]
+        if metadatatools.RADIOMETERS in sat.instruments_types:
+            idx = sat.instruments_types.index("Radiometer")
+            img = sat.data[sat.products_keys[idx]]
             if type(img) == xa.core.dataarray.DataArray:
                 img = img.variable.to_numpy()
             elif type(img) == xa.core.dataset.Dataset:
@@ -195,16 +196,16 @@ class MergePolarGeos(tbase.BinaryTransformerABC):
             DataArray of a file from satellite 1.
         """
         # Check type of orbit
-        orb0 = sat0.orbit_type
-        orb1 = sat1.orbit_type
+        orb0 = sat0.orbits_types
+        orb1 = sat1.orbits_types
 
-        if orb0 == "Polar" and orb1 == "Geostationary":
+        if orb0 == ("Polar",) and orb1 == ("Geostationary",):
             # Checks if temporal collocation is possible for usr time
             if self.check_time(sat0):
                 # Products to collocate
                 prodPolar = sat0.data
                 img = self.get_image(sat1)
-        elif orb0 == "Geostationary" and orb1 == "Polar":
+        elif orb0 == ("Geostationary",) and orb1 == ("Polar",):
             if self.check_time(sat1):
                 prodPolar = sat1.data
                 img = self.get_image(sat0)
