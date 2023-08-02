@@ -7,7 +7,6 @@ from unittest import mock
 
 import pytest
 
-from stratopy import metadatatools
 from stratopy.extractors import ebase
 
 import xarray as xa
@@ -66,7 +65,7 @@ def test_ConnectorABC_xx():
     ]
 
     assert result.obj == expected_obj
-   
+
 
 # --------------------------------------------------------------
 # S3Mixin
@@ -83,7 +82,6 @@ def test_S3mixin_FileNotFoundError():
 
         def _parse_result(self, response):
             return None
-
 
     conn = TestFileNotFoundError()
 
@@ -111,7 +109,6 @@ def test_SFTPMixin_download(from_private_key_file, connect, open_sftp):
 
         def _parse_result(self, response):
             return xa.DataArray()
-
 
     conn = TestSFTP("host", "port", "zaraza@coso.com", keyfile="algo")
 
