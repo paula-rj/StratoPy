@@ -258,12 +258,12 @@ class GOES16(ebase.S3Mixin, ebase.ConnectorABC):
 
         sat_goes_data = metadatatools.SatelliteData(
             data=goes_ds,
-            product_key=DATA_GOES.get(self.product_type),
-            instrument_type=metadatatools.RADIOMETERS,
-            platform=metadatatools.GOES,
-            orbit_type=metadatatools.GEOSTATIONARY,
-            time_start=goes_ds.time_coverage_start,
-            time_end=goes_ds.time_coverage_end,
+            products_keys=DATA_GOES.get(self.product_type),
+            instruments_types=metadatatools.RADIOMETERS,
+            platforms=metadatatools.GOES,
+            orbits_types=metadatatools.GEOSTATIONARY,
+            times_starts=goes_ds.time_coverage_start,
+            times_ends=goes_ds.time_coverage_end,
         )
 
         return sat_goes_data

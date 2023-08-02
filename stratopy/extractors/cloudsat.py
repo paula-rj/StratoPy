@@ -176,12 +176,12 @@ def read_as_SatelliteData(path, product):
     hdf4_as_xa = read_hdf4(path)
     sat_cloudsat_data = metadatatools.SatelliteData(
         data=hdf4_as_xa,
-        product_key=product,
-        instrument_type=metadatatools.RADARS,
-        platform=metadatatools.CLOUDSAT,
-        orbit_type=metadatatools.POLAR,
-        time_start=hdf4_as_xa.time_coverage_start,
-        time_end=hdf4_as_xa.time_coverage_end,
+        products_keys=product,
+        instruments_types=metadatatools.RADARS,
+        platforms=metadatatools.CLOUDSAT,
+        orbits_types=metadatatools.POLAR,
+        times_starts=hdf4_as_xa.time_coverage_start,
+        times_ends=hdf4_as_xa.time_coverage_end,
     )
     return sat_cloudsat_data
 
@@ -317,12 +317,12 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
         csat_data = read_hdf4(result)
         sat_csat_data = metadatatools.SatelliteData(
             data=csat_data,
-            time_start=csat_data.time_coverage_start,
-            time_end=csat_data.time_coverage_end,
-            product_key=DATA_CLOUDSAT.get(self.product_type),
-            instrument_type=metadatatools.RADARS,
-            platform=metadatatools.CLOUDSAT,
-            orbit_type=metadatatools.POLAR,
+            times_starts=csat_data.time_coverage_start,
+            times_ends=csat_data.time_coverage_end,
+            products_keys=DATA_CLOUDSAT.get(self.product_type),
+            instruments_types=metadatatools.RADARS,
+            platforms=metadatatools.CLOUDSAT,
+            orbits_types=metadatatools.POLAR,
         )
         return sat_csat_data
 
