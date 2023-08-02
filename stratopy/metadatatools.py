@@ -161,3 +161,6 @@ class SatelliteData:
 
     def to_dict(self):
         return dcss.asdict(self)
+
+    def metadata_at(self, idx):
+        return {k: v[idx] for k, v in self.to_dict().items() if k != "data"}
