@@ -68,8 +68,10 @@ def test_download(from_private_key_file, connect, open_sftp):
     assert mq == "Data/2B-CLDCLASS.P1_R05/2010/176/2010176180000"
 
     # tests read_hdf4()
-    expected = cloudsat.read_hdf4(CLOUDSAT_PATH)
+    expected = cloudsat.read_as_SatelliteData(CLOUDSAT_PATH,"2B-CLDCLASS.P1_R05" ).data
     result = cs_obj._parse_result(CLOUDSAT_PATH)
+    
+    import ipdb; ipdb.set_trace()
     assert isinstance(expected, xa.Dataset)
     xa.testing.assert_equal(expected, result)
 

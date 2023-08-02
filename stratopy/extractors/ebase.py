@@ -213,7 +213,6 @@ class ConnectorABC(abc.ABC):
         # convierte a xarray
         result_as_xr = self._parse_result(fp)
 
-
         return result_as_xr
 
 

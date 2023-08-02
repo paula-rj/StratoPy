@@ -28,38 +28,33 @@ STRATOPY_METADATA_KEY = "_STRATOPY_"
 
 
 # ORBITS ======================================================================
-
+# Declare any new type of orbit in this section as a str
+# Add the variable inside the AVAIL_ORBITS tuple
 #: For Geostationary satellites
 GEOSTATIONARY = "Geostationary"
-
 #: For Polar orbiting satellites
 POLAR = "Polar"
 
 #: Types of satellite orbits available
-ORBIT_TYPES = (GEOSTATIONARY, POLAR)
+AVAIL_ORBITS = (GEOSTATIONARY, POLAR)
 
 # Satellites available ========================================================
 GOES = "GOES"
 CLOUDSAT = "CloudSat"
 
-PLATFORMS = (GOES, CLOUDSAT)
+AVAIL_SATS = (GOES, CLOUDSAT)
 
-# instruments =================================================================
+# Sensor type =================================================================
 
 RADIOMETERS = "Radiometer"
 
 RADARS = "Radar"
 
-INSTRUMENTS_TYPES = (RADIOMETERS, RADARS)
+AVAIL_INSTRUMENTS = (RADIOMETERS, RADARS)
 
 # =============================================================================
 # CLASS
 # =============================================================================
-
-
-AVAIL_ORBITS = ["Polar", "Geostationary"]
-AVAIL_SATS = ["GOES", "CloudSat", "Terra"]
-AVAIL_INSTRUMENTS = ["Radar", "Radiometer"]
 
 
 @dcss.dataclass(frozen=True, repr=False)

@@ -31,7 +31,7 @@ import pytz
 import xarray as xa
 
 from . import ebase
-from .. import metadatatools 
+from .. import metadatatools
 from ..utils import util_funcs
 
 _TRACE = np.arange(36950, dtype=np.int32)
@@ -39,14 +39,14 @@ _LAYERS = np.arange(10, dtype=np.int8)
 
 
 DATA_CLOUDSAT = {
-            "2B-CLDCLASS.P1_R05": "cloud_scenario",
-            "2B-CLDCLASS.P_R04": "cloud_scenario",
-            "2B-CLDCLASS-LIDAR.P_R04": [
-                "cloud_layer_type",
-                "cloud_layer_base",
-                "cloud_layer_top",
-            ],
-        }
+    "2B-CLDCLASS.P1_R05": "cloud_scenario",
+    "2B-CLDCLASS.P_R04": "cloud_scenario",
+    "2B-CLDCLASS-LIDAR.P_R04": [
+        "cloud_layer_type",
+        "cloud_layer_base",
+        "cloud_layer_top",
+    ],
+}
 
 
 def read_hdf4(path):
@@ -167,6 +167,23 @@ def read_hdf4(path):
     )
 
     return ds
+
+
+def read_as_SatelliteData(path, product):
+    if product not in DATA_CLOUDSAT.keys():
+        raise ValueError(f"product should be one of {DATA_CLOUDSAT.keys()}")
+
+    hdf4_as_xa = read_hdf4(path)
+    sat_cloudsat_data = metadatatools.SatelliteData(
+        data=hdf4_as_xa,
+        product_key=product,
+        instrument_type=metadatatools.RADARS,
+        platform=metadatatools.CLOUDSAT,
+        orbit_type=metadatatools.POLAR,
+        time_start=hdf4_as_xa.time_coverage_start,
+        time_end=hdf4_as_xa.time_coverage_end,
+    )
+    return sat_cloudsat_data
 
 
 class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
@@ -305,7 +322,7 @@ class CloudSat(ebase.SFTPMixin, ebase.ConnectorABC):
             product_key=DATA_CLOUDSAT.get(self.product_type),
             instrument_type=metadatatools.RADARS,
             platform=metadatatools.CLOUDSAT,
-            orbit_type=metadatatools.POLAR
+            orbit_type=metadatatools.POLAR,
         )
         return sat_csat_data
 

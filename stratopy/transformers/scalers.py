@@ -7,8 +7,6 @@ r"""Contains functions to normalize images."""
 
 import numpy as np
 
-from stratopy import metadatatools
-
 import xarray as xa
 
 from . import tbase
@@ -38,12 +36,12 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
 
                 It also adds a new dimension "bands".
         """
-        imager = metadatatools.instrument_type(sat0)
+        imager = sat0.instrument_type
         if imager != "Radiometer":
             raise ValueError("Not an image in Xarray")
 
-        bands = metadatatools.product_and_key(sat0)
-        image_ds = sat0[bands]  # Gets product data
+        bands = sat0.product_key
+        image_ds = sat0.data[bands]  # Gets product data
 
         if type(image_ds) == xa.core.dataarray.DataArray:
             image = image_ds.variable.to_numpy()
@@ -55,7 +53,7 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
         if len(image.shape) < 3:
             image = image.reshape(1, image.shape[0], image.shape[1])
         if len(dimslist) < len(image.shape):
-            sat0[bands] = sat0[bands].expand_dims(
+            sat0.data[bands] = sat0.data[bands].expand_dims(
                 nbands=np.arange(1, image.shape[0] + 1)
             )
             dimslist = ["nbands"] + dimslist
@@ -69,8 +67,8 @@ class MinMaxNormalize(tbase.UnaryTransformerABC):
 
         if type(bands) == list:
             for i in range(len(bands)):
-                sat0.update({bands[i]: da[i, :, :]})
+                sat0.data.update({bands[i]: da[i, :, :]})
         else:
-            sat0.update({bands: da})
+            sat0.data.update({bands: da})
 
         return sat0
