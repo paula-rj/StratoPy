@@ -126,8 +126,7 @@ def test_metadata_idx():
     }
     assert NEW_SD.metadata_at(0) == return_dict
 
+
 def test_repr():
-    la_repr = f"<SatelliteData products_keys={str(NEW_SD.products_keys)}, instruments_types={str(NEW_SD.instruments_types)}, platforms={str(NEW_SD.platforms)}, orbits_types={str(NEW_SD.orbits_types)}, times_starts=(0,), times_ends=(1,)>" # noqa
+    la_repr = f"<SatelliteData products_keys={str(NEW_SD.products_keys)}, instruments_types={str(NEW_SD.instruments_types)}, platforms={str(NEW_SD.platforms)}, orbits_types={str(NEW_SD.orbits_types)}, times_starts=(0,), times_ends=(1,)>"  # noqa
     assert NEW_SD.__repr__() == la_repr
-        
-        
