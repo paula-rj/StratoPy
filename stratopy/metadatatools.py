@@ -18,17 +18,12 @@ import xarray as xa
 
 #:
 STRATOPY_METADATA_KEY = "_STRATOPY_"
+MAX_METADATA_ELEMS_SHOW = 10
 
-
-# ORBITS ======================================================================
-# Declare any new type of orbit in this section as a str
-# Add the variable inside the AVAIL_ORBITS tuple
-#: For Geostationary satellites
+#: Types of orbits available ==================================================
 GEOSTATIONARY = "Geostationary"
-#: For Polar orbiting satellites
 POLAR = "Polar"
 
-#: Types of satellite orbits available
 AVAIL_ORBITS = (GEOSTATIONARY, POLAR)
 
 # Satellites available ========================================================
@@ -40,12 +35,9 @@ AVAIL_SATS = (GOES, CLOUDSAT)
 # Sensor type =================================================================
 
 RADIOMETERS = "Radiometer"
-
 RADARS = "Radar"
 
 AVAIL_INSTRUMENTS = (RADIOMETERS, RADARS)
-
-MAX_METADATA_ELEMS_SHOW = 10
 
 # =============================================================================
 # CLASS

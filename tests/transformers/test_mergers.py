@@ -15,22 +15,17 @@ from stratopy.transformers import mergers, scalers
 import xarray as xa
 
 # pytest.skip(allow_module_level=True)
-cldsat = cloudsat.read_hdf4(
+cldsat = cloudsat.read_as_SatelliteData(
     "tests/data/CloudSat/"
-    "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf"
+    "2019002175851_67551_CS_2B-CLDCLASS_GRANULE_P1_R05_E08_F03.hdf",
+    product="2B-CLDCLASS.P1_R05"
 )
 GOES_PATH = (
     "tests/data/GOES16/"
     "OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_c20190040611220.nc"  # noqa
 )
 
-csat_data = metadatatools.add_metadata(
-    cldsat,
-    orbit_type=metadatatools.POLAR,
-    platform=metadatatools.CLOUDSAT,
-    instrument_type=metadatatools.RADARS,
-    product_key="some",
-)
+csat_data = cldsat
 
 GOES_DS = xa.open_dataset(GOES_PATH, engine="h5netcdf")
 
@@ -83,12 +78,13 @@ def test_gen_vec_larger():
 
 
 def test_wrong_orbit():
-    GOES_DS_WITHATRRS = metadatatools.add_metadata(
+    GOES_DS_WITHATRRS = metadatatools.SatelliteData.from_values(
         FAKE_DS,
-        orbit_type=metadatatools.POLAR,
-        platform=metadatatools.GOES,
-        instrument_type=metadatatools.RADIOMETERS,
-        product_key="CMI",
+        orbits_types=metadatatools.POLAR,
+        platforms=metadatatools.GOES,
+        instruments_types=metadatatools.RADIOMETERS,
+        products_keys="CMI",
+        times_starts=0, times_ends=1
     )
     mobj = mergers.MergePolarGeos("2019 jan 2 18:25")
     with pytest.raises(ValueError):
@@ -96,12 +92,13 @@ def test_wrong_orbit():
 
 
 def test_get_image():
-    GOES_DS_WITHATRRS = metadatatools.add_metadata(
+    GOES_DS_WITHATRRS = metadatatools.SatelliteData.from_values(
         FAKE_DS,
-        orbit_type=metadatatools.GEOSTATIONARY,
-        platform=metadatatools.GOES,
-        instrument_type=metadatatools.RADARS,
-        product_key="CMI",
+        orbits_types=metadatatools.GEOSTATIONARY,
+        platforms=metadatatools.GOES,
+        instruments_types=metadatatools.RADARS,
+        products_keys="CMI",
+        times_starts=0, times_ends=1
     )
     mobj = mergers.MergePolarGeos("2019 jan 2 18:25")
     with pytest.raises(ValueError):
@@ -109,20 +106,14 @@ def test_get_image():
 
 
 def test_transform():
-    csat_data = metadatatools.add_metadata(
-        cldsat,
-        orbit_type=metadatatools.POLAR,
-        platform=metadatatools.CLOUDSAT,
-        instrument_type=metadatatools.RADARS,
-        product_key="2B-CLDCLASS.P1_R05",
-    )
 
-    GOES_DS_WITHATRRS = metadatatools.add_metadata(
+    GOES_DS_WITHATRRS = metadatatools.SatelliteData.from_values(
         GOES_DS,
-        orbit_type=metadatatools.GEOSTATIONARY,
-        platform=metadatatools.GOES,
-        instrument_type=metadatatools.RADIOMETERS,
-        product_key="CMI",
+        orbits_types=metadatatools.GEOSTATIONARY,
+        platforms=metadatatools.GOES,
+        instruments_types=metadatatools.RADIOMETERS,
+        products_keys="CMI",
+        times_starts=0, times_ends=1
     )
 
     goesnorm = scalers.MinMaxNormalize().transform(GOES_DS_WITHATRRS)

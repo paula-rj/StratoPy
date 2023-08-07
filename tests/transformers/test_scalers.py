@@ -15,8 +15,17 @@ import xarray as xa
 GOES_PATH = "tests/data/GOES16/\
 OR_ABI-L2-CMIPF-M3C13_G16_s20190040600363_e20190040611141_c20190040611220.nc"
 
-
 GOES_DS = xa.open_dataset(GOES_PATH, engine="h5netcdf")
+GOES_DS_WITHATTRS = metadatatools.SatelliteData.from_values(
+    GOES_DS,
+    products_keys=("CMI",),
+    instruments_types=(metadatatools.RADIOMETERS,),
+    platforms=(metadatatools.GOES,),
+    orbits_types=(metadatatools.GEOSTATIONARY,),
+    times_starts=(0,),
+    times_ends=(1,),
+    notes=("a",),
+)
 
 FAKE_GOES_MULTI = xa.Dataset(
     data_vars=dict(
@@ -41,38 +50,35 @@ FAKE_MULTI_DS = xa.Dataset(
 
 
 def test_min_max_normalize_da():
-    GOES_DS_WITHATTRS = metadatatools.add_metadata(
-        GOES_DS,
-        orbit_type=metadatatools.GEOSTATIONARY,
-        platform=metadatatools.CLOUDSAT,
-        instrument_type=metadatatools.RADIOMETERS,
-        product_key="CMI",
-    )
     result = scalers.MinMaxNormalize().transform(sat0=GOES_DS_WITHATTRS)
-    img_result = result.CMI.to_numpy()
+    img_result = result.data.CMI.to_numpy()
     assert np.nanmax(img_result, axis=(2, 1), keepdims=True) < 1.1
 
 
 def test_min_max_normalize_ds():
-    FAKE_MULTI_DS_attrs = metadatatools.add_metadata(
-        FAKE_GOES_MULTI,
-        orbit_type=metadatatools.POLAR,
-        platform=metadatatools.CLOUDSAT,
-        instrument_type=metadatatools.RADIOMETERS,
-        product_key=["ch1", "ch2"],
+    FAKE_MULTI_DS_attrs = metadatatools.SatelliteData.from_values(
+        data=FAKE_GOES_MULTI,
+        orbits_types=(metadatatools.POLAR,),
+        platforms=(metadatatools.CLOUDSAT,),
+        instruments_types=(metadatatools.RADIOMETERS,),
+        products_keys=(["ch1", "ch2"],),
+        times_starts=(0,),
+        times_ends=(1,),
     )
     result = scalers.MinMaxNormalize().transform(sat0=FAKE_MULTI_DS_attrs)
-    img_result = result.to_array().to_numpy()
+    img_result = result.data.to_array().to_numpy()
     assert np.max(img_result) < 1.1
 
 
 def test_raise_err():
-    FAKE_MULTI_DS_attrs = metadatatools.add_metadata(
-        FAKE_MULTI_DS,
-        orbit_type=metadatatools.POLAR,
-        platform=metadatatools.CLOUDSAT,
-        instrument_type=metadatatools.RADARS,
-        product_key="the_img",
+    FAKE_MULTI_DS_attrs = metadatatools.SatelliteData.from_values(
+        data=FAKE_MULTI_DS,
+        orbits_types=(metadatatools.POLAR,),
+        platforms=(metadatatools.CLOUDSAT,),
+        instruments_types=(metadatatools.RADARS,),
+        products_keys=("the_img",),
+        times_ends=(1,),
+        times_starts=(0,),
     )
     with pytest.raises(ValueError):
         scalers.MinMaxNormalize().transform(sat0=FAKE_MULTI_DS_attrs)

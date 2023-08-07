@@ -17,88 +17,95 @@ FAKE_XA = xa.Dataset(
     coords={"the_cords": np.arange(4)},
 )
 
+NEW_SD = metadatatools.SatelliteData.from_values(
+    data=FAKE_XA,
+    orbits_types=metadatatools.POLAR,
+    platforms=metadatatools.CLOUDSAT,
+    instruments_types=metadatatools.RADARS,
+    products_keys="aaa",
+    times_starts=0,
+    times_ends=1,
+)
+
 
 def test_error_add_metadata():
     with pytest.raises(ValueError):
-        metadatatools.Metadata(
-            orbit_type="Extravagant",
-            platform=metadatatools.GOES,
-            instrument_type=metadatatools.RADARS,
-            product_key="abc",
+        metadatatools.SatelliteData.from_values(
+            data=FAKE_XA,
+            orbits_types="Extravagant",
+            platforms=metadatatools.GOES,
+            instruments_types=metadatatools.RADARS,
+            products_keys="abc",
+            times_starts=0,
+            times_ends=1,
         )
     with pytest.raises(ValueError):
-        metadatatools.Metadata(
-            orbit_type=metadatatools.POLAR,
-            platform="somesat",
-            instrument_type=metadatatools.RADIOMETERS,
-            product_key="abc",
+        metadatatools.SatelliteData.from_values(
+            data=FAKE_XA,
+            orbits_types=metadatatools.POLAR,
+            platforms="somesat",
+            instruments_types=metadatatools.RADARS,
+            products_keys="abc",
+            times_starts=0,
+            times_ends=1,
         )
     with pytest.raises(ValueError):
-        metadatatools.Metadata(
-            orbit_type=metadatatools.GEOSTATIONARY,
-            platform=metadatatools.CLOUDSAT,
-            instrument_type="CAMERA",
-            product_key="abc",
+        metadatatools.SatelliteData.from_values(
+            data=FAKE_XA,
+            orbits_types=metadatatools.GEOSTATIONARY,
+            platforms=metadatatools.GOES,
+            instruments_types="camera",
+            products_keys="abc",
+            times_starts=0,
+            times_ends=1,
         )
 
 
-def test_add_metadata():
-    new_xa = metadatatools.add_metadata(
-        FAKE_XA,
-        orbit_type=metadatatools.POLAR,
-        platform=metadatatools.CLOUDSAT,
-        instrument_type=metadatatools.RADARS,
-        product_key="cloud_scenario",
-    )
-
-    assert new_xa.attrs["_STRATOPY_"].orbit_type == "polar"
-    assert new_xa.attrs["_STRATOPY_"].platform == "CloudSat"
-    assert new_xa.attrs["_STRATOPY_"].instrument_type == "Radar"
-    assert new_xa.attrs["_STRATOPY_"].product_key == "cloud_scenario"
-
-
-@pytest.mark.parametrize("or_type", metadatatools.ORBIT_TYPES)
+@pytest.mark.parametrize("or_type", metadatatools.AVAIL_ORBITS)
 def test_add_orbittype(or_type):
-    new_xa = metadatatools.add_metadata(
-        FAKE_XA,
-        orbit_type=or_type,
-        platform=metadatatools.CLOUDSAT,
-        instrument_type=metadatatools.RADARS,
-        product_key="cloud_scenario",
+    new_xa = metadatatools.SatelliteData.from_values(
+        data=FAKE_XA,
+        orbits_types=or_type,
+        platforms=metadatatools.CLOUDSAT,
+        instruments_types=metadatatools.RADARS,
+        products_keys="cloud_scenario",
+        times_starts=0,
+        times_ends=1,
     )
-    assert metadatatools.orbit_type(new_xa) == or_type
+    assert new_xa.orbits_types == (or_type,)
 
 
-@pytest.mark.parametrize("satellite", metadatatools.PLATFORMS)
+@pytest.mark.parametrize("satellite", metadatatools.AVAIL_SATS)
 def test_add_platform(satellite):
-    new_xa = metadatatools.add_metadata(
-        FAKE_XA,
-        orbit_type=metadatatools.POLAR,
-        platform=satellite,
-        instrument_type=metadatatools.RADARS,
-        product_key="cloud_scenario",
+    new_xa = metadatatools.SatelliteData.from_values(
+        data=FAKE_XA,
+        orbits_types=metadatatools.POLAR,
+        platforms=satellite,
+        instruments_types=metadatatools.RADARS,
+        products_keys="cloud_scenario",
+        times_starts=0,
+        times_ends=1,
     )
-    assert metadatatools.platform(new_xa) == satellite
+    assert new_xa.platforms == (satellite,)
 
 
-@pytest.mark.parametrize("ins_type", metadatatools.INSTRUMENTS_TYPES)
+@pytest.mark.parametrize("ins_type", metadatatools.AVAIL_INSTRUMENTS)
 def test_add_instrument_type(ins_type):
-    new_xa = metadatatools.add_metadata(
-        FAKE_XA,
-        orbit_type=metadatatools.POLAR,
-        platform=metadatatools.CLOUDSAT,
-        instrument_type=ins_type,
-        product_key="cloud_scenario",
+    new_xa = metadatatools.SatelliteData.from_values(
+        data=FAKE_XA,
+        orbits_types=metadatatools.POLAR,
+        platforms=metadatatools.CLOUDSAT,
+        instruments_types=ins_type,
+        products_keys="cloud_scenario",
+        times_starts=0,
+        times_ends=1,
     )
-    assert metadatatools.instrument_type(new_xa) == ins_type
+    assert new_xa.instruments_types == (ins_type,)
 
 
 def test_add_product():
-    new_xa = metadatatools.add_metadata(
-        FAKE_XA,
-        orbit_type=metadatatools.GEOSTATIONARY,
-        platform=metadatatools.GOES,
-        instrument_type=metadatatools.RADIOMETERS,
-        product_key="aaa",
-    )
-    assert metadatatools.product_and_key(new_xa) == "aaa"
+    assert NEW_SD.products_keys == ("aaa",)
+
+
+def test_todict():
+    assert isinstance(NEW_SD.to_dict(), dict)
