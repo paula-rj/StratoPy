@@ -72,6 +72,7 @@ def test_add_orbittype(or_type):
         times_starts=0,
         times_ends=1,
     )
+    assert isinstance(new_xa.orbits_types, tuple)
     assert new_xa.orbits_types == (or_type,)
 
 
@@ -86,6 +87,7 @@ def test_add_platform(satellite):
         times_starts=0,
         times_ends=1,
     )
+    assert isinstance(new_xa.platforms, tuple)
     assert new_xa.platforms == (satellite,)
 
 
@@ -100,6 +102,7 @@ def test_add_instrument_type(ins_type):
         times_starts=0,
         times_ends=1,
     )
+    assert isinstance(new_xa.instruments_types, tuple)
     assert new_xa.instruments_types == (ins_type,)
 
 
@@ -109,3 +112,22 @@ def test_add_product():
 
 def test_todict():
     assert isinstance(NEW_SD.to_dict(), dict)
+
+
+def test_metadata_idx():
+    return_dict = {
+        "products_keys": "aaa",
+        "instruments_types": "Radar",
+        "platforms": "CloudSat",
+        "orbits_types": "Polar",
+        "times_starts": 0,
+        "times_ends": 1,
+        "notes": None,
+    }
+    assert NEW_SD.metadata_at(0) == return_dict
+
+def test_repr():
+    la_repr = f"<SatelliteData products_keys={str(NEW_SD.products_keys)}, instruments_types={str(NEW_SD.instruments_types)}, platforms={str(NEW_SD.platforms)}, orbits_types={str(NEW_SD.orbits_types)}, times_starts=(0,), times_ends=(1,)>" # noqa
+    assert NEW_SD.__repr__() == la_repr
+        
+        
