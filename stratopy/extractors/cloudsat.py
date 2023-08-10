@@ -170,6 +170,15 @@ def read_hdf4(path):
 
 
 def read_as_SatelliteData(path, product):
+    """Reads a CloudSat product and retrieves a SatelliteData object.
+
+    Parameters
+    ----------
+    path: Path or str
+        The path where the product is hosted.
+    product: str
+        The name of the product. Options available at DATA_CLOUDSAT attr.
+    """
     if product not in DATA_CLOUDSAT.keys():
         raise ValueError(f"product should be one of {DATA_CLOUDSAT.keys()}")
 
